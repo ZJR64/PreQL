@@ -1,8 +1,5 @@
 package src;
 
-import src.Database;
-import src.Helper;
-
 /**
  * The main class for the database, recieves the arguments for creating a new database.
  *
@@ -37,6 +34,9 @@ public class Main {
                 return;
             }
 
+            //create the database
+            Database db = new Database(args[0], Integer.parseInt(args[1]), Integer.parseInt(args[2]));
+            db.run();
         }
         else {
             //print help message
