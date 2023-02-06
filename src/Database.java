@@ -6,11 +6,11 @@ import java.util.Scanner;
 public class Database {
 
     private String db_loc;
-    private int page_size;
     private int buffer_size;
+    private Catalog catalog;
 
     /**
-     * Creates a new Database object.
+     * Constructor for the database object
      *
      * @param db_loc the location of the database.
      * @param page_size the size of each page of the database.
@@ -18,27 +18,13 @@ public class Database {
      */
     public Database(String db_loc, int page_size, int buffer_size) {
         this.db_loc = db_loc;
-        this.page_size = page_size;
         this.buffer_size = buffer_size;
+        //create catalog if it does not exist
+        String catPath = db_loc + "\\catalog.txt";
+        this.catalog = new Catalog(catPath, page_size);
     }
 
     public void run(){
-        //check for file and create if not present
-        //PLACEHOLDER
-        if (Helper.checkFile(db_loc + "\\database.db")) {
-            System.out.println("database file found.");
-        }
-        else {
-            try {
-                File newFile = new File(db_loc + "\\database.db");
-                newFile.createNewFile();
-                System.out.println("database file created.");
-            } catch (Exception e) {
-                System.err.println("Error: database file could not be created");
-                return;
-            }
-        }
-
         //create new scanner
         Scanner reader = new Scanner(System.in);
 
@@ -50,7 +36,7 @@ public class Database {
                 input += line;
                 //check for quit
                 if (line.equalsIgnoreCase("quit")) {
-                    System.out.println("loser");
+                    shutDown();
                     return;
                 }
             }
@@ -58,22 +44,32 @@ public class Database {
             //split string
             input = input.substring(0,  input.length() - 1);
             String[] line = input.split(",");
-            String[] firstLine = input.split(" ");
+            String[] firstLine = line[0].split(" ");
             String command = firstLine[0];
             if (firstLine[0].equalsIgnoreCase("create") || firstLine[0].equalsIgnoreCase("display")) {
                 command += " " + firstLine[1];
             }
 
+            /*
             //check for ; at end of command
-            if (input.substring(input.length() - 1).equals(";")) {
-
+            if (command.substring(input.length() - 1).equals(";")) {
+                command = command.substring(0, input.length() - 1);
+                System.out.println(command);
             }
+             */
 
             //check command
             checkCommand(command, input);
         }
     }
 
+    /**
+     * Checs the start of the commands from the users then sends the input to
+     * the right classes.
+     *
+     * @param command the reformatted first parts of the user input.
+     * @param input the entire input from the user.
+     */
     private static void checkCommand(String command, String input) {
 
         switch (command.toLowerCase()) {
@@ -101,6 +97,14 @@ public class Database {
                 System.out.println("*mockingly* " + input);
         }
 
+    }
+
+    /**
+     * When the database is being powered down it will store the buffer
+     * and ensure the catalog is updated.
+     */
+    private static void shutDown() {
+        //TODO
     }
 
 }
