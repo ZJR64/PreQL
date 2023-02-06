@@ -1,6 +1,7 @@
 package src;
 
 import src.Catalog.Catalog;
+import src.Commands.DisplaySchema;
 
 import java.util.Scanner;
 
@@ -71,7 +72,7 @@ public class Database {
      * @param command the reformatted first parts of the user input.
      * @param input the entire input from the user.
      */
-    private static void checkCommand(String command, String input) {
+    private void checkCommand(String command, String input) {
 
         switch (command.toLowerCase()) {
             case "create table":
@@ -87,7 +88,7 @@ public class Database {
                 return;
 
             case "display schema":
-                System.out.println("The hells a schema?!");
+                DisplaySchema action = new DisplaySchema(input, this.catalog);
                 return;
 
             case "display info":

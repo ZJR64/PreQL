@@ -3,7 +3,7 @@ package src;
 /**
  * The main class for the database, recieves the arguments for creating a new database.
  *
- * @author Group 6
+ * @author Zak Rutherford zjr6302@rit.edu
  */
 public class Main {
     static String helpMessage = "java Main <db loc> <page size> <buffer size>";
