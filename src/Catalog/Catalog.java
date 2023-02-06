@@ -4,12 +4,17 @@ import src.Helper;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Scanner;
 
+/**
+ * The class for the catalog. The catalog, also known as the data dictionary, stores
+ * the database's metadata. This means the catalog is important to ensure
+ * the tables know their own structures and relations.
+ *
+ * @author Zak Rutherford zjr6302@rit.edu
+ */
 public class Catalog {
 
     private String catPath;

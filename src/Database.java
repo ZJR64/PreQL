@@ -5,6 +5,14 @@ import src.Commands.DisplaySchema;
 
 import java.util.Scanner;
 
+/**
+ * The class for the database. This is the class that does most of the heavy lifting.
+ * It creates the catalog object and takes in user input. It also sorts through the
+ * input to determine the command that needs to be executed. Finally, when all is done,
+ * it safely shuts down and stores the database.
+ *
+ * @author Zak Rutherford zjr6302@rit.edu
+ */
 public class Database {
 
     private String db_loc;
@@ -22,7 +30,7 @@ public class Database {
         this.db_loc = db_loc;
         this.buffer_size = buffer_size;
         //create catalog if it does not exist
-        String catPath = db_loc + "\\catalog.txt";
+        String catPath = db_loc + "\\catalog";
         this.catalog = new Catalog(catPath, page_size);
     }
 

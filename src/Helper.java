@@ -2,6 +2,13 @@ package src;
 
 import java.io.File;
 
+/**
+ * A helper class created to assist in various tasks that the program needs to perform, while
+ * not necessarily being a part of any singular class.
+ *
+ * @author Zak Rutherford zjr6302@rit.edu
+ */
+
 public class Helper {
     /**
      * Determines if file exists or not.

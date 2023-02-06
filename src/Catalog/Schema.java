@@ -2,6 +2,13 @@ package src.Catalog;
 
 import java.util.ArrayList;
 
+/**
+ * This class is used mostly to organise and store the attribute objects. It
+ * is also equipped to convert the attributes to strings and a writable form
+ * when required.
+ *
+ * @author Zak Rutherford zjr6302@rit.edu
+ */
 public class Schema {
 
     private String name;
@@ -47,9 +54,9 @@ public class Schema {
     @Override
     public String toString() {
         String output = name + "\n";
-        output += "\t" + key.toString() + "\n";
+        output += "\t" + key.toString();
         for (Attribute a: attributes) {
-            output += "\t" + a.toString() + "\n";
+            output += ",\n\t" + a.toString();
         }
         return output;
     }
