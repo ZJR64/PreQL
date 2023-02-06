@@ -103,8 +103,9 @@ public class Database {
      * When the database is being powered down it will store the buffer
      * and ensure the catalog is updated.
      */
-    private static void shutDown() {
+    private void shutDown() {
         //TODO
+        this.catalog.shutDown();
     }
 
 }
