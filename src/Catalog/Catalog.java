@@ -88,7 +88,7 @@ public class Catalog {
      *
      * @return the string representing every schema in the catalog.
      */
-    public String getSchema() {
+    public String writable() {
         String output = "\nTables:";
         if (!schemas.isEmpty()) {
             for (Schema schema : schemas) {
@@ -106,7 +106,7 @@ public class Catalog {
     }
     public Schema getSchema(String name) {
         for (Schema schema: schemas) {
-            if (schema.getName().equalsIgnoreCase(name)) {
+            if (schema.getName().equals(name)) {
                 return schema;
             }
         }

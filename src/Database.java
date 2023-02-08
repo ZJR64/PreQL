@@ -2,8 +2,11 @@ package src;
 
 import src.Catalog.Catalog;
 import src.Catalog.Schema;
+import src.Commands.Command;
+import src.Commands.DisplayInfo;
 import src.Commands.DisplaySchema;
 
+import javax.swing.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -131,16 +134,9 @@ public class Database {
                 command += " " + firstLine[1];
             }
 
-            /*
-            //check for ; at end of command
-            if (command.substring(input.length() - 1).equals(";")) {
-                command = command.substring(0, input.length() - 1);
-                System.out.println(command);
-            }
-             */
-
             //check command
-            checkCommand(command, input);
+            Command action = checkCommand(command, input);
+            System.out.println(action.execute());
         }
     }
 
@@ -148,35 +144,35 @@ public class Database {
      * Checs the start of the commands from the users then sends the input to
      * the right classes.
      *
-     * @param command the reformatted first parts of the user input.
+     * @param command the formatted first parts of the user input.
      * @param input the entire input from the user.
      */
-    private void checkCommand(String command, String input) {
+    private Command checkCommand(String command, String input) {
+        Command action = new Command(input);
 
         switch (command.toLowerCase()) {
             case "create table":
                 System.out.println("what? does it look like i'm a carpenter?");
-                return;
 
             case "select":
                 System.out.println("Select this! *censored action*");
-                return;
 
             case "insert":
                 System.out.println("how about you insert this up your... hmm.. I'm blanking on where you should put this.");
-                return;
 
             case "display schema":
-                DisplaySchema action = new DisplaySchema(input, location, pageSize, bufferSize, this.catalog);
-                return;
+                action = new DisplaySchema(input, location, pageSize, bufferSize, this.catalog);
+                return action;
 
             case "display info":
-                System.out.println("Info?! Well did you know the canary islands were named after dogs?... or seals. Latin is confusing.");
-                return;
+                action = new DisplayInfo(input, this.catalog);
+                return action;
 
             default:
                 System.out.println("*mockingly* " + input);
         }
+
+        return action;
 
     }
 
