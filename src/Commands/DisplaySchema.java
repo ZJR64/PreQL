@@ -34,13 +34,15 @@ public class DisplaySchema extends Command {
 
     /**
      * Method used to execute the action of the command
+     *
+     * @return the status of the command, SUCCESS if successful, ERROR if not.
      */
     @Override
     public String execute() {
         System.out.println("DB location: " + location);
         System.out.println("Page Size: " + pageSize);
         System.out.println("Buffer Size: " + bufferSize);
-        System.out.println(cat.writable());
+        System.out.println(cat.toString());
         return "SUCCESS";
     }
 }

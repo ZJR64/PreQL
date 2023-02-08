@@ -116,6 +116,9 @@ public class Database {
             System.out.print("\n" + databaseName + ">");
             String input = "";
             while (input.equals("") || !input.substring(input.length() - 1).equals(";")) {
+                if (!input.equalsIgnoreCase("")) {
+                    input += " ";           //temporary fix to the newline problem
+                }
                 String line = reader.nextLine();
                 input += line;
                 //check for quit
@@ -126,7 +129,7 @@ public class Database {
             }
 
             //split string
-            input = input.substring(0,  input.length() - 1);
+            input = input.substring(0,  input.length() - 1); //get rid of ;
             String[] line = input.split(",");
             String[] firstLine = line[0].split(" ");
             String command = firstLine[0];

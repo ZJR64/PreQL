@@ -54,9 +54,9 @@ public class Catalog {
 
         } else {
 
-            //TODO temp line that adds a random schema to prove it works.
-            schemas.add(new Schema("Group~1024~56~integer 4 id primaryKey~varchar 20 name"));
-
+            //TODO temp line that adds random schema to prove it works.
+            schemas.add(new Schema("Group~1024~56~integer 4 id primaryKey~varchar 20 name~double 8 gpa"));
+            schemas.add(new Schema("School~209~5000~integer 4 id primaryKey~varchar 20 name~char 10 building"));
         }
     }
 
@@ -88,15 +88,16 @@ public class Catalog {
      *
      * @return the string representing every schema in the catalog.
      */
-    public String writable() {
-        String output = "\nTables:";
+    public String toString() {
+        String output = "\n";
         if (!schemas.isEmpty()) {
+            output += "Tables:";
             for (Schema schema : schemas) {
                 output += "\n\n" + schema.toString();
             }
         }
         else {
-            output += "No schemas yet.";
+            output += "No tables to display";
         }
         return output;
     }
