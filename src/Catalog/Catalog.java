@@ -32,7 +32,6 @@ public class Catalog {
         this.schemas = new ArrayList<Schema>();
         this.catPath = catPath;
         if (Helper.checkFile(catPath)) {
-            System.out.println("catalog found.");
             //make the catalog read from file
             byte[] byteArray;
             try {
@@ -60,22 +59,13 @@ public class Catalog {
             byteBuffer.clear();
 
         } else {
-            try {
-                File newFile = new File(catPath);
-                newFile.createNewFile();
-                System.out.println("catalog file created.");
-            } catch (Exception e) {
-                System.err.println("Error: catalog file could not be created");
-                return;
-            }
             //assign values
             this.pageSize = pageSize;
 
             //TODO temp file that adds a random schema to prove it works.
-            schemas.add(new Schema("Group integer group_id varchar name varchar role integer age"));
+            schemas.add(new Schema("Group~1024~56~integer 4 id primaryKey~varchar 20 name"));
 
         }
-        System.out.println(this.pageSize);
     }
 
     /**
@@ -117,10 +107,10 @@ public class Catalog {
      * @return the string representing every schema in the catalog.
      */
     public String getSchema() {
-        String output = "Database Schema:\n\n";
+        String output = "\nTables:";
         if (!schemas.isEmpty()) {
-            for (Schema s : schemas) {
-                output += s.toString() + "\n";
+            for (Schema schema : schemas) {
+                output += "\n\n" + schema.toString();
             }
         }
         else {

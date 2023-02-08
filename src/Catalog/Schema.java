@@ -12,40 +12,44 @@ import java.util.ArrayList;
 public class Schema {
 
     private String name;
-    private Attribute key;
-    private Attribute[] attributes;
+    private int pages;
+    private int records;
+    private ArrayList<Attribute> attributes;
 
     /**
-     * Constructor for the Schema object
+     * Constructor for a new Schema object
      *
      * @param name the name of the table.
      * @param key the key attribute for the table.
      * @param attributes the list of non-key attributes for the table.
      */
-    public Schema (String name, Attribute key, Attribute[] attributes) {
+    public Schema (String name, Attribute key, ArrayList<Attribute> attributes) {
         this.name = name;
-        this.key = key;
         this.attributes = attributes;
+        this.pages = 0;
+        this.records = 0;
     }
 
     /**
      * Constructor for the Schema object when read from file.
      *
-     * @param input the byte array containing the schema.
+     * @param input the String containing the schema.
      */
     public Schema (String input) {
-        String[] filtered = input.split(" ");
+        String[] filtered = input.split("~");
         //name is always first
         this.name = filtered[0];
-        //key always follows
-        this.key = new Attribute(filtered[1], filtered[2]);
+        //next is pages
+        this.pages = Integer.parseInt(filtered[1]);
+        //then records
+        this.records = Integer.parseInt(filtered[2]);
         //get rest of attributes
-        ArrayList<Attribute> temp = new ArrayList<Attribute>();
-        this.attributes = new Attribute[(filtered.length - 3)/2];
-        for (int i = 3; i < filtered.length; i+=2) {
-            attributes[(i - 3)/2] = new Attribute(filtered[i], filtered[i+1]);
+        this.attributes = new ArrayList<Attribute>();
+        for (int i = 3; i < filtered.length; i++) {
+            attributes.add(new Attribute(filtered[i]));
         }
     }
+
     /**
      * toString method for the schema that is used when the schema needs to be displayed.
      *
@@ -53,11 +57,12 @@ public class Schema {
      */
     @Override
     public String toString() {
-        String output = name + "\n";
-        output += "\t" + key.toString();
+        String output = name;
         for (Attribute a: attributes) {
-            output += ",\n\t" + a.toString();
+            output += "\n\t" + a.toString();
         }
+        output += "\nPages: " + pages;
+        output += "\nRecords: " + records;
         return output;
     }
 
@@ -68,10 +73,9 @@ public class Schema {
      * @return the schema in writable form.
      */
     public String writeable() {
-        String output = name + " ";
-        output += key.toString();
+        String output = name + "~" + pages + "~" + records;
         for (Attribute a: attributes) {
-            output += " " + a.toString();
+            output += "~" + a.writeable();
         }
         output += ";";
         return output;

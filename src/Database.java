@@ -15,23 +15,23 @@ import java.util.Scanner;
  */
 public class Database {
 
-    private String db_loc;
-    private int buffer_size;
+    private String location;
+    private int bufferSize;
     private Catalog catalog;
 
     /**
      * Constructor for the database object
      *
-     * @param db_loc the location of the database.
-     * @param page_size the size of each page of the database.
-     * @param buffer_size the size of the buffer.
+     * @param location the location of the database.
+     * @param pageSize the size of each page of the database.
+     * @param bufferSize the size of the buffer.
      */
-    public Database(String db_loc, int page_size, int buffer_size) {
-        this.db_loc = db_loc;
-        this.buffer_size = buffer_size;
+    public Database(String location, int pageSize, int bufferSize) {
+        this.location = location;
+        this.bufferSize = bufferSize;
         //create catalog if it does not exist
-        String catPath = db_loc + "\\catalog";
-        this.catalog = new Catalog(catPath, page_size);
+        String catPath = location + "\\catalog";
+        this.catalog = new Catalog(catPath, pageSize);
     }
 
     public void run(){
@@ -96,7 +96,7 @@ public class Database {
                 return;
 
             case "display schema":
-                DisplaySchema action = new DisplaySchema(input, this.catalog);
+                DisplaySchema action = new DisplaySchema(input, location, bufferSize, this.catalog);
                 return;
 
             case "display info":
