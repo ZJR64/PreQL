@@ -19,9 +19,9 @@ public class DisplaySchema {
      * @param bufferSize the page size for the database
      * @param cat the catalog for the database.
      */
-    public DisplaySchema(String input, String loc, int bufferSize, Catalog cat) {
+    public DisplaySchema(String input, String loc, int pageSize, int bufferSize, Catalog cat) {
         System.out.println("DB location: " + loc);
-        System.out.println("Page Size: " + cat.getPageSize());
+        System.out.println("Page Size: " + pageSize);
         System.out.println("Buffer Size: " + bufferSize);
         System.out.println(cat.getSchema());
         System.out.println("SUCCESS");

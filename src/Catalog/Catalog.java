@@ -18,7 +18,6 @@ import java.util.ArrayList;
 public class Catalog {
 
     private String catPath;
-    private int pageSize;
     private ArrayList<Schema> schemas;
 
 
@@ -43,11 +42,8 @@ public class Catalog {
                 return;
             }
             //extract info
-            byte[] pageSizeArray = {byteArray[0], byteArray[1], byteArray[2], byteArray[3]};
-            ByteBuffer byteBuffer = ByteBuffer.wrap(pageSizeArray);
             String unfiltered = new String(byteArray);
             //get rid of page size
-            unfiltered = unfiltered.substring(4);
             String[] filtered = unfiltered.split(";");
             //add schemas
             for (String s : filtered) {
@@ -55,24 +51,13 @@ public class Catalog {
                     schemas.add(new Schema(s));
                 }
             }
-            this.pageSize = byteBuffer.getInt();
-            byteBuffer.clear();
 
         } else {
-            //assign values
-            this.pageSize = pageSize;
 
-            //TODO temp file that adds a random schema to prove it works.
+            //TODO temp line that adds a random schema to prove it works.
             schemas.add(new Schema("Group~1024~56~integer 4 id primaryKey~varchar 20 name"));
 
         }
-    }
-
-    /**
-     * Getter for page size
-     */
-    public int getPageSize() {
-        return pageSize;
     }
 
     /**
@@ -82,9 +67,6 @@ public class Catalog {
         //record page size
         try {
             FileOutputStream outputStream = new FileOutputStream(catPath);
-            byte[] pageBytes = new byte[] {(byte)(pageSize >>> 24),  (byte)(pageSize >>> 16),  (byte)(pageSize >>> 8), (byte)pageSize};
-            outputStream.write(pageBytes);
-            outputStream.flush();
             //make sure schemas is populated
             if (!schemas.isEmpty()) {
                 for (Schema s : schemas) {
