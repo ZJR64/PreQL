@@ -81,5 +81,33 @@ public class Schema {
         return output;
     }
 
+    public String getName() {return name;}
+    public int getPages() {return pages;}
+    public void addPage() {this.pages++;}
+    public void subPage() {this.pages--;}
+    public int getRecords() {return records;}
+    public void addRecord() {this.records++;}
+    public void subRecord() {this.records--;}
+    public Attribute getAttribute(String name) {
+        for (Attribute attribute: attributes) {
+            if (attribute.getName().equalsIgnoreCase(name)) {
+                return attribute;
+            }
+        }
+        return null;
+    }
+    public ArrayList<Attribute> getAttributes() {
+        return attributes;
+    }
+    public Attribute getKey()  {
+        for (Attribute attribute: attributes) {
+            for (String descriptor: attribute.getDescriptors()) {
+                if (descriptor.equalsIgnoreCase("primarykey")) {
+                    return attribute;
+                }
+            }
+        }
+        return null;
+    }
 
 }

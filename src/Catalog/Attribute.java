@@ -87,4 +87,8 @@ public class Attribute {
         return output;
     }
 
+    public int getSize() {return size;}
+    public String getName() {return name;}
+    public String getType() {return type;}
+    public ArrayList<String> getDescriptors() {return descriptors;}
 }

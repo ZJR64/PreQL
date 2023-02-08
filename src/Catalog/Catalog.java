@@ -118,4 +118,16 @@ public class Catalog {
         }
         return output;
     }
+
+    public ArrayList<Schema> getSchemas() {
+        return schemas;
+    }
+    public Schema getSchema(String name) {
+        for (Schema schema: schemas) {
+            if (schema.getName().equalsIgnoreCase(name)) {
+                return schema;
+            }
+        }
+        return null;
+    }
 }
