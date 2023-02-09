@@ -102,9 +102,22 @@ public class Catalog {
         return output;
     }
 
+    /**
+     * getter method for the list of schemas
+     *
+     * @return the arraylist of schemas.
+     */
     public ArrayList<Schema> getSchemas() {
         return schemas;
     }
+
+    /**
+     * Searches through the collection of schemas
+     * and searches for one with the given name.
+     * This method is case-sensitive.
+     *
+     * @return the schema, or null if not found.
+     */
     public Schema getSchema(String name) {
         for (Schema schema: schemas) {
             if (schema.getName().equals(name)) {

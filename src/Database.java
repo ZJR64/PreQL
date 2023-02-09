@@ -134,7 +134,9 @@ public class Database {
             String[] firstLine = line[0].split(" ");
             String command = firstLine[0];
             if (firstLine[0].equalsIgnoreCase("create") || firstLine[0].equalsIgnoreCase("display")) {
-                command += " " + firstLine[1];
+                if (firstLine.length > 1) {
+                    command += " " + firstLine[1];
+                }
             }
 
             //check command
@@ -172,7 +174,7 @@ public class Database {
                 return action;
 
             default:
-                System.out.println("*mockingly* " + input);
+                System.out.println(command + " is not a recognised command");
         }
 
         return action;

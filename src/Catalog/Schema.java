@@ -81,24 +81,77 @@ public class Schema {
         return output;
     }
 
+    /**
+     * getter method for name of the table.
+     *
+     * @return name of the schema.
+     */
     public String getName() {return name;}
+
+    /**
+     * getter method for number of pages the table occupies.
+     *
+     * @return number of pages.
+     */
     public int getPages() {return pages;}
+
+    /**
+     * Adds one to the number of pages the table takes up
+     */
     public void addPage() {this.pages++;}
+
+    /**
+     * Subtracts one to the number of pages the table takes up
+     */
     public void subPage() {this.pages--;}
+
+    /**
+     * getter method for the number of records the table has.
+     *
+     * @return number of records.
+     */
     public int getRecords() {return records;}
+
+    /**
+     * Adds one to the number of pages the table takes up
+     */
     public void addRecord() {this.records++;}
+
+    /**
+     * Subtracts one to the number of pages the table takes up
+     */
     public void subRecord() {this.records--;}
+
+    /**
+     * Searches through the collection of attributes
+     * and searches for one with the given name.
+     * This method is case-sensitive.
+     *
+     * @return the attribute, or null if not found.
+     */
     public Attribute getAttribute(String name) {
         for (Attribute attribute: attributes) {
-            if (attribute.getName().equalsIgnoreCase(name)) {
+            if (attribute.getName().equals(name)) {
                 return attribute;
             }
         }
         return null;
     }
+
+    /**
+     * getter method for the collection of attributes.
+     *
+     * @return the arraylist of schemas.
+     */
     public ArrayList<Attribute> getAttributes() {
         return attributes;
     }
+
+    /**
+     * Finds the primaryKey from the list of attributes and returns it.
+     *
+     * @return the attribute that is the primary key, or null if not found.
+     */
     public Attribute getKey()  {
         for (Attribute attribute: attributes) {
             for (String descriptor: attribute.getDescriptors()) {

@@ -87,8 +87,31 @@ public class Attribute {
         return output;
     }
 
+    /**
+     * getter method for size of the attribute
+     *
+     * @return size of the attribute.
+     */
     public int getSize() {return size;}
+
+    /**
+     * getter method for name of the attribute
+     *
+     * @return name of the attribute.
+     */
     public String getName() {return name;}
+
+    /**
+     * getter method for type of the attribute
+     *
+     * @return tyoe of the attribute.
+     */
     public String getType() {return type;}
+
+    /**
+     * getter method for descriptors of the attribute
+     *
+     * @return an arraylist of the descriptors
+     */
     public ArrayList<String> getDescriptors() {return descriptors;}
 }
