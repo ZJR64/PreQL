@@ -42,10 +42,7 @@ public class Catalog {
                 return;
             }
             //extract info
-            byte[] inverse = new byte[byteArray.length];
-            for (int i = 0; i < byteArray.length; i++) {
-                inverse[i] = Helper.reverseBits(byteArray[i]);
-            }
+            byte[] inverse = Helper.invertBits(byteArray);
             String unfiltered = new String(inverse);
             //get rid of page size
             String[] filtered = unfiltered.split(";");
@@ -74,11 +71,7 @@ public class Catalog {
             //make sure schemas is populated
             if (!schemas.isEmpty()) {
                 for (Schema s : schemas) {
-                    byte[] stringRep = s.writeable().getBytes();
-                    byte[] inverse = new byte[stringRep.length];
-                    for (int i = 0; i < stringRep.length; i++) {
-                        inverse[i] = Helper.reverseBits(stringRep[i]);
-                    }
+                    byte[] inverse = Helper.invertBits(s.writeable().getBytes());
                     outputStream.write(inverse);
                     outputStream.flush();
                 }

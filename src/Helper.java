@@ -55,13 +55,17 @@ public class Helper {
         }
     }
 
-    public static byte reverseBits(byte x) {
-        int intSize = 8;
-        byte y=0;
-        for(int position=intSize-1; position>0; position--){
-            y+=((x&1)<<position);
-            x >>= 1;
+    /**
+     * Takes a byte array and inverts the bits for reading/writing from files.
+     *
+     * @param byteArray the num to be tested.
+     * @return the inverted byte array.
+     */
+    public static byte[] invertBits(byte[] byteArray) {
+        byte[] inverse = new byte[byteArray.length];
+        for (int i = 0; i < byteArray.length; i++) {
+            inverse[i] = (byte) ~byteArray[i];
         }
-        return y;
+        return inverse;
     }
 }

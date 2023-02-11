@@ -76,7 +76,7 @@ public class Database {
             try {
                 byte[] pageBytes= new byte[4];
                 FileOutputStream outputStream = new FileOutputStream(dbFile);
-                //store name size
+                //store page size
                 for (int i = 0; i < 4; i++) {
                     pageBytes[i] = (byte) (pageSize >>> (24 - (8 * i)));
                 }
