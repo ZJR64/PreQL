@@ -42,7 +42,11 @@ public class Catalog {
                 return;
             }
             //extract info
-            String unfiltered = new String(byteArray);
+            byte[] inverse = new byte[byteArray.length];
+            for (int i = 0; i < byteArray.length; i++) {
+                inverse[i] = Helper.reverseBits(byteArray[i]);
+            }
+            String unfiltered = new String(inverse);
             //get rid of page size
             String[] filtered = unfiltered.split(";");
             //add schemas
@@ -70,7 +74,12 @@ public class Catalog {
             //make sure schemas is populated
             if (!schemas.isEmpty()) {
                 for (Schema s : schemas) {
-                    outputStream.write(s.writeable().getBytes());
+                    byte[] stringRep = s.writeable().getBytes();
+                    byte[] inverse = new byte[stringRep.length];
+                    for (int i = 0; i < stringRep.length; i++) {
+                        inverse[i] = Helper.reverseBits(stringRep[i]);
+                    }
+                    outputStream.write(inverse);
                     outputStream.flush();
                 }
             }
