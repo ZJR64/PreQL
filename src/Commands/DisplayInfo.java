@@ -21,10 +21,14 @@ public class DisplayInfo extends Command {
      */
     public DisplayInfo(String input, Catalog cat) {
         super(input);
+        this.schema = cat.getSchema(name);
+    }
+
+    @Override
+    public void parse() {
         //TODO currently only works with good user input
         String[] parts = input.split(" ");
         this.name = parts[2];
-        this.schema = cat.getSchema(name);
     }
 
     /**

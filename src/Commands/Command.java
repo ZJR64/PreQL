@@ -7,9 +7,8 @@ package src.Commands;
  *
  * @author Zak Rutherford zjr6302@rit.edu
  */
-public class Command {
+public abstract class Command {
     String input;
-    String[] filtered;
 
     /**
      * Constructor for the Command object. Used to store  and manipulate the input from
@@ -19,16 +18,14 @@ public class Command {
      */
     public Command(String input) {
         this.input = input;
-        breakUp();
+        parse();
     }
 
     /**
      * A method that will break up and the user input. May be to hyper specific
      * for more complicated classes down the line.
      */
-    private static void breakUp() {
-        //TODO
-    }
+    public abstract void parse();
 
     /**
      * A placeholder method so classes that extend this one can be run by the
@@ -36,7 +33,5 @@ public class Command {
      *
      * @return error because this is only executed with bad input
      */
-    public String execute() {
-        return "ERROR";
-    }
+    public abstract String execute();
 }

@@ -2,9 +2,7 @@ package src;
 
 import src.Catalog.Catalog;
 import src.Catalog.Schema;
-import src.Commands.Command;
-import src.Commands.DisplayInfo;
-import src.Commands.DisplaySchema;
+import src.Commands.*;
 
 import javax.swing.*;
 import java.io.File;
@@ -129,19 +127,20 @@ public class Database {
             }
 
             //split string
-            input = input.substring(0,  input.length() - 1); //get rid of ;
-            String[] line = input.split(",");
-            String[] firstLine = line[0].split(" ");
-            String command = firstLine[0];
-            if (firstLine[0].equalsIgnoreCase("create") || firstLine[0].equalsIgnoreCase("display")) {
-                if (firstLine.length > 1) {
-                    command += " " + firstLine[1];
-                }
+            //input = input.substring(0,  input.length() - 1); //get rid of ;
+//            String[] line = input.split(",");
+//            String[] firstLine = line[0].split(" ");
+//            String command = firstLine[0];
+//            if (firstLine[0].equalsIgnoreCase("create") || firstLine[0].equalsIgnoreCase("display")) {
+//                if (firstLine.length > 1) {
+//                    command += " " + firstLine[1];
+//                }
+//            }
+//
+            Command action = checkCommand(input);
+            if(action != null) {
+                System.out.println(action.execute());
             }
-
-            //check command
-            Command action = checkCommand(command, input);
-            System.out.println(action.execute());
         }
     }
 
@@ -149,34 +148,35 @@ public class Database {
      * Checs the start of the commands from the users then sends the input to
      * the right classes.
      *
-     * @param command the formatted first parts of the user input.
      * @param input the entire input from the user.
      */
-    private Command checkCommand(String command, String input) {
-        Command action = new Command(input);
+    private Command checkCommand(String input) {
+        Command action; // new Command(input);
+        input = input.toLowerCase().strip();
 
-        switch (command.toLowerCase()) {
-            case "create table":
-                System.out.println("what? does it look like i'm a carpenter?");
-
-            case "select":
-                System.out.println("Select this! *censored action*");
-
-            case "insert":
-                System.out.println("how about you insert this up your... hmm.. I'm blanking on where you should put this.");
-
-            case "display schema":
-                action = new DisplaySchema(input, location, pageSize, bufferSize, this.catalog);
-                return action;
-
-            case "display info":
-                action = new DisplayInfo(input, this.catalog);
-                return action;
-
-            default:
-                System.out.println(command + " is not a recognised command");
+        if(input.startsWith("create table")){
+            action = new CreateTable(input);
+        }
+        else if(input.startsWith("select")){
+            action = new Select(input);
         }
 
+        else if(input.startsWith("insert")){
+            action = new Insert(input);
+        }
+
+        else if(input.startsWith("display schema")){
+            action = new DisplaySchema(input, location, pageSize, bufferSize, this.catalog);
+        }
+
+        else if(input.startsWith("display info")){
+            action = new DisplayInfo(input, this.catalog);
+        }
+
+        else{
+            System.out.println(input + " is not a recognised command");
+            return null;
+        }
         return action;
 
     }

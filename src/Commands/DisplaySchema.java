@@ -32,6 +32,12 @@ public class DisplaySchema extends Command {
         this.cat = cat;
     }
 
+    @Override
+    public void parse() {
+        // nothing to parse
+        return;
+    }
+
     /**
      * Method used to execute the action of the command
      *
