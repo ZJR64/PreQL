@@ -11,7 +11,7 @@ public class Select extends Command {
     public void parse(){
         // split on the keyword from
         // should return ["select *", <name>]
-        String[] split = input.split("from");
+        String[] split = input.split("(?i)from");
         // remove semicolon and white space
         this.name = split[1].replace(";", "").strip();
     }

@@ -15,10 +15,10 @@ public class Insert extends Command{
     public void parse() {
         // split on keyword values
         // should get ["insert into <name>", "<tuples>"]
-        String[] splitInput = input.split("values");
+        String[] splitInput = input.split("(?i)values");
 
         //split first half of input on keyword into and get the name
-        this.name = splitInput[0].split("into")[1];
+        this.name = splitInput[0].split("(?i)into")[1];
 
         // get tuples and remove semicolon
         String tuples = splitInput[1].replace(";", "");

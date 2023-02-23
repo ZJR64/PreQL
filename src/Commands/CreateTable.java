@@ -21,7 +21,7 @@ public class CreateTable extends Command{
         //["create table <name>", attributes,...]
         String[] tokens = input.split("\\(", 2);
         // get the name
-        this.name = tokens[0].split("table")[1].strip();
+        this.name = tokens[0].split("(?i)table")[1].strip();
 
         // parse attributes
         String[] attributes = tokens[1].strip().split(",");
@@ -29,7 +29,7 @@ public class CreateTable extends Command{
             a = a.replace(";", "").strip();
             String[] splitAtts = a.split(" ");
             // if primary key, store that it's the primary key
-            if (splitAtts.length > 2 && splitAtts[2].equals("primarykey")){
+            if (splitAtts.length > 2 && splitAtts[2].equals("(?i)primarykey")){
                 this.primarykeyName = splitAtts[0];
             }
             // put each attribute pair in map

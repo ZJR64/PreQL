@@ -28,7 +28,7 @@ public class DisplayInfo extends Command {
     public void parse() {
         //TODO currently only works with good user input
         String[] parts = input.split(" ");
-        this.name = parts[2];
+        this.name = parts[2].replace(";", "");
     }
 
     /**

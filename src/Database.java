@@ -125,18 +125,6 @@ public class Database {
                     return;
                 }
             }
-
-            //split string
-            //input = input.substring(0,  input.length() - 1); //get rid of ;
-//            String[] line = input.split(",");
-//            String[] firstLine = line[0].split(" ");
-//            String command = firstLine[0];
-//            if (firstLine[0].equalsIgnoreCase("create") || firstLine[0].equalsIgnoreCase("display")) {
-//                if (firstLine.length > 1) {
-//                    command += " " + firstLine[1];
-//                }
-//            }
-//
             Command action = checkCommand(input);
             if(action != null) {
                 System.out.println(action.execute());
@@ -152,24 +140,24 @@ public class Database {
      */
     private Command checkCommand(String input) {
         Command action; // new Command(input);
-        input = input.toLowerCase().strip();
+        input = input.strip();
 
-        if(input.startsWith("create table")){
+        if(input.toLowerCase().startsWith("create table")){
             action = new CreateTable(input);
         }
-        else if(input.startsWith("select")){
+        else if(input.toLowerCase().startsWith("select")){
             action = new Select(input);
         }
 
-        else if(input.startsWith("insert")){
+        else if(input.toLowerCase().startsWith("insert")){
             action = new Insert(input);
         }
 
-        else if(input.startsWith("display schema")){
+        else if(input.toLowerCase().startsWith("display schema")){
             action = new DisplaySchema(input, location, pageSize, bufferSize, this.catalog);
         }
 
-        else if(input.startsWith("display info")){
+        else if(input.toLowerCase().startsWith("display info")){
             action = new DisplayInfo(input, this.catalog);
         }
 
