@@ -29,7 +29,7 @@ public class CreateTable extends Command{
             a = a.replace(";", "").strip();
             String[] splitAtts = a.split(" ");
             // if primary key, store that it's the primary key
-            if (splitAtts.length > 2 && splitAtts[2].equals("(?i)primarykey")){
+            if (splitAtts.length > 2 && splitAtts[2].equalsIgnoreCase("primarykey")){
                 this.primarykeyName = splitAtts[0];
             }
             // put each attribute pair in map
