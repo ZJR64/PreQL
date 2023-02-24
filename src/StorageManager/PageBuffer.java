@@ -1,4 +1,6 @@
-package src;
+package src.StorageManager;
+
+import src.StorageManager.Page;
 
 /**
  * The class for the page buffer. Uses a LRU (Least Recently Used) method for

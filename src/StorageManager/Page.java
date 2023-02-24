@@ -1,4 +1,4 @@
-package src;
+package src.StorageManager;
 
 /**
  * Defines the page object.
