@@ -48,8 +48,38 @@ public class BufferManager {
 
     }
 
+    public int addPage(String fileName, byte[] pageData) {
+        //if the try method fails, returns -1 to indicate failure
+        int pageNumber = -1;
+
+        try {
+            RandomAccessFile file = new RandomAccessFile(fileName, "rw");
+            //find end of file
+            long fileLength = file.length();
+
+            file.seek(fileLength);
+
+            //write some nonsense bytes to add to the file
+            byte[] padding = new byte[pageSize];
+            file.write(padding);
+            //add to buffer
+            pageNumber = (int) fileLength / pageSize;
+            getPage(fileName, pageNumber);
+
+            //write to page
+            writePage(fileName, pageNumber, pageData);
+
+            //close
+            file.close();
+        } catch (IOException e) {
+            System.err.println("Could not add page to file " + fileName);
+            System.err.println(e);
+        }
+        return pageNumber;
+    }
+
     public void shutDown(){
-        // Flush all dirty pages to disk
+        // Flush all pages to disk
         for (String pageKey : buffer.keySet()) {
             try {
                 flush(pageKey);
@@ -58,10 +88,12 @@ public class BufferManager {
                 System.err.println(e);
             }
         }
+        //cleanse buffer
+        buffer.clear();
     }
 
     private void flush(String pageKey) throws IOException{
-        //brake dwn dict key
+        //brake down dict key
         String[] parts = pageKey.split(":");
         String fileName = parts[0];
         int pageNumber = Integer.parseInt(parts[1]);
