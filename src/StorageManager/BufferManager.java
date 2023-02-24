@@ -1,17 +1,19 @@
 package src.StorageManager;
 
-import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class BufferManager {
     private int pageSize;
     private int bufferSize;
     private HashMap<String, byte[]> buffer;
 
-    public BufferManager(int pageSize, int bufferCapacity) {
+    public BufferManager(int pageSize, int bufferSize) {
         this.pageSize = pageSize;
-        this.bufferSize = bufferCapacity;
+        this.bufferSize = bufferSize;
         this.buffer = new HashMap<String, byte[]>();
     }
 
@@ -33,7 +35,7 @@ public class BufferManager {
         return pageData;
     }
 
-    private void writePage(String fileName, int pageNumber, byte[] pageData) throws IOException {
+    public void writePage(String fileName, int pageNumber, byte[] pageData) {
         String pageKey = getPageKey(fileName, pageNumber);
 
         if (buffer.get(pageKey) != null) {
