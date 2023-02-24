@@ -19,4 +19,19 @@ public class Page {
         this.size = size;
     }
 
+    /**
+     * Gets the id of the page.
+     * @return the id of the page.
+     */
+    public int getId(){
+        return id;
+    }
+
+    /**
+     * Gets the size of the page.
+     * @return the size of the page.
+     */
+    public int getSize() {
+        return size;
+    }
 }

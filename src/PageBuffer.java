@@ -1,7 +1,5 @@
 package src;
 
-import java.util.ArrayList;
-
 /**
  * The class for the page buffer. Uses a LRU (Least Recently Used) method for
  * determining the page to write to hardware first. The buffer's array is
@@ -13,7 +11,7 @@ import java.util.ArrayList;
 public class PageBuffer {
 
     private final int bufferSize;
-    private int[] buffer;
+    private Page[] buffer;
 
     /**
      * Constructor for the page buffer object.
@@ -22,8 +20,7 @@ public class PageBuffer {
      */
     public PageBuffer(int bufferSize){
         this.bufferSize = bufferSize;
-        buffer = new int[bufferSize];
-
+        this.buffer = new Page[bufferSize];
 
     }
 
@@ -34,18 +31,18 @@ public class PageBuffer {
      */
     public void writeToBuffer(int pageId){
         for(int i = 0; i < bufferSize; i++){
-            if(buffer[i] == 0) {
+            if(buffer[i] == null) {
                 if(i == 0){
-                    buffer[i] = pageId;
+                    buffer[i] = getPage(pageId);
                     return;
                 }
                 System.arraycopy(buffer, 0, buffer, 1, i );
-                buffer[0] = pageId;
+                buffer[0] = getPage(pageId);
                 return;
             }
         }
         writeToHardware();
-        buffer[0] = pageId;
+        buffer[0] = getPage(pageId);
 
     }
 
@@ -55,7 +52,7 @@ public class PageBuffer {
      * more buffer space is needed.
      */
     public void writeToHardware(){
-
+        System.arraycopy(buffer, 0, buffer, 1, bufferSize-1);
     }
 
     /**
@@ -67,9 +64,8 @@ public class PageBuffer {
     }
 
 
-    public int getPage(int pageId){
-
-        return 0;
+    public Page getPage(int pageId){
+        return null;
     }
 
 }
