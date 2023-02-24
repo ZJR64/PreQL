@@ -56,8 +56,8 @@ public class Catalog {
         } else {
 
             //TODO temp line that adds random schema to prove it works.
-            schemas.add(new Schema("Group~1024~56~integer 4 id primaryKey~varchar 20 name~double 8 gpa"));
-            schemas.add(new Schema("School~209~5000~integer 4 id primaryKey~varchar 20 name~char 10 building"));
+            schemas.add(new Schema("Group~doesnotexist.txt~1024~56~integer 4 id primaryKey~varchar 20 name~double 8 gpa"));
+            schemas.add(new Schema("School~hubris~209~5000~integer 4 id primaryKey~varchar 20 name~char 10 building"));
         }
     }
 
