@@ -133,13 +133,13 @@ public class Database {
     }
 
     /**
-     * Checs the start of the commands from the users then sends the input to
+     * Checks the start of the commands from the users then sends the input to
      * the right classes.
      *
      * @param input the entire input from the user.
      */
     private Command checkCommand(String input) {
-        Command action; // new Command(input);
+        Command action;
         input = input.strip();
 
         if(input.toLowerCase().startsWith("create table")){
@@ -165,7 +165,14 @@ public class Database {
             System.out.println(input + " is not a recognised command");
             return null;
         }
-        return action;
+        // if the input was able to be parsed, return comand
+        // otherwise, return null
+        if (action.isSuccess()){
+            return action;
+        }
+        else{
+            return null;
+        }
 
     }
 

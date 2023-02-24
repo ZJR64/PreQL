@@ -7,6 +7,7 @@ import src.Catalog.Schema;
  * to search for the correct schema. It then uses the retrieved schema to display information to the user.
  *
  * @author Zak Rutherford zjr6302@rit.edu
+ * @author Kaitlyn DeCola kmd8594@rit.edu
  */
 public class DisplayInfo extends Command {
     String name;
@@ -24,11 +25,20 @@ public class DisplayInfo extends Command {
         this.schema = cat.getSchema(name);
     }
 
+    /**
+     * parses the command and stores the table name and if the parse was successful
+     */
     @Override
     public void parse() {
-        //TODO currently only works with good user input
-        String[] parts = input.split(" ");
-        this.name = parts[2].replace(";", "");
+        try {
+            String[] parts = input.split(" ");
+            this.name = parts[2].replace(";", "");
+            this.success = true;
+        }
+        catch(Exception e){
+            System.out.println(input + " could not be parsed");
+            this.success = false;
+        }
     }
 
     /**

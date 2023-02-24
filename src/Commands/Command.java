@@ -6,9 +6,12 @@ package src.Commands;
  * Any command class created should extend this class so it can use it's features
  *
  * @author Zak Rutherford zjr6302@rit.edu
+ * @author Kaitlyn DeCola kmd8594@rit.edu
  */
 public abstract class Command {
     String input;
+
+    boolean success;
 
     /**
      * Constructor for the Command object. Used to store  and manipulate the input from
@@ -22,8 +25,7 @@ public abstract class Command {
     }
 
     /**
-     * A method that will break up and the user input. May be to hyper specific
-     * for more complicated classes down the line.
+     * A method that will break up and the user input.
      */
     public abstract void parse();
 
@@ -34,4 +36,12 @@ public abstract class Command {
      * @return error because this is only executed with bad input
      */
     public abstract String execute();
+
+    /**
+     * returns the success variable that is set when class is parsed
+     * @return boolean whether the parse was successful
+     */
+    public boolean isSuccess() {
+        return success;
+    }
 }

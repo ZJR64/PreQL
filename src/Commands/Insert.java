@@ -2,59 +2,80 @@ package src.Commands;
 
 import java.util.ArrayList;
 
+/**
+ * The class for the Insert Command.
+ * It takes the input as the argument and parses it and executes the command.
+ *
+ * @author Kaitlyn DeCola kmd8594@rit.edu
+ */
 public class Insert extends Command{
 
+    // table name
     private String name;
-    private ArrayList tuples;
+    // arraylist of tuples
+    // contains array lists of the tuple string values
+    private ArrayList<ArrayList<String>> tuples;
 
+    // default constructor
     public Insert(String input){
         super(input);
     }
 
+    /**
+     * parses the command and stores the table name, list of tuples,
+     * and if the parse was successful
+     */
     @Override
     public void parse() {
-        // split on keyword values
-        // should get ["insert into <name>", "<tuples>"]
-        String[] splitInput = input.split("(?i)values");
+        try {
+            // split on keyword values
+            // should get ["insert into <name>", "<tuples>"]
+            String[] splitInput = input.split("(?i)values");
 
-        //split first half of input on keyword into and get the name
-        this.name = splitInput[0].split("(?i)into")[1];
+            //split first half of input on keyword into and get the name
+            this.name = splitInput[0].split("(?i)into")[1].strip();
 
-        // get tuples and remove semicolon
-        String tuples = splitInput[1].replace(";", "");
-        // split tuples on comma
-        String[] splitTuples = tuples.split(",");
-        this.tuples = new ArrayList();
+            // get tuples and remove semicolon
+            String tuples = splitInput[1].replace(";", "");
+            // split tuples on comma
+            String[] splitTuples = tuples.split(",");
+            this.tuples = new ArrayList<ArrayList<String>>();
 
-        // iterate though tuples
-        for (String tuple : splitTuples) {
-            ArrayList<String> currentTuple = new ArrayList<>();
-            // remove parenthesis
-            tuple = tuple.replace("(", "").replace(")", "").strip();
-            // split tuple on space
-            String[] splitTuple = tuple.split(" ");
-            // iterate through each value, checking for strings with multiple words
-            int i = 0;
-            while (i < splitTuple.length) {
-                String s = splitTuple[i];
-                // if word starts with quotation but does not end with one,
-                // iterate until you find end of string
-                if (s.startsWith("\"") && !s.endsWith("\"")) {
-                    i++;
-                    String next = splitTuple[i];
-                    String wholeString = s.concat(" " + next);
-                    while (!next.endsWith("\"")) {
+            // iterate though tuples
+            for (String tuple : splitTuples) {
+                ArrayList<String> currentTuple = new ArrayList<>();
+                // remove parenthesis
+                tuple = tuple.replace("(", "").replace(")", "").strip();
+                // split tuple on space
+                String[] splitTuple = tuple.split(" ");
+                // iterate through each value, checking for strings with multiple words
+                int i = 0;
+                while (i < splitTuple.length) {
+                    String s = splitTuple[i];
+                    // if word starts with quotation but does not end with one,
+                    // iterate until you find end of string
+                    if (s.startsWith("\"") && !s.endsWith("\"")) {
                         i++;
-                        next = splitTuple[i];
-                        wholeString = wholeString.concat(" " + next);
+                        String next = splitTuple[i];
+                        String wholeString = s.concat(" " + next);
+                        while (!next.endsWith("\"")) {
+                            i++;
+                            next = splitTuple[i];
+                            wholeString = wholeString.concat(" " + next);
+                        }
+                        currentTuple.add(wholeString);
+                    } else {
+                        currentTuple.add(s);
                     }
-                    currentTuple.add(wholeString);
-                } else {
-                    currentTuple.add(s);
+                    i++;
                 }
-                i++;
+                this.tuples.add(currentTuple);
             }
-            this.tuples.add(currentTuple);
+            this.success = true;
+        }
+        catch(Exception e){
+            System.out.println(input + " could not be parsed");
+            this.success = false;
         }
     }
 
