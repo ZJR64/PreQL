@@ -1,14 +1,15 @@
 package src;
 
 /**
+ *
  * @author Jackson O'Connor jdo7339@rit.edu
  */
 public class StorageManager {
 
     /**
-     *
+     * Attempts to insert a record into a table.
      */
-    public void insert(){
+    public static void insert(){
 
     }
 
