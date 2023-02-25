@@ -17,7 +17,8 @@ import java.util.List;
  * @author Zak Rutherford zjr6302@rit.edu
  */
 public class BufferManager {
-    public int pageSize;
+    String storagePath;
+    private int pageSize;
     private int bufferSize;
     private HashMap<String, byte[]> buffer;
 
@@ -26,12 +27,21 @@ public class BufferManager {
      *
      * @param pageSize the size of each page of the database.
      * @param bufferSize how many pages the buffer can store at a time.
+     * @param databaseLocation the path to the databse. The constructor adds \
      */
-    public BufferManager(int pageSize, int bufferSize) {
+    public BufferManager(int pageSize, int bufferSize, String databaseLocation) {
         this.pageSize = pageSize;
         this.bufferSize = bufferSize;
         this.buffer = new HashMap<String, byte[]>();
+        this.storagePath = databaseLocation + "\\";
     }
+
+    /**
+     * Getter method for the page size
+     *
+     * @return the page size.
+     */
+    public int getPageSize(){return pageSize;}
 
     /**
      * Gets the desired page from the provided file location.
@@ -95,7 +105,7 @@ public class BufferManager {
         int pageNumber = -1;
 
         try {
-            RandomAccessFile file = new RandomAccessFile(fileName, "rw");
+            RandomAccessFile file = new RandomAccessFile(storagePath + fileName, "rw");
             //find end of file
             long fileLength = file.length();
 
@@ -152,7 +162,7 @@ public class BufferManager {
         byte[] pageData = buffer.get(pageKey);
 
         //open file to write to
-        RandomAccessFile file = new RandomAccessFile(fileName, "rw");
+        RandomAccessFile file = new RandomAccessFile(storagePath + fileName, "rw");
 
         // Calculate the offset for the page within the file
         long offset = (long) pageNumber * pageSize;
@@ -196,7 +206,7 @@ public class BufferManager {
      * @throws IOException
      */
     private byte[] readPageFromFile(String fileName, int pageNumber) throws IOException {
-        RandomAccessFile file = new RandomAccessFile(fileName, "r");
+        RandomAccessFile file = new RandomAccessFile(storagePath + fileName, "r");
         //make array of pageSize length
         byte[] pageData = new byte[pageSize];
         //calculate offset
