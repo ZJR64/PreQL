@@ -59,7 +59,7 @@ public class StorageManager {
         //Read each table page in order from the table file.
         for(int i = 0; i < table.getPages(); i++){
             // page_num = 0 = first page, page_num = 1 second page, etc.
-            int page_num = bm.pageSize * i;
+            int page_num = bm.getPageSize() * i;
             byte[] page = bm.getPage(tableName, page_num);
 
             byte[] bytes = new byte[Integer.SIZE];
@@ -151,7 +151,7 @@ public class StorageManager {
             return makeAttributesString(table).concat("\nSUCCESS");
         }
         for(int i = 0; i < table.getPages(); i++){
-            int pageNum = bm.pageSize * i;
+            int pageNum = bm.getPageSize() * i;
             byte[] page = bm.getPage(tableName, pageNum);
 
         }
