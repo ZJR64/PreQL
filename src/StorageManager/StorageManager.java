@@ -47,29 +47,43 @@ public class StorageManager {
             System.err.println("Error: tuples could not be read");
             return "FILE ERROR";
         }
-
         //if table doesnt yet have pages.
         if(table.getPages() == 0){
            bm.addPage(tableName, byteArray);
+           table.addPage();
+           table.addRecord();
+
            return "SUCCESS";
         }
+
+        byte[] first_page = bm.getPage(tableName, 0); // get the first page
+
+        byte[] bytesNumRecs = new byte[Integer.SIZE]; // byte array for number of records
+
+        for (int j = 0; j < Integer.SIZE; j++) {
+            bytesNumRecs[j] = first_page[j]; // set each byte of numrecs to byte of page
+        }
+        int numRecs = 0;
+        for (byte b : bytesNumRecs) {
+            numRecs = (numRecs << 8) + (b & 0xFF); //convert bytes of num recs to actual value.
+        }
+
+        //Read each table page in order from the table file.
         for(int i = 0; i < table.getPages(); i++){
+            // page_num = 0 = first page, page_num = 1 second page, etc.
             int page_num = bm.pageSize * i;
             byte[] page = bm.getPage(tableName, page_num);
-            int rec_nums = 0;
+
             byte[] bytes = new byte[Integer.SIZE];
-            for (int j = 0; j < Integer.SIZE; j++){
-                bytes[j] = page[j];
-            }
-            int value = 0;
-            for (byte b : bytes) {
-                value = (value << 8) + (b & 0xFF);
-            }
-
-            while(true){
-
-            }
+                for (int j = 0; j < Integer.SIZE; j++) {
+                    bytes[j] = page[j];
+                }
+                int value = 0;
+                for (byte b : bytes) {
+                    value = (value << 8) + (b & 0xFF);
+                }
         }
+
         return null;
     }
 
@@ -120,7 +134,7 @@ public class StorageManager {
         if(table == null){
             return "No such table " + tableName.concat("\nERROR");
         }
-        String path = table.getPath();
+
         for(int i = 0; i < table.getPages(); i++){
             int page_num = bm.pageSize * i;
             byte[] page = bm.getPage(tableName, page_num);
