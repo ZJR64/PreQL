@@ -142,7 +142,7 @@ public class StorageManager {
      * @param tableName
      * @return
      */
-    private String getAllRecords(String tableName){
+    public String getAllRecords(String tableName){
         Schema table = c.getSchema(tableName);
         if(table == null){
             return "No such table " + tableName.concat("\nERROR");
@@ -217,7 +217,7 @@ public class StorageManager {
             }
         }
 
-        Schema new_table = new Schema(name, null, attributes);
+        Schema new_table = new Schema(name, attributes);
         c.schemas.add(new_table);
         return "Success";
     }

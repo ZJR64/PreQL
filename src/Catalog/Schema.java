@@ -11,8 +11,8 @@ import java.util.ArrayList;
  */
 public class Schema {
 
+    String seperator = "~";
     private String name;
-    private String path;
     private int pages;
     private int records;
     private ArrayList<Attribute> attributes;
@@ -21,12 +21,10 @@ public class Schema {
      * Constructor for a new Schema object
      *
      * @param name the name of the table.
-     * @param path the reference to the first page for the table
      * @param attributes the list of non-key attributes for the table.
      */
-    public Schema (String name, String path, ArrayList<Attribute> attributes) {
+    public Schema (String name, ArrayList<Attribute> attributes) {
         this.name = name;
-        this.path= path;
         this.attributes = attributes;
         this.pages = 0;
         this.records = 0;
@@ -38,11 +36,9 @@ public class Schema {
      * @param input the String containing the schema.
      */
     public Schema (String input) {
-        String[] filtered = input.split("~");
+        String[] filtered = input.split(seperator);
         //name is always first
         this.name = filtered[0];
-        //next is path
-        this.path = filtered[1];
         //next is pages
         this.pages = Integer.parseInt(filtered[2]);
         //then records
@@ -77,9 +73,9 @@ public class Schema {
      * @return the schema in writable form.
      */
     public String writeable() {
-        String output = name + "~" + path + "~" + pages + "~" + records;
+        String output = name + seperator + seperator + pages + seperator + records;
         for (Attribute a: attributes) {
-            output += "~" + a.writeable();
+            output += seperator + a.writeable();
         }
         output += ";";
         return output;
@@ -93,11 +89,11 @@ public class Schema {
     public String getName() {return name;}
 
     /**
-     * getter method for path of the table.
+     * getter method for name of the file the table is stored on.
      *
      * @return path to the table.
      */
-    public String getPath() {return path;}
+    public String getFileName() {return name + ".tbl";}
 
     /**
      * getter method for number of pages the table occupies.
