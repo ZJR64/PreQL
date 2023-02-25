@@ -6,17 +6,43 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+/**
+ * The class for the buffer. The buffer hold pages to use and modify.
+ * The buffer is created with a set size and uses the database's page size
+ * in may of it's operations. This class primarily uses RandomAccessFile
+ * to read and write to files. This helps when searching for specific
+ * pages within the bytes of the file. The buffer manager handles all operations
+ * for the buffer itself, from flushing pages to disks, to adding to files.
+ *
+ * @author Zak Rutherford zjr6302@rit.edu
+ */
 public class BufferManager {
     private int pageSize;
     private int bufferSize;
     private HashMap<String, byte[]> buffer;
 
+    /**
+     * Constructor for the BufferManager object
+     *
+     * @param pageSize the size of each page of the database.
+     * @param bufferSize how many pages the buffer can store at a time.
+     */
     public BufferManager(int pageSize, int bufferSize) {
         this.pageSize = pageSize;
         this.bufferSize = bufferSize;
         this.buffer = new HashMap<String, byte[]>();
     }
 
+    /**
+     * Gets the desired page from the provided file location.
+     * If the page is not already in the buffer it is retrieved from
+     * storage.
+     * It then returns the bytes from the page.
+     *
+     * @param fileName the name of the file.
+     * @param pageNumber the page of the file to look for.
+     * @return the bytes making up the page.
+     */
     public byte[] getPage(String fileName, int pageNumber) {
         String pageKey = getPageKey(fileName, pageNumber);
         byte[] pageData = buffer.get(pageKey);
@@ -35,7 +61,14 @@ public class BufferManager {
         return pageData;
     }
 
-
+    /**
+     * Writes the desired page to the provided file location.
+     * The page must already be in the buffer to write to it.
+     *
+     * @param fileName the name of the file.
+     * @param pageNumber the page of the file to look for.
+     * @param pageData the data for the page.
+     */
     public void writePage(String fileName, int pageNumber, byte[] pageData) {
         String pageKey = getPageKey(fileName, pageNumber);
 
@@ -49,6 +82,14 @@ public class BufferManager {
 
     }
 
+    /**
+     * Adds a new page to the end of the given file.
+     * Adds the created page to the buffer manager.
+     *
+     * @param fileName the name of the file.
+     * @param pageData the data to be written to the new page.
+     * @return the page number of the new page.
+     */
     public int addPage(String fileName, byte[] pageData) {
         //if the try method fails, returns -1 to indicate failure
         int pageNumber = -1;
@@ -79,6 +120,9 @@ public class BufferManager {
         return pageNumber;
     }
 
+    /**
+     * Method that safely stores the Catalog when the database is shut down.
+     */
     public void shutDown(){
         // Flush all pages to disk
         for (String pageKey : buffer.keySet()) {
@@ -93,6 +137,13 @@ public class BufferManager {
         buffer.clear();
     }
 
+    /**
+     * Flushes the page to storage. Uses RanomAccessFile to
+     * write to specific bytes of the file.
+     *
+     * @param pageKey the key for the page to be written to disk.
+     * @throws IOException
+     */
     private void flush(String pageKey) throws IOException{
         //brake down dict key
         String[] parts = pageKey.split(":");
@@ -114,6 +165,14 @@ public class BufferManager {
         file.close();
     }
 
+    /**
+     * Adds a page to the buffer, and if the buffer is full
+     * it removes that least recently used page and flushes it.
+     *
+     * @param pageKey the key for the page in the dictionary.
+     * @param pageData the data to be written to the new page.
+     * @throws IOException
+     */
     private void addPageToBuffer(String pageKey, byte[] pageData) throws IOException{
         if (buffer.size() == bufferSize) {
             // if buffer is full remove least recently used page
@@ -128,6 +187,14 @@ public class BufferManager {
         return fileName + ":" + pageNumber;
     }
 
+    /**
+     * Method used to read the page from the file.
+     *
+     * @param fileName the name of the file.
+     * @param pageNumber the number of the page to be read in.
+     * @return the page number of the new page.
+     * @throws IOException
+     */
     private byte[] readPageFromFile(String fileName, int pageNumber) throws IOException {
         RandomAccessFile file = new RandomAccessFile(fileName, "r");
         //make array of pageSize length
