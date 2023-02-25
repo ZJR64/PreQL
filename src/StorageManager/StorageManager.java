@@ -29,6 +29,9 @@ public class StorageManager {
      */
     public String insert(String tableName, ArrayList<ArrayList<String>> tuples) {
         Schema table = c.getSchema(tableName);
+        if(table == null){
+            return "No such table " + tableName.concat("\nERROR");
+        }
         byte[] byteArray;
         //Make the byte array
         try{
@@ -51,9 +54,15 @@ public class StorageManager {
         String path = table.getPath();
 
 
+
         return null;
     }
 
+    /**
+     *
+     * @param tuples
+     * @return
+     */
     private static byte[] convertToBytes(ArrayList<ArrayList<String>> tuples){
         ByteArrayOutputStream mkBytes = new ByteArrayOutputStream();
         DataOutputStream out = new DataOutputStream(mkBytes);
@@ -87,10 +96,19 @@ public class StorageManager {
     }
 
     /**
-     * Gets all records for a given table number.
+     *
+     * @param tableName
+     * @return
      */
-    public void getAllRecords(String table){
+    public String getAllRecords(String tableName){
+        Schema table = c.getSchema(tableName);
+        if(table == null){
+            return "No such table " + tableName.concat("\nERROR");
+        }
+        String path = table.getPath();
 
+
+        return "ERROR";
     }
 
     /**
