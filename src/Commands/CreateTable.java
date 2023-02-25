@@ -82,6 +82,10 @@ public class CreateTable extends Command{
 
                     // create attribute and add to list
                     Attribute at = createAttribute(splitAtts[0], attributeType, currentIsPrimary);
+                    if(at == null){
+                        this.success = false;
+                        break; 
+                    }
                     ats.add(at);
                 }
                 // if there's no primary key after going through all attributes, error
