@@ -18,7 +18,7 @@ import java.util.ArrayList;
 public class Catalog {
 
     private String catPath;
-    private ArrayList<Schema> schemas;
+    public ArrayList<Schema> schemas;
 
 
     /**

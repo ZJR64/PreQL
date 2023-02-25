@@ -5,6 +5,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import src.Catalog.*;
+import src.Commands.CreateTable;
 
 
 /**
@@ -125,8 +126,16 @@ public class StorageManager {
 
     }
 
-    public String createTable(){
+    public String createTable(String name, ArrayList<Attribute> attributes){
+        for (Schema i : c.getSchemas()) {
+            if(i.getName().equals(name)){
+                return "ERROR";
+            }
+        }
 
-        return "ERROR";
+        Schema new_table = new Schema(name, name + ".tbl", attributes);
+        c.schemas.add(new_table);
+        bm.addPage(new_table.getName(), null);
+        return "Success";
     }
 }
