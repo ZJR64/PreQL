@@ -77,6 +77,86 @@ public class StorageManager {
 
 
     /**
+     * Checks if the user is trying to insert the correct number and types of
+     * values into the table.
+     *
+     * @param table the table that contains the attributes being checked against.
+     * @param tuples the tuples containing the attributes being checked
+     * @return null if the tuples are correct, otherwise a string explaining
+     * what is wrong with the string.
+     */
+    private String checkAttributes(Schema table,
+                                   ArrayList<ArrayList<String>> tuples){
+        ArrayList<Attribute> tableAttributes = table.getAttributes();
+        for(ArrayList<String> tuple: tuples){                // for each tuple
+            if(tuple.size() > tableAttributes.size()){  // check if too many attributes
+                return "row (" + tuple.toString()+ ")" +
+                        "Too few attributes: expected  " +
+                        table.getAttributes().toString() +
+                        " got " + tuple.toString();
+            }
+            else if(tuple.size() < tableAttributes.size()){ //check if enough attributes
+                return "row (" + tuple.toString()+ ")" +
+                        "Too many attributes: expected  " +
+                        table.getAttributes().toString() +
+                        " got " + tuple.toString();
+            }
+            for(int i = 0; i < tableAttributes.size(); i++){ // for each attribute in the table
+                Attribute attr = tableAttributes.get(i); // get table attribute i
+                String type = attr.getType();            // get type of attribute i
+                String val = tuple.get(i);
+                if(type.contains("varchar")){
+                    int amount = Integer.parseInt(type.substring(type.indexOf("(")+1, type.indexOf(")")).strip());
+                    if(val.length() <= amount){
+                        break;
+                    }
+                    else{
+                        return "TOO BIG ERROR";
+                    }
+
+                }
+                else if(type.contains("char")){
+                    int amount = Integer.parseInt(type.substring(type.indexOf("(")+1, type.indexOf(")")).strip());
+                    if(val.length() == amount){
+                        break;
+                    }
+                    else{
+                        return "WRONG SIZE error";
+                    }
+                }
+
+
+
+
+            }
+        }
+
+
+        return null;
+    }
+
+    /**
+     * checks if the passed in string is either int or double.
+     * @param str
+     * @return
+     */
+    private Boolean isNumeric(String str){
+        try {
+            if(str.contains(".")){
+                double val = Double.parseDouble(str);
+            }
+            else{
+                int val = Integer.parseInt(str);
+            }
+
+        } catch (NumberFormatException nfe) {
+            return false;
+        }
+        return true;
+    }
+
+
+    /**
      * Takes in a table and page number, gets the number of records in that
      * page.
      * @param tableName the tabble whose page's number of records is being
@@ -142,7 +222,7 @@ public class StorageManager {
      * @param tableName
      * @return
      */
-    private String getAllRecords(String tableName){
+    public String getAllRecords(String tableName){
         Schema table = c.getSchema(tableName);
         if(table == null){
             return "No such table " + tableName.concat("\nERROR");
@@ -165,7 +245,7 @@ public class StorageManager {
      * @param table The table the attributes are pulled from.
      * @return The completed attributes string.
      */
-    public String makeAttributesString(Schema table){
+    private String makeAttributesString(Schema table){
         ArrayList<Attribute> attributes = table.getAttributes();
         StringBuilder str = new StringBuilder();
         str.append("\n");
