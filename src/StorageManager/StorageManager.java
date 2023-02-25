@@ -75,6 +75,7 @@ public class StorageManager {
         return null;
     }
 
+
     /**
      * Checks if the user is trying to insert the correct number and types of
      * values into the table.
