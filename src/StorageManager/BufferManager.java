@@ -17,7 +17,7 @@ import java.util.List;
  * @author Zak Rutherford zjr6302@rit.edu
  */
 public class BufferManager {
-    private int pageSize;
+    public int pageSize;
     private int bufferSize;
     private HashMap<String, byte[]> buffer;
 

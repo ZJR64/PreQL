@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+
 import src.Catalog.*;
 import src.Commands.CreateTable;
 
@@ -14,7 +15,7 @@ import src.Commands.CreateTable;
  */
 public class StorageManager {
 
-    private static BufferManager bm;
+    public static BufferManager bm;
     private static Catalog c;
 
     public StorageManager(BufferManager bm, Catalog c){
@@ -52,15 +53,28 @@ public class StorageManager {
            bm.addPage(tableName, byteArray);
            return "SUCCESS";
         }
-        String path = table.getPath();
+        for(int i = 0; i < table.getPages(); i++){
+            int page_num = bm.pageSize * i;
+            byte[] page = bm.getPage(tableName, page_num);
+            int rec_nums = 0;
+            byte[] bytes = new byte[Integer.SIZE];
+            for (int j = 0; j < Integer.SIZE; j++){
+                bytes[j] = page[j];
+            }
+            int value = 0;
+            for (byte b : bytes) {
+                value = (value << 8) + (b & 0xFF);
+            }
 
+            while(true){
 
-
+            }
+        }
         return null;
     }
 
     /**
-     *
+     * Converts the passed in tuples to a byte array.
      * @param tuples
      * @return
      */
@@ -107,7 +121,11 @@ public class StorageManager {
             return "No such table " + tableName.concat("\nERROR");
         }
         String path = table.getPath();
+        for(int i = 0; i < table.getPages(); i++){
+            int page_num = bm.pageSize * i;
+            byte[] page = bm.getPage(tableName, page_num);
 
+        }
 
         return "ERROR";
     }

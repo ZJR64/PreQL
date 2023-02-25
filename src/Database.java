@@ -186,7 +186,12 @@ public class Database {
      */
     private void shutDown() {
         //record catalog
+        System.out.println("Safely shutting down the database...");
+        System.out.println("Purging page buffer...");
+        this.storageManager.bm.shutDown();
+        System.out.println("Saving catalog...");
         this.catalog.shutDown();
+        System.out.println("Exiting the database...");
     }
 
 }
