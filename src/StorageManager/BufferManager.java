@@ -111,6 +111,17 @@ public class BufferManager {
         //if the try method fails, returns -1 to indicate failure
         int pageNumber = -1;
 
+        //check if file exists, create it if it doesn't
+        File tableFile = new File(storagePath + fileName);
+        if (!tableFile.exists()) {
+            try {
+                tableFile.createNewFile();
+            } catch (Exception e) {
+                System.err.println("Could not create file");
+                System.err.println(e);
+            }
+        }
+
         try {
             RandomAccessFile file = new RandomAccessFile(storagePath + fileName, "rw");
             //find end of file
