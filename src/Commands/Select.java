@@ -41,7 +41,6 @@ public class Select extends Command {
 
     @Override
     public String execute() {
-        sm.getAllRecords(name);
-        return "ERROR";
+        return sm.getAllRecords(name);
     }
 }
