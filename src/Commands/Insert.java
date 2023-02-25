@@ -1,6 +1,8 @@
 package src.Commands;
 
+import src.StorageManager.StorageManager;
 import java.util.ArrayList;
+
 
 /**
  * The class for the Insert Command.
@@ -15,10 +17,12 @@ public class Insert extends Command{
     // arraylist of tuples
     // contains array lists of the tuple string values
     private ArrayList<ArrayList<String>> tuples;
+    private StorageManager sm;
 
-    // default constructor
-    public Insert(String input){
+    // Needs storage manager for execute()
+    public Insert(String input, StorageManager sm){
         super(input);
+        this.sm = sm;
     }
 
     /**
@@ -81,7 +85,7 @@ public class Insert extends Command{
 
     @Override
     public String execute() {
-        return "ERROR";
+        return sm.insert(name, tuples);
     }
 
 }

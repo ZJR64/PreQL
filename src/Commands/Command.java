@@ -1,5 +1,6 @@
 package src.Commands;
 
+
 /**
  * The class for all commands. This class should be used to help keep
  * commands as uniform as possible and help with implementation elsewhere.
@@ -10,7 +11,6 @@ package src.Commands;
  */
 public abstract class Command {
     String input;
-
     boolean success;
 
     /**

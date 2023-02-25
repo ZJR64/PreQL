@@ -34,6 +34,7 @@ public class DisplaySchema extends Command {
 
     @Override
     public void parse() {
+        this.success = true;
         // nothing to parse
         return;
     }

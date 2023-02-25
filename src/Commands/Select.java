@@ -1,5 +1,7 @@
 package src.Commands;
 
+import src.StorageManager.StorageManager;
+
 /**
  * The class for the Select Command.
  * It takes the input as the argument and parses it and executes the command.
@@ -9,10 +11,12 @@ package src.Commands;
 public class Select extends Command {
     // table name
     private String name;
+    private StorageManager sm;
 
     // default constructor
-    public Select(String input){
+    public Select(String input, StorageManager sm){
         super(input);
+        this.sm = sm;
     }
 
     /**
@@ -37,6 +41,7 @@ public class Select extends Command {
 
     @Override
     public String execute() {
+        sm.getAllRecords(name);
         return "ERROR";
     }
 }

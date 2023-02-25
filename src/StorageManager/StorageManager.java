@@ -1,5 +1,11 @@
 package src.StorageManager;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import src.Catalog.*;
+
 
 /**
  *
@@ -7,13 +13,63 @@ package src.StorageManager;
  */
 public class StorageManager {
 
-    /**
-     * Attempts to insert a record into the proper location in the given table.
-     * If a duplicate primary key is found, reports an error. If the table
-     * doesn't exist, creates the table.
-     */
-    public void insert(){
+    private static BufferManager bm;
+    private static Catalog c;
 
+    public StorageManager(BufferManager bm, Catalog c){
+        this.bm = bm;
+        this.c = c;
+    }
+
+    /**
+     *
+     * @param tableName
+     * @param tuples
+     * @return
+     */
+    public String insert(String tableName, ArrayList<ArrayList<String>> tuples) {
+        Schema table = c.getSchema(tableName);
+        byte[] byteArray;
+        //Make the byte array
+        try{
+            byteArray = convertToBytes(tuples);
+            if(byteArray == null){
+                System.err.println("Error: Could not write out bytes");
+                return "FILE ERROR";
+            }
+        }
+        catch(Exception e){
+            System.err.println("Error: tuples could not be read");
+            return "FILE ERROR";
+        }
+
+        //if table doesnt yet have pages.
+        if(table.getPages() == 0){
+           bm.addPage(tableName, byteArray);
+           return "SUCCESS";
+        }
+        String path = table.getPath();
+
+
+        return null;
+    }
+
+    private static byte[] convertToBytes(ArrayList<ArrayList<String>> tuples){
+        ByteArrayOutputStream mkBytes = new ByteArrayOutputStream();
+        DataOutputStream out = new DataOutputStream(mkBytes);
+        for(ArrayList<String> list : tuples){
+            for(String entry : list){
+                try{
+                    out.writeUTF(entry);
+                }
+                catch(Exception e){
+                    System.err.println("Error: Could not write out bytes");
+                    return null;
+                }
+            }
+        }
+        byte[] bytes = mkBytes.toByteArray();
+        return bytes;
     }
 
     /**
@@ -33,7 +89,7 @@ public class StorageManager {
     /**
      * Gets all records for a given table number.
      */
-    public void getAllRecords(){
+    public void getAllRecords(String table){
 
     }
 

@@ -3,6 +3,7 @@ package src;
 import src.Catalog.Catalog;
 import src.Catalog.Schema;
 import src.Commands.*;
+import src.StorageManager.*;
 
 import javax.swing.*;
 import java.io.File;
@@ -27,6 +28,7 @@ public class Database {
     private int bufferSize;
     private int pageSize;
     private Catalog catalog;
+    private StorageManager storageManager;
 
     /**
      * Constructor for the database object
@@ -97,6 +99,8 @@ public class Database {
         //create catalog
         String catPath = location + "\\catalog";
         this.catalog = new Catalog(catPath, pageSize);
+        BufferManager bm = new BufferManager(pageSize, bufferSize);
+        this.storageManager = new StorageManager(bm, this.catalog);
     }
 
     /**
@@ -146,11 +150,11 @@ public class Database {
             action = new CreateTable(input);
         }
         else if(input.toLowerCase().startsWith("select")){
-            action = new Select(input);
+            action = new Select(input, storageManager);
         }
 
         else if(input.toLowerCase().startsWith("insert")){
-            action = new Insert(input);
+            action = new Insert(input, storageManager);
         }
 
         else if(input.toLowerCase().startsWith("display schema")){
