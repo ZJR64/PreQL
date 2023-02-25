@@ -16,11 +16,13 @@ import java.util.Map;
 public class CreateTable extends Command{
 
     // Map of the name of the attribute eot the type stored as a String
-    private Map<String, String> attributesNameToType;
+    //private Map<String, String> attributesNameToType;
     // name of the primary key
     private String primarykeyName;
     // name of the table to create
     private String name;
+
+    private ArrayList<Attribute> ats;
 
     private StorageManager sm;
 
@@ -36,27 +38,57 @@ public class CreateTable extends Command{
      */
     @Override
     public void parse() {
-        try{
-            this.attributesNameToType = new HashMap<>();
+        try {
+            //this.attributesNameToType = new HashMap<>();
+            this.ats = new ArrayList<>();
+            boolean hasPrimary = false;
             // split on first occurrence of (
             //["create table <name>", attributes,...]
             String[] tokens = input.split("\\(", 2);
             // get the name
             this.name = tokens[0].split("(?i)table")[1].strip();
 
-            // parse attributes
-            String[] attributes = tokens[1].strip().split(",");
-            for (String a : attributes) {
-                a = a.replace(";", "").strip();
-                a = a.replace(")", "").strip();
+            // empty attributes
+            if (tokens[1].equals(");")) {
+                this.success = true;
+            } else {
+                // parse attributes
+                String[] attributes = tokens[1].strip().split(",");
+                for (String a : attributes) {
+                    a = a.replace(");", "").strip();
+                    a = a.replace(";", "").strip();
+                    boolean currentIsPrimary = false;
 
-                String[] splitAtts = a.split(" ");
-                // if primary key, store that it's the primary key
-                if (splitAtts.length > 2 && splitAtts[2].equalsIgnoreCase("primarykey")) {
-                    this.primarykeyName = splitAtts[0];
+                    String[] splitAtts = a.split(" ");
+                    // if primary key, store that it's the primary key
+                    if (splitAtts.length > 2 && splitAtts[2].replaceAll("\\)*", "").equalsIgnoreCase("primarykey")) {
+                        if (hasPrimary){
+                            System.out.println(input + " has multiple primary keys. Cannot create table.");
+                            this.success = false;
+                            break;
+                        }
+                        this.primarykeyName = splitAtts[0];
+                        hasPrimary = true;
+                        currentIsPrimary = true;
+                    }
+                    String attributeType = splitAtts[1];
+                    // if the string contains only closing parenthesis, remove it
+                    // keeps both parenthesis if both opening and closing are there
+                    if (attributeType.contains(")") && !attributeType.contains("(")){
+                        attributeType = attributeType.replace(")", "");
+                    }
+                    // if there's two ending parenthesis, remove one
+                    attributeType = attributeType.replaceAll("\\)\\)*", ")");
+
+                    // create attribute and add to list
+                    Attribute at = createAttribute(splitAtts[0], attributeType, currentIsPrimary);
+                    ats.add(at);
                 }
-                // put each attribute pair in map
-                attributesNameToType.put(splitAtts[0], splitAtts[1]);
+                // if there's no primary key after going through all attributes, error
+                if(!hasPrimary){
+                    System.out.println(input + " does not have a primary key. Cannot create table.");
+                    this.success = false;
+                }
                 this.success = true;
             }
         }
@@ -66,56 +98,47 @@ public class CreateTable extends Command{
         }
     }
 
-    @Override
-    public String execute() {
-        ArrayList<Attribute> ats = new ArrayList<>();
-        boolean primenums = false;
-        for (String s : this.attributesNameToType.keySet()) {
-            String type = this.attributesNameToType.get(s);
-            ArrayList<String> descriptors = new ArrayList<>();
-            int datatype = 0;
-            if (s.equals(this.primarykeyName)){
-                if(primenums == true){
-                    return "ERROR";
-                }
-                descriptors.add("primarykey");
-                primenums = true;
-
-            }
-            if(type.equals( "integer")){
-                ats.add(new Attribute(type, Integer.SIZE, s, descriptors));
-                datatype = 1;
-            }
-            if(type.equals( "double")){
-                ats.add(new Attribute(type, Double.SIZE, s, descriptors));
-                datatype = 1;
-
-            }
-            if(type.equals( "boolean")){
-                ats.add(new Attribute(type, 1, s, descriptors));
-                datatype = 1;
-
-            }
-            if(type.startsWith("char")){
-                int amount = Integer.parseInt(String.valueOf(type.charAt(4)));
-                ats.add(new Attribute(type, (amount * Character.SIZE + 1), s, descriptors));
-                datatype = 1;
-
-            }
-            if(type.startsWith("varchar")){
-                int amount = Integer.parseInt(String.valueOf(type.charAt(8)));
-                ats.add(new Attribute(type, (amount * Character.SIZE + 1), s, descriptors));
-                datatype = 1;
-            }
-            if (datatype == 0){
-                return "invalid data type \"" + type + "\"\n ERROR";
-            }
+    /**
+     * creates an attribute based on the type
+     * @param a attribute as a string
+     * @param type attribute type as a string
+     * @param isPrimary whether tis attribute is the primary
+     * @return the newly created attribute or null if attibute type is incorrect
+     */
+    private Attribute createAttribute(String a, String type, boolean isPrimary){
+        ArrayList<String> descriptors = new ArrayList<>();
+        type = type.toLowerCase();
+        if (isPrimary){
+            descriptors.add("primarykey");
+        }
+        Attribute att;
+        if (type.equals("integer")) {
+            att = new Attribute(type, Integer.SIZE, a, descriptors);
+        }
+        else if (type.equals("double")) {
+            att = new Attribute(type, Double.SIZE, a, descriptors);
 
         }
-        if(primenums == false){
-            return "ERROR";
+        else if (type.equals("boolean")) {
+            att = new Attribute(type, 1, a, descriptors);
         }
-        return sm.createTable(this.name, ats);
+        else if (type.startsWith("char")) {
+            int amount = Integer.parseInt(type.substring(type.indexOf("(")+1, type.indexOf(")")).strip());
+            att = new Attribute(type, (amount * Character.SIZE + 1), a, descriptors);
+        }
+        else if (type.startsWith("varchar")) {
+            int amount = Integer.parseInt(type.substring(type.indexOf("(")+1, type.indexOf(")")).strip());
+            att = new Attribute(type, (amount * Character.SIZE + 1), a, descriptors);
+        }
+        else {
+            System.out.println("invalid data type \"" + type + "\"\n");
+            return null;
+        }
+        return att;
     }
 
+    @Override
+    public String execute() {
+        return sm.createTable(this.name, this.ats);
+    }
 }
