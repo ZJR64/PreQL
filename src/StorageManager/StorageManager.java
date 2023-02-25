@@ -24,15 +24,20 @@ public class StorageManager {
     }
 
     /**
+     * Inserts into a table a number of records.
      *
-     * @param tableName
-     * @param tuples
-     * @return
+     * @param tableName The table being inserted into
+     * @param tuples the records to be inserted into the table.
+     * @return If the insertion was successful or not.
      */
     public String insert(String tableName, ArrayList<ArrayList<String>> tuples) {
         Schema table = c.getSchema(tableName);
         if(table == null){
             return "No such table " + tableName.concat("\nERROR");
+        }
+        String result = checkAttributes(table, tuples);
+        if(!result.equals(null)){  // if result equals null, attributes are good.
+            return result;
         }
         byte[] byteArray;
         //Make the byte array
@@ -52,7 +57,6 @@ public class StorageManager {
            bm.addPage(tableName, byteArray);
            table.addPage();
            table.addRecord();
-
            return "SUCCESS";
         }
 
@@ -105,33 +109,56 @@ public class StorageManager {
                 Attribute attr = tableAttributes.get(i); // get table attribute i
                 String type = attr.getType();            // get type of attribute i
                 String val = tuple.get(i);
-                if(type.contains("varchar")){
+                if(type.equals("varchar")){
                     int amount = Integer.parseInt(type.substring(type.indexOf("(")+1, type.indexOf(")")).strip());
                     if(val.length() <= amount){
-                        break;
+                        continue;
                     }
                     else{
                         return "TOO BIG ERROR";
                     }
 
                 }
-                else if(type.contains("char")){
+                else if(type.equals("char")){
                     int amount = Integer.parseInt(type.substring(type.indexOf("(")+1, type.indexOf(")")).strip());
                     if(val.length() == amount){
-                        break;
+                        continue;
                     }
                     else{
                         return "WRONG SIZE error";
                     }
                 }
-
-
-
-
+                else if(type.equals("double")){
+                    if(isNumeric(val)){
+                        if(val.contains(".")){
+                            return "EXPECTED INTEGER, GOT DOUBLE";
+                        }
+                        else{
+                            continue;
+                        }
+                    }
+                    else{
+                        return "EXPECTED DOUBLE, GOT NOT DOUBLE ERROR";
+                    }
+                }
+                else if(type.equals("integer")){
+                    if(isNumeric(val)){
+                        if(val.contains(".")){
+                            return "EXPECTED INTEGER, GOT DOUBLE";
+                        }
+                        else{
+                            continue;
+                        }
+                    }
+                    else{
+                        return "EXPECTED INTEGER, GOT NOT INTEGER ERROR";
+                    }
+                }
+                else{
+                    return "INVALID TYPE ERROR";
+                }
             }
         }
-
-
         return null;
     }
 
@@ -264,7 +291,7 @@ public class StorageManager {
             }
             midStr.append(atrName);
             midStr.append(" | ");
-        }
+         }
         botStr.append(topStr);
         str.append(topStr);
         str.append("\n");
