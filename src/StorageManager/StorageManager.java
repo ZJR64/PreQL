@@ -134,14 +134,52 @@ public class StorageManager {
         if(table == null){
             return "No such table " + tableName.concat("\nERROR");
         }
-
+        if(table.getPages() == 0){
+            return makeAttributesString(table).concat("\nSUCCESS");
+        }
         for(int i = 0; i < table.getPages(); i++){
-            int page_num = bm.pageSize * i;
-            byte[] page = bm.getPage(tableName, page_num);
+            int pageNum = bm.pageSize * i;
+            byte[] page = bm.getPage(tableName, pageNum);
 
         }
 
         return "ERROR";
+    }
+
+
+    /**
+     * Makes a string containing nicely formatted attributes.
+     * @param table The table the attributes are pulled from.
+     * @return The completed attributes string.
+     */
+    public String makeAttributesString(Schema table){
+        ArrayList<Attribute> attributes = table.getAttributes();
+        StringBuilder str = new StringBuilder();
+        str.append("\n");
+        StringBuilder topStr = new StringBuilder();
+        StringBuilder midStr = new StringBuilder();
+        StringBuilder botStr = new StringBuilder();
+        for(int i = 0; i < attributes.size(); i++){
+            Attribute atr = attributes.get(i);
+            String atrName = atr.getName();
+            int atrSize = atrName.length();
+            for(int j = 0; j < atrSize + 4; j++){ // attribute "size" would make
+                topStr.append("-");                  // "--------"
+            }
+            String bottomBox = str.toString();
+            if(i == 0){
+                midStr.append("| ");
+            }
+            midStr.append(atrName);
+            midStr.append(" | ");
+        }
+        botStr.append(topStr);
+        str.append(topStr);
+        str.append("\n");
+        str.append(midStr);
+        str.append("\n");
+        str.append(botStr);
+        return str.toString();
     }
 
     /**
