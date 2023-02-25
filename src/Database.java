@@ -147,7 +147,7 @@ public class Database {
         input = input.strip();
 
         if(input.toLowerCase().startsWith("create table")){
-            action = new CreateTable(input);
+            action = new CreateTable(input, storageManager);
         }
         else if(input.toLowerCase().startsWith("select")){
             action = new Select(input, storageManager);

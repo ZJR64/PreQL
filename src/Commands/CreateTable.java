@@ -1,5 +1,6 @@
 package src.Commands;
 
+import src.StorageManager.StorageManager;
 import java.util.HashMap;
 import java.util.Map;
 /**
@@ -17,14 +18,17 @@ public class CreateTable extends Command{
     // name table to create
     private String name;
 
+    private StorageManager sm;
+
     // default constructor
-    public CreateTable(String input){
+    public CreateTable(String input, StorageManager sm){
         super(input);
+        this.sm = sm;
     }
 
     /**
      * parses the command and stores the table name, attributes to attribute type, primary key name,
-     * and if the parse was successful
+     * and if the parse was successful.
      */
     @Override
     public void parse() {
@@ -58,7 +62,7 @@ public class CreateTable extends Command{
 
     @Override
     public String execute() {
-        return "ERROR";
+        return sm.createTable();
     }
 
 }

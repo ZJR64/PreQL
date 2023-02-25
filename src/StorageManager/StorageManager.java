@@ -106,4 +106,9 @@ public class StorageManager {
     public void updateRecord(){
 
     }
+
+    public String createTable(){
+
+        return "ERROR";
+    }
 }
