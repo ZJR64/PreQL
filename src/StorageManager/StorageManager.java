@@ -147,13 +147,13 @@ public class StorageManager {
     public String createTable(String name, ArrayList<Attribute> attributes){
         for (Schema i : c.getSchemas()) {
             if(i.getName().equals(name)){
-                return "ERROR";
+                return "Table already exists" +
+                        "\nERROR";
             }
         }
 
-        Schema new_table = new Schema(name, name + ".tbl", attributes);
+        Schema new_table = new Schema(name, null, attributes);
         c.schemas.add(new_table);
-        bm.addPage(new_table.getName(), null);
         return "Success";
     }
 }
