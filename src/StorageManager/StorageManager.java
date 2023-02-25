@@ -56,18 +56,6 @@ public class StorageManager {
            return "SUCCESS";
         }
 
-        byte[] first_page = bm.getPage(tableName, 0); // get the first page
-
-        byte[] bytesNumRecs = new byte[Integer.SIZE]; // byte array for number of records
-
-        for (int j = 0; j < Integer.SIZE; j++) {
-            bytesNumRecs[j] = first_page[j]; // set each byte of numrecs to byte of page
-        }
-        int numRecs = 0;
-        for (byte b : bytesNumRecs) {
-            numRecs = (numRecs << 8) + (b & 0xFF); //convert bytes of num recs to actual value.
-        }
-
         //Read each table page in order from the table file.
         for(int i = 0; i < table.getPages(); i++){
             // page_num = 0 = first page, page_num = 1 second page, etc.
@@ -85,6 +73,31 @@ public class StorageManager {
         }
 
         return null;
+    }
+
+
+    /**
+     * Takes in a table and page number, gets the number of records in that
+     * page.
+     * @param tableName the tabble whose page's number of records is being
+     *                  gotten from.
+     * @param pageNum the page number whose number of records is being gotten
+     *                from.
+     * @return The number of records in the passed page.
+     */
+    private int getNumRecords(String tableName, int pageNum){
+        byte[] first_page = bm.getPage(tableName, pageNum); // get page
+
+        byte[] bytesNumRecs = new byte[Integer.SIZE]; // byte array for number of records
+
+        for (int j = 0; j < Integer.SIZE; j++) {
+            bytesNumRecs[j] = first_page[j]; // set each byte of numrecs to byte of page
+        }
+        int numRecs = 0;
+        for (byte b : bytesNumRecs) {
+            numRecs = (numRecs << 8) + (b & 0xFF); //convert bytes of num recs to actual value.
+        }
+        return numRecs;
     }
 
     /**
@@ -129,7 +142,7 @@ public class StorageManager {
      * @param tableName
      * @return
      */
-    public String getAllRecords(String tableName){
+    private String getAllRecords(String tableName){
         Schema table = c.getSchema(tableName);
         if(table == null){
             return "No such table " + tableName.concat("\nERROR");
