@@ -562,6 +562,29 @@ public class StorageManager {
             Attribute atr = attributes.get(i);
             String atrName = atr.getName();
             int atrSize = atrName.length();
+            int typeSize = 0;
+            String type = atr.getType();
+            if (type.equals("integer")) {
+                typeSize = 15;
+            }
+            else if (type.equals("double")) {
+                typeSize = 20;
+            }
+            else if (type.equals("boolean")) {
+                typeSize = 5;
+            }
+            else {
+                String size = type;
+                size = size.substring(size.indexOf("(") + 1);
+                size = size.substring(0, size.indexOf(")"));
+                typeSize = Integer.parseInt(size);
+            }
+
+            //check what is bigger
+            if (atrSize < typeSize) {
+                atrSize = typeSize;
+            }
+
             for(int j = 0; j < atrSize + 4; j++){ // attribute "size" would make
                 topStr.append("-");                  // "--------"
             }
@@ -569,6 +592,7 @@ public class StorageManager {
             if(i == 0){
                 midStr.append("| ");
             }
+            atrName = String.format("%1$"+atrSize+ "s", atrName);
             midStr.append(atrName);
             midStr.append(" | ");
          }
