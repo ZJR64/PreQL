@@ -1,5 +1,6 @@
 package src.StorageManager;
 
+import java.io.File;
 import java.io.RandomAccessFile;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,6 +22,7 @@ public class BufferManager {
     private int pageSize;
     private int bufferSize;
     private HashMap<String, byte[]> buffer;
+    private ArrayList<String> recentlyUsed;
 
     /**
      * Constructor for the BufferManager object
@@ -33,7 +35,8 @@ public class BufferManager {
         this.pageSize = pageSize;
         this.bufferSize = bufferSize;
         this.buffer = new HashMap<String, byte[]>();
-        this.storagePath = databaseLocation + "\\";
+        recentlyUsed = new ArrayList<String>();
+        this.storagePath = databaseLocation + File.separator;
     }
 
     /**
@@ -67,6 +70,10 @@ public class BufferManager {
                 System.err.println(e);
             }
         }
+        //modify recently used for LRU
+        else {
+            recentlyUsed.add(recentlyUsed.remove(recentlyUsed.indexOf(pageKey)));
+        }
 
         return pageData;
     }
@@ -82,7 +89,7 @@ public class BufferManager {
     public void writePage(String fileName, int pageNumber, byte[] pageData) {
         String pageKey = getPageKey(fileName, pageNumber);
 
-        if (buffer.get(pageKey) != null) {
+        if (buffer.containsKey(pageKey)) {
             // Page is in the buffer, so overwrite the data
             buffer.put(pageKey, pageData);
         }
@@ -103,6 +110,17 @@ public class BufferManager {
     public int addPage(String fileName, byte[] pageData) {
         //if the try method fails, returns -1 to indicate failure
         int pageNumber = -1;
+
+        //check if file exists, create it if it doesn't
+        File tableFile = new File(storagePath + fileName);
+        if (!tableFile.exists()) {
+            try {
+                tableFile.createNewFile();
+            } catch (Exception e) {
+                System.err.println("Could not create file");
+                System.err.println(e);
+            }
+        }
 
         try {
             RandomAccessFile file = new RandomAccessFile(storagePath + fileName, "rw");
@@ -145,6 +163,7 @@ public class BufferManager {
         }
         //cleanse buffer
         buffer.clear();
+        recentlyUsed.clear();
     }
 
     /**
@@ -186,10 +205,11 @@ public class BufferManager {
     private void addPageToBuffer(String pageKey, byte[] pageData) throws IOException{
         if (buffer.size() == bufferSize) {
             // if buffer is full remove least recently used page
-            String leastRecentlyUsedPageKey = buffer.keySet().iterator().next();
+            String leastRecentlyUsedPageKey = recentlyUsed.remove(0);
             flush(leastRecentlyUsedPageKey);
             buffer.remove(leastRecentlyUsedPageKey);
         }
+        recentlyUsed.add(pageKey);
         buffer.put(pageKey, pageData);
     }
 

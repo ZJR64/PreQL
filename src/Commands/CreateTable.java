@@ -93,7 +93,9 @@ public class CreateTable extends Command{
                     System.out.println(input + " does not have a primary key. Cannot create table.");
                     this.success = false;
                 }
-                this.success = true;
+                else{
+                    this.success = true;
+                }
             }
         }
         catch(Exception e){
