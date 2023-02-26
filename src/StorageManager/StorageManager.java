@@ -52,7 +52,7 @@ public class StorageManager {
         }
         //if table doesnt yet have pages.
         if(table.getPages() == 0){
-           //bm.addPage(tableName, byteArray);
+           bm.addPage(tableName, byteArray);
            table.addPage();
            table.addRecord();
            return "SUCCESS";
