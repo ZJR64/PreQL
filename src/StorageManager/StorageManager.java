@@ -393,8 +393,7 @@ public class StorageManager {
         System.out.println(makeAttributesString(table));                //print out the attributes
 
         for(int i = 0; i < table.getPages(); i++){                      //for each page in order
-            int pageNum = bm.getPageSize() * i;                         //pageNum is the number of bytes the page starts at
-            byte[] page = bm.getPage(tableName, pageNum);               //gets the next page
+            byte[] page = bm.getPage(tableName, i);                     //gets the next page
             System.out.println(page);                                      //TODO test this print
 
 
@@ -404,53 +403,81 @@ public class StorageManager {
                 numOfRecs = (numOfRecs << 8) + (page[index] & 0xFF);    //turns the first couple bytes into the number of records
                 index++;
             }
-            for (int recordNum = 0; recordNum < numOfRecs; recordNum+= (Integer.SIZE * 2)){
+            for (int recordNum = 0; recordNum < numOfRecs; recordNum++){
                 //iterates through each record of the current page
-                int offset = 0;                                         //The offset of the record
-                while (index < Integer.SIZE) {
-                    offset = (offset << 8) + (page[index] & 0xFF);
-                    index++;
-                }
-                int size = 0;                                           //The size of the record
-                while (index < Integer.SIZE) {
-                    size = (size << 8) + (page[index] & 0xFF);
-                    index++;
-                }
-                String type = table.getAttributes().get(i).getType();   //get the type of the attribute
-                if (type.equals("integer")) {
-                    int intValue = 0;                                           //The size of the record
-                    for (int byteNum = 0; byteNum < Integer.SIZE; byteNum++) {
-                        intValue = (intValue << 8) + (page[offset + byteNum] & 0xFF);
-                    }
+                String recordOutput = "| ";                             //Initialize the string of the record
 
-                }
-                else if (type.equals("double")) {
-                    byte[] bytes = new byte[Double.SIZE];
-                    double doubleValue = 0;                             //The size of the record
-                    for (int byteNum = 0; byteNum < Double.SIZE; byteNum++) {
-                        bytes[byteNum] = page[offset + byteNum];
+                for (Attribute att:table.getAttributes()) {
+
+                    int offset = 0;                                         //The offset of the
+                    while (index < Integer.SIZE) {
+                        offset = (offset << 8) + (page[index] & 0xFF);
+                        index++;
                     }
-                    doubleValue = ByteBuffer.wrap(bytes).getDouble();
-                }
-                else if (type.equals("boolean")) {
-                    boolean boolValue = false;
-                    int temp = 0;
-                    temp = (page[offset] & 0xFF);
-                    boolValue = Boolean.valueOf(Integer.toString(temp));
-                }
-                else if (type.startsWith("char")) {
-                    int charAmount = Integer.parseInt(type.substring(type.indexOf("(")+1, type.indexOf(")")).strip());
-                    String outputString = "";
-                    for (int byteNum = 0; byteNum < charAmount; byteNum++) {
-                        outputString = outputString +  (char) page[offset + byteNum];
+                    int size = 0;                                           //The size of the record
+                    while (index < Integer.SIZE) {
+                        size = (size << 8) + (page[index] & 0xFF);
+                        index++;
+                    }
+                    String type = att.getType();                                    //get the type of the attribute
+                    if (type.equals("integer")) {
+                        int intValue = 0;                                           //The size of the record
+                        for (int byteNum = 0; byteNum < Integer.SIZE; byteNum++) {
+                            intValue = (intValue << 8) + (page[offset + byteNum] & 0xFF);
+                        }
+                        String tempString = Integer.toString(intValue);
+                        tempString = String.format("%1$"+15+ "s", tempString);
+                        recordOutput = recordOutput + tempString + " | ";
+
+                    }
+                    else if (type.equals("double")) {
+                        byte[] bytes = new byte[Double.SIZE];
+                        double doubleValue = 0;                             //The size of the record
+                        for (int byteNum = 0; byteNum < Double.SIZE; byteNum++) {
+                            bytes[byteNum] = page[offset + byteNum];
+                        }
+                        int attributeSize = att.getSize();
+                        doubleValue = ByteBuffer.wrap(bytes).getDouble();
+                        String tempString = Double.toString(doubleValue);
+                        tempString = String.format("%1$"+20+ "s", tempString);
+                        recordOutput = recordOutput + tempString + " | ";
+
+                    }
+                    else if (type.equals("boolean")) {
+                        boolean boolValue = false;
+                        int temp = 0;
+                        temp = (page[offset] & 0xFF);
+                        boolValue = Boolean.valueOf(Integer.toString(temp));
+                        recordOutput = recordOutput + boolValue + " | ";
+
+                        if (boolValue == false){
+                            recordOutput = recordOutput + "false | ";
+                        }
+                        else{
+                            recordOutput = recordOutput + "true  | ";
+                        }
+
+                    }
+                    else if (type.startsWith("char")) {
+                        int charAmount = Integer.parseInt(type.substring(type.indexOf("(")+1, type.indexOf(")")).strip());
+                        String outputString = "";
+                        for (int byteNum = 0; byteNum < charAmount; byteNum++) {
+                            outputString = outputString +  (char) page[offset + byteNum];
+                        }
+                        recordOutput = recordOutput + outputString + " | ";
+
+                    }
+                    else if (type.startsWith("varchar")) {
+                        String outputString = "";
+                        for (int byteNum = 0; byteNum < size; byteNum++) {
+                            outputString = outputString +  (char) page[offset + byteNum];
+                        }
+                        recordOutput = recordOutput + outputString + " | ";
+
                     }
                 }
-                else if (type.startsWith("varchar")) {
-                    String outputString = "";
-                    for (int byteNum = 0; byteNum < size; byteNum++) {
-                        outputString = outputString +  (char) page[offset + byteNum];
-                    }
-                }
+                System.out.println(recordOutput + "\n");
+
             }
 
         }
