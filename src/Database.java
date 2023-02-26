@@ -40,7 +40,7 @@ public class Database {
     public Database(String location, int pageSize, int bufferSize) {
         this.location = location;
         this.bufferSize = bufferSize;
-        this.dbFile = location + "\\db";
+        this.dbFile = location + File.separator + "db";
 
         System.out.println("Welcome to " + databaseName);
 
@@ -63,10 +63,10 @@ public class Database {
                 return;
             }
             //extract info
-            byte[] pageSizeArray = {byteArray[0], byteArray[1], byteArray[2], byteArray[3]};
-            ByteBuffer byteBuffer = ByteBuffer.wrap(pageSizeArray);
-            this.pageSize = byteBuffer.getInt();
-            byteBuffer.clear();
+            pageSize = 0;
+            for (byte b : byteArray) {
+                pageSize = (pageSize << 8) + (b & 0xFF);
+            }
         }
         else {
             System.out.println("No existing db found");
@@ -74,11 +74,12 @@ public class Database {
 
             //create file
             try {
-                byte[] pageBytes= new byte[4];
+                int integerSize = Integer.SIZE/8;
+                byte[] pageBytes= new byte[integerSize];
                 FileOutputStream outputStream = new FileOutputStream(dbFile);
                 //store page size
-                for (int i = 0; i < 4; i++) {
-                    pageBytes[i] = (byte) (pageSize >>> (24 - (8 * i)));
+                for (int i = 0; i < integerSize; i++) {
+                    pageBytes[i] = (byte) (pageSize >>> ((integerSize-1)*8 - (8 * i)));
                 }
                 outputStream.write(pageBytes);
                 outputStream.flush();

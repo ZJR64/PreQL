@@ -37,7 +37,7 @@ public class StorageManager {
             return "No such table " + tableName.concat("\nERROR");
         }
         String result = checkAttributes(table, tuples);
-        if(!result.equals(null)){  // if result equals null, attributes are good.
+        if(result != null){  // if result equals null, attributes are good.
             return result;
         }
         byte[] byteArray;

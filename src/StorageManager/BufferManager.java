@@ -116,6 +116,22 @@ public class BufferManager {
         if (!tableFile.exists()) {
             try {
                 tableFile.createNewFile();
+
+                //write 0 page number to file
+                RandomAccessFile file = new RandomAccessFile(storagePath + fileName, "rw");
+                int intSize = Integer.SIZE / 8;
+                byte[] numPageBytes = new byte[intSize];
+
+                //fill with bits
+                for (int i = 0; i < intSize; i++) {
+                    numPageBytes[i] = 0;
+                }
+
+                //store
+                file.seek(0);
+                file.write(numPageBytes);
+
+                file.close();
             } catch (Exception e) {
                 System.err.println("Could not create file");
                 System.err.println(e);
@@ -141,6 +157,9 @@ public class BufferManager {
 
             //close
             file.close();
+
+            //increment page
+            addPageNumber(fileName);
         } catch (IOException e) {
             System.err.println("Could not add page to file " + fileName);
             System.err.println(e);
@@ -167,6 +186,48 @@ public class BufferManager {
     }
 
     /**
+     * Adds 1 to the number of pages
+     *
+     * @param fileName he name of the file to increment
+     * @throws IOException
+     */
+    private void addPageNumber(String fileName) throws IOException {
+        //open file to write to
+        RandomAccessFile file = new RandomAccessFile(storagePath + fileName, "r");
+
+        //get the current page Size
+        int intSize = Integer.SIZE / 8;
+        //size bytes
+        byte[] numPageBytes = new byte[intSize];
+
+        //read from file
+        file.seek(0);
+        file.readFully(numPageBytes);
+        file.close();
+
+        //extract info
+        int numPages = 0;
+        for (byte b : numPageBytes) {
+            numPages = (numPages << 8) + (b & 0xFF);
+        }
+
+        //add 1
+        numPages++;
+        file = new RandomAccessFile(storagePath + fileName, "rw");
+
+        //convert again
+        for (int i = 0; i < intSize; i++) {
+            numPageBytes[i] = (byte) (pageSize >>> ((intSize-1)*8 - (8 * i)));
+        }
+
+        //store
+        file.seek(0);
+        file.write(numPageBytes);
+
+        file.close();
+    }
+
+    /**
      * Flushes the page to storage. Uses RanomAccessFile to
      * write to specific bytes of the file.
      *
@@ -188,7 +249,7 @@ public class BufferManager {
 
 
         // Write the page data to the file at the calculated offset
-        file.seek(offset);
+        file.seek((Integer.SIZE / 8) + offset);
         file.write(pageData);
 
         file.close();
@@ -233,7 +294,7 @@ public class BufferManager {
         long offset =  (long) pageNumber * pageSize;
 
         //find the data and read it in
-        file.seek(offset);
+        file.seek((Integer.SIZE / 8) + offset);
         file.readFully(pageData);
         file.close();
 
