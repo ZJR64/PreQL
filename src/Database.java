@@ -63,9 +63,9 @@ public class Database {
                 return;
             }
             //extract info
-            this.pageSize = 0;
+            pageSize = 0;
             for (byte b : byteArray) {
-                this.pageSize = (this.pageSize << 8) + (b & 0xFF);
+                pageSize = (pageSize << 8) + (b & 0xFF);
             }
         }
         else {
