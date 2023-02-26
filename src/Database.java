@@ -55,7 +55,7 @@ public class Database {
             //get bytes for page size
             byte[] byteArray;
             try {
-                FileInputStream inputStream = new FileInputStream(dbFile);;
+                FileInputStream inputStream = new FileInputStream(dbFile);
                 byteArray = inputStream.readAllBytes();
                 inputStream.close();
             } catch (Exception e) {
