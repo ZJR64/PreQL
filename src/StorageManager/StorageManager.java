@@ -3,6 +3,7 @@ package src.StorageManager;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 import src.Catalog.*;
@@ -72,7 +73,7 @@ public class StorageManager {
                 }
         }
 
-        return null;
+        return "ERROR";
     }
 
 
@@ -124,10 +125,6 @@ public class StorageManager {
                         return "WRONG SIZE error";
                     }
                 }
-
-
-
-
             }
         }
 
@@ -224,20 +221,78 @@ public class StorageManager {
     public String getAllRecords(String tableName){
         Schema table = c.getSchema(tableName);
         if(table == null){
-            return "No such table " + tableName.concat("\nERROR");
+            return "No such table " + tableName.concat("\nERROR");  //returns an error if there is no table
         }
         if(table.getPages() == 0){
-            return makeAttributesString(table).concat("\nSUCCESS");
+            return makeAttributesString(table).concat("\nSUCCESS"); //returns the attributes of the table
         }
-        for(int i = 0; i < table.getPages(); i++){
-            int pageNum = bm.getPageSize() * i;
-            byte[] page = bm.getPage(tableName, pageNum);
+        System.out.println(makeAttributesString(table));                //print out the attributes
+
+        for(int i = 0; i < table.getPages(); i++){                      //for each page in order
+            int pageNum = bm.getPageSize() * i;                         //pageNum is the number of bytes the page starts at
+            byte[] page = bm.getPage(tableName, pageNum);               //gets the next page
+            System.out.println(page);                                      //TODO test this print
+
+
+            int numOfRecs = 0;                                          //Initialize the number of records
+            int index = 0;                                              //Index of the page
+            while (index < Integer.SIZE) {
+                numOfRecs = (numOfRecs << 8) + (page[index] & 0xFF);    //turns the first couple bytes into the number of records
+                index++;
+            }
+            for (int recordNum = 0; recordNum < numOfRecs; recordNum+= (Integer.SIZE * 2)){
+                                                                        //iterates through each record of the current page
+                int offset = 0;                                         //The offset of the record
+                while (index < Integer.SIZE) {
+                    offset = (offset << 8) + (page[index] & 0xFF);
+                    index++;
+                }
+                int size = 0;                                           //The size of the record
+                while (index < Integer.SIZE) {
+                    size = (size << 8) + (page[index] & 0xFF);
+                    index++;
+                }
+                String type = table.getAttributes().get(i).getType();   //get the type of the attribute
+                if (type.equals("integer")) {
+                    int intValue = 0;                                           //The size of the record
+                    for (int byteNum = 0; byteNum < Integer.SIZE; byteNum++) {
+                        intValue = (intValue << 8) + (page[offset + byteNum] & 0xFF);
+                    }
+
+                }
+                else if (type.equals("double")) {
+                    byte[] bytes = new byte[Double.SIZE];
+                    double doubleValue = 0;                             //The size of the record
+                    for (int byteNum = 0; byteNum < Double.SIZE; byteNum++) {
+                        bytes[byteNum] = page[offset + byteNum];
+                    }
+                    doubleValue = ByteBuffer.wrap(bytes).getDouble();
+                }
+                else if (type.equals("boolean")) {
+                    boolean boolValue = false;
+                    int temp = 0;
+                    temp = (page[offset] & 0xFF);
+                    boolValue = Boolean.valueOf(Integer.toString(temp));
+                }
+                else if (type.startsWith("char")) {
+                    int charAmount = Integer.parseInt(type.substring(type.indexOf("(")+1, type.indexOf(")")).strip());
+                    String outputString = "";
+                    for (int byteNum = 0; byteNum < charAmount; byteNum++) {
+                        outputString = outputString +  (char) page[offset + byteNum];
+                    }
+                }
+                else if (type.startsWith("varchar")) {
+                    String outputString = "";
+                    for (int byteNum = 0; byteNum < size; byteNum++) {
+                        outputString = outputString +  (char) page[offset + byteNum];
+                    }
+                }
+            }
 
         }
 
-        return "ERROR";
+        return "SUCCESS";
     }
-
 
     /**
      * Makes a string containing nicely formatted attributes.
