@@ -23,11 +23,12 @@ public class StorageManager {
     /**
      * Inserts into a table a number of records.
      *
-     * @param tableName The table being inserted into
+     * @param tableNThe table being inserted into
      * @param tuples the records to be inserted into the table.
      * @return If the insertion was successful or not.
      */
-    public String insert(String tableName, ArrayList<ArrayList<String>> tuples) {
+    public String insert(String tableN, ArrayList<ArrayList<String>> tuples) {
+        String tableName = tableN + ".tbl";
         Schema table = c.getSchema(tableName);
         if(table == null){
             return "No such table " + tableName.concat("\nERROR");
@@ -52,27 +53,31 @@ public class StorageManager {
         }
         //if table doesnt yet have pages.
         if(table.getPages() == 0){
-           bm.addPage(tableName, byteArray);
-           table.addPage();
-           table.addRecord();
+            int pageNum = 0;
+            for(int i = 0; i < records.size(); i++){
+                if(i == 0){
+                    pageNum = bm.addPage(tableName,records.get(i));
+                    table.addRecord();
+                    table.addPage();
+                }
+                bm.writePage(tableName, pageNum, records.get(i));
+
+            }
            return "SUCCESS";
         }
-
-        //Read each table page in order from the table file.
-        for(int i = 0; i < table.getPages(); i++){
-            // page_num = 0 = first page, page_num = 1 second page, etc.
-            int page_num = bm.getPageSize() * i;
-            byte[] page = bm.getPage(tableName, page_num);
-
-            byte[] bytes = new byte[Integer.SIZE];
-                for (int j = 0; j < Integer.SIZE; j++) {
-                    bytes[j] = page[j];
-                }
-                int value = 0;
-                for (byte b : bytes) {
-                    value = (value << 8) + (b & 0xFF);
-                }
+        int page_num = bm.getPageSize() * 0;
+        byte[] page = bm.getPage(tableName, page_num);
+        int freeSpace = page[0];
+        for(int i = 0; i < records.size(); i++){
+            byte[] record = records.get(i);
+            for(int j = 0; j < record.length; j++){
+                page[freeSpace + i] = record[j];
+            }
         }
+        return "SUCCESS";
+    }
+
+    private ArrayList<byte[]> split(){
 
         return null;
     }
@@ -175,7 +180,7 @@ public class StorageManager {
                         }
                         else{
                             values.add(Double.parseDouble(val));
-                            recordAttributeSizes.add(Double.SIZE);
+                            recordAttributeSizes.add(Double.SIZE/8);
                             if(i == tableAttributes.size()-1){
                                 allRecordsAttributeSizes.add(recordAttributeSizes);
                             }
@@ -203,7 +208,7 @@ public class StorageManager {
                         }
                         else{
                             values.add(Integer.parseInt(val));
-                            recordAttributeSizes.add(Integer.SIZE);
+                            recordAttributeSizes.add(Integer.SIZE/8);
                             if(i == tableAttributes.size()-1){
                                 allRecordsAttributeSizes.add(recordAttributeSizes);
                             }
@@ -224,10 +229,18 @@ public class StorageManager {
                         }
                         continue;
                     }
-                    if(val.equals("true") || val.equals("false")){
+                    if(val.equals("true")){
                         values.add(Boolean.parseBoolean(val));
                         recordAttributeSizes.add(1);
                         if(i == tableAttributes.size()-1){
+                            allRecordsAttributeSizes.add(recordAttributeSizes);
+                        }
+                        continue;
+                    }
+                    else if(val.equals("false")) {
+                        values.add(Boolean.parseBoolean(val));
+                        recordAttributeSizes.add(1);
+                        if (i == tableAttributes.size() - 1) {
                             allRecordsAttributeSizes.add(recordAttributeSizes);
                         }
                         continue;
@@ -304,6 +317,7 @@ public class StorageManager {
                                                     ArrayList<ArrayList<Integer>> sizes,
                                                     ArrayList<Object> values,
                                                     Schema table){
+        ArrayList<byte[]> byteArrays = new ArrayList<>();
         int intSize = Integer.SIZE/8;
         for(int j = 0; j < tuples.size(); j++){ //for each tuple in tuples
 
@@ -355,12 +369,58 @@ public class StorageManager {
             ArrayList<Attribute> attributes = table.getAttributes();
             for(int i = 0; i < values.size(); i++){        // add values
                 String value = attributes.get(i).getType();
-                if(value.equals(""))
-                values.get(i);
+                Object obj = values.get(i);
+                if(value.equals("integer")){
+                    int num = (int) obj;
+                    for(int k = 0; k < intSize; k++){
+                        bytes[curLocation + k] = (byte) (num >>> ((intSize-1)*8 - (8 * k)));
+                    }
+                    curLocation += intSize;
+
+                }
+                else if(value.equals("double")){
+                    double valDouble = (double) obj;
+                    long longValue = Double.doubleToLongBits(valDouble);
+                    byte[] byteArray = ByteBuffer.allocate(Long.BYTES).putLong(longValue).array();
+                    for(int k = 0; k < byteArray.length; k++){
+                        bytes[curLocation + k] = byteArray[k];
+                        curLocation += k;
+                    }
+                }
+                else if(value.equals("boolean")){
+                    boolean valBool = (boolean) obj;
+                    if(valBool){
+                        bytes[curLocation + 1] = 1;
+                        curLocation++;
+                    }
+                    else{
+                        bytes[curLocation + 1] = 1;
+                        curLocation++;
+                    }
+
+                }
+                else if(value.equals("char")){
+                    String valBool = (String) obj;
+                    byte[] byteArray = valBool.getBytes();
+                    for(int k = 0; k < byteArray.length; k++){
+                        bytes[curLocation + k] = byteArray[k];
+                        curLocation += k;
+                    }
+
+                }
+                else if(value.equals("varchar")){
+                    String valDouble = (String) obj;
+                    byte[] byteArray = valDouble.getBytes();
+                    for(int k = 0; k < byteArray.length; k++){
+                        bytes[curLocation + k] = byteArray[k];
+                        curLocation += k;
+                    }
+                }
             }
+            byteArrays.add(bytes);
 
         }
-        return null;
+        return byteArrays;
     }
 
     /**
