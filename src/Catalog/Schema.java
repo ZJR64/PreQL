@@ -11,7 +11,7 @@ import java.util.ArrayList;
  */
 public class Schema {
 
-    String seperator = "~!@#%&_";
+    String seperator = "~";
     private String name;
     private int pages;
     private int records;
@@ -77,6 +77,7 @@ public class Schema {
         for (Attribute a: attributes) {
             output += seperator + a.writeable();
         }
+        output += ";";
         return output;
     }
 

@@ -17,7 +17,6 @@ import java.util.ArrayList;
  */
 public class Catalog {
 
-    String seperator = "567785";
     private String catPath;
     public ArrayList<Schema> schemas;
 
@@ -46,7 +45,7 @@ public class Catalog {
             byte[] inverse = Helper.invertBits(byteArray);
             String unfiltered = new String(inverse);
             //get rid of page size
-            String[] filtered = unfiltered.split(seperator);
+            String[] filtered = unfiltered.split(";");
             //add schemas
             for (String s : filtered) {
                 if (!s.equals("")) {
@@ -67,7 +66,7 @@ public class Catalog {
             //make sure schemas is populated
             if (!schemas.isEmpty()) {
                 for (Schema s : schemas) {
-                    byte[] inverse = Helper.invertBits((s.writeable() + seperator).getBytes());
+                    byte[] inverse = Helper.invertBits(s.writeable().getBytes());
                     outputStream.write(inverse);
                     outputStream.flush();
                 }

@@ -1,19 +1,14 @@
 package src.StorageManager;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 import src.Catalog.*;
-import src.Commands.CreateTable;
 
 
 /**
  *
  * @author Jackson O'Connor jdo7339@rit.edu
- * @contributors Nicholas Lewandowski
  */
 public class StorageManager {
 
@@ -37,16 +32,16 @@ public class StorageManager {
         if(table == null){
             return "No such table " + tableName.concat("\nERROR");
         }
-        ArrayList<Integer> result = checkAttributes(table, tuples);
-        if(result == null){  // if result equals null, attributes are good.
+        ArrayList[] result = checkAttributes(table, tuples);
+        if(result == null){  // if result equals null, attributes are not good.
             return "ERROR";
         }
-
-        byte[] byteArray;
-        //Make the byte array
+        ArrayList<Object> values = result[0];
+        ArrayList<ArrayList<Integer>> sizes = result[1];
+        ArrayList<byte[]> records = new ArrayList<>();
         try{
-            byteArray = convertToBytes(tuples);
-            if(byteArray == null){
+            records = convertToBytes(tuples, sizes, values, table);
+            if(records.isEmpty()){
                 System.err.println("Error: Could not write out bytes");
                 return "FILE ERROR";
             }
@@ -92,11 +87,14 @@ public class StorageManager {
      * @return null if the tuples are correct, otherwise a string explaining
      * what is wrong with the string.
      */
-    private ArrayList<Integer> checkAttributes(Schema table,
-                                   ArrayList<ArrayList<String>> tuples){
-        ArrayList<Integer> attributeSizes = new ArrayList<>();
+    private ArrayList[] checkAttributes(Schema table,
+                                        ArrayList<ArrayList<String>> tuples){
+        ArrayList[] toReturn = new ArrayList[tuples.size() + 1];
+        ArrayList<Object> values = new ArrayList<>();
+        ArrayList<ArrayList<Integer>> allRecordsAttributeSizes = new ArrayList<>();
         ArrayList<Attribute> tableAttributes = table.getAttributes();
         for(ArrayList<String> tuple: tuples){                // for each tuple
+            ArrayList<Integer> recordAttributeSizes = new ArrayList<>();
             if(tuple.size() > tableAttributes.size()){  // check if too many attributes
                  System.out.println("row (" + tuple.toString()+ ")" +
                         "Too few attributes: expected  " +
@@ -113,61 +111,140 @@ public class StorageManager {
                 Attribute attr = tableAttributes.get(i); // get table attribute i
                 String type = attr.getType();            // get type of attribute i
                 String val = tuple.get(i);
+
                 if(type.equals("varchar")){
+                    if(val == null){
+                        recordAttributeSizes.add(1);
+                        values.add(null);
+                        if(i == tableAttributes.size()-1){
+                            allRecordsAttributeSizes.add(recordAttributeSizes);
+                        }
+                        continue;
+                    }
                     int amount = Integer.parseInt(type.substring(type.indexOf("(")+1, type.indexOf(")")).strip());
                     if(val.length() <= amount){
-                        attributeSizes.add(val.length());
+                        values.add(val);
+                        recordAttributeSizes.add(val.length());
+                        if(i == tableAttributes.size()-1){
+                            allRecordsAttributeSizes.add(recordAttributeSizes);
+                        }
                         continue;
                     }
                     else{
                          System.out.println("TOO BIG ERROR");
+                        return null;
                     }
 
                 }
                 else if(type.equals("char")){
+                    if(val == null){
+                        values.add(null);
+                        recordAttributeSizes.add(1);
+                        if(i == tableAttributes.size()-1){
+                            allRecordsAttributeSizes.add(recordAttributeSizes);
+                        }
+                        continue;
+                    }
                     int amount = Integer.parseInt(type.substring(type.indexOf("(")+1, type.indexOf(")")).strip());
                     if(val.length() == amount){
-                        attributeSizes.add(val.length());
+                        values.add(val);
+                        recordAttributeSizes.add(val.length());
+                        if(i == tableAttributes.size()-1){
+                            allRecordsAttributeSizes.add(recordAttributeSizes);
+                        }
                         continue;
                     }
                     else{
                         System.out.println("WRONG SIZE error");
+                        return null;
                     }
                 }
                 else if(type.equals("double")){
+                    if(val == null){
+                        values.add(null);
+                        recordAttributeSizes.add(1);
+                        if(i == tableAttributes.size()-1){
+                            allRecordsAttributeSizes.add(recordAttributeSizes);
+                        }
+                        continue;
+                    }
                     if(isNumeric(val)){
                         if(val.contains(".")){
                             System.out.println("EXPECTED INTEGER, GOT DOUBLE");
+                            return null;
                         }
                         else{
-                            attributeSizes.add(Double.SIZE);
+                            values.add(Double.parseDouble(val));
+                            recordAttributeSizes.add(Double.SIZE);
+                            if(i == tableAttributes.size()-1){
+                                allRecordsAttributeSizes.add(recordAttributeSizes);
+                            }
                             continue;
                         }
                     }
                     else{
                         System.out.println("EXPECTED DOUBLE, GOT NOT DOUBLE ERROR");
+                        return null;
                     }
                 }
                 else if(type.equals("integer")){
+                    if(val == null){
+                        values.add(null);
+                        recordAttributeSizes.add(1);
+                        if(i == tableAttributes.size()-1){
+                            allRecordsAttributeSizes.add(recordAttributeSizes);
+                        }
+                        continue;
+                    }
                     if(isNumeric(val)){
                         if(val.contains(".")){
                             System.out.println("EXPECTED INTEGER, GOT DOUBLE");
+                            return null;
                         }
                         else{
-                            attributeSizes.add(Integer.SIZE);
+                            values.add(Integer.parseInt(val));
+                            recordAttributeSizes.add(Integer.SIZE);
+                            if(i == tableAttributes.size()-1){
+                                allRecordsAttributeSizes.add(recordAttributeSizes);
+                            }
                             continue;
                         }
                     }
                     else{
                         System.out.println("EXPECTED INTEGER, GOT NOT INTEGER ERROR");
+                        return null;
+                    }
+                }
+                else if(type.equals("boolean")){
+                    if(val == null){
+                        values.add(null);
+                        recordAttributeSizes.add(1);
+                        if(i == tableAttributes.size()-1){
+                            allRecordsAttributeSizes.add(recordAttributeSizes);
+                        }
+                        continue;
+                    }
+                    if(val.equals("true") || val.equals("false")){
+                        values.add(Boolean.parseBoolean(val));
+                        recordAttributeSizes.add(1);
+                        if(i == tableAttributes.size()-1){
+                            allRecordsAttributeSizes.add(recordAttributeSizes);
+                        }
+                        continue;
+                    }
+                    else{
+                        return null;
                     }
                 }
                 else{
                     System.out.println("INVALID TYPE ERROR");
+                    return null;
                 }
             }
         }
-        return null;
+        toReturn[0] = values;
+        toReturn[1] = allRecordsAttributeSizes;
+        return toReturn;
     }
 
     /**
@@ -216,11 +293,73 @@ public class StorageManager {
 
     /**
      * Converts the passed in tuples to a byte array.
-     * @param tuples
+     *
+     * @param result
+     * @param tuples the arraylist of tuples.
+     * @param values
+     * @param table
      * @return
      */
-    private static byte[] convertToBytes(ArrayList<ArrayList<String>> tuples){
-        //WILL DO LATER
+    private static ArrayList<byte[]> convertToBytes(ArrayList<ArrayList<String>> tuples,
+                                                    ArrayList<ArrayList<Integer>> sizes,
+                                                    ArrayList<Object> values,
+                                                    Schema table){
+        int intSize = Integer.SIZE/8;
+        for(int j = 0; j < tuples.size(); j++){ //for each tuple in tuples
+
+            ArrayList<String> tuple = tuples.get(j);                    // tuple i
+            ArrayList<Integer> tupleSizes = sizes.get(j);               // tuple i sizes
+            int sizeOfPointers = tupleSizes.size() * 2 * Integer.SIZE;  // size of all pointers
+            int nullBitMapLength = tuple.size() * Byte.SIZE;         // size of null bit map
+            int sizeOfNonData = nullBitMapLength + sizeOfPointers;      // adds up size of non data
+            int totalSize = sizeOfNonData;
+
+            for(int i = 0; i < tupleSizes.size(); i++){
+                totalSize += tupleSizes.get(i);                        // total size = nondata + data
+            }
+
+            byte[] bytes = new byte[totalSize];                        //
+
+            int dataLoc = sizeOfNonData;
+            int location = 0;
+            int prevSizes = 0;
+            int curLocation = 0;
+            ArrayList<Integer> locations = new ArrayList<>();
+            for(int i = 0; i < tuple.size(); i++) { // for each attribute in each tuple
+
+                int size = tupleSizes.get(i);       // gets the size of the attribute
+                if(i == 0){
+                    location = dataLoc;
+                }
+                else{
+                    location += prevSizes;
+                }
+                prevSizes += size;
+                locations.add(location);
+                for(int k = 0; k < intSize; k++){
+                    bytes[curLocation + k] = (byte) (location >>> ((intSize-1)*8 - (8 * k))); //add attribute location
+                    bytes[curLocation + k + intSize] = (byte) (size >>> ((intSize-1)*8 - (8 * k))); //add attribute size
+                }
+                curLocation += intSize * 2;
+
+            }
+            for(int i = 0; i < nullBitMapLength; i++){      // add null bitMap
+                curLocation += i;
+                if(tuple.get(i) == null){
+                    bytes[curLocation] = 1;
+                }
+                else{
+                    bytes[curLocation] = 0;
+                }
+            }
+            ArrayList<Attribute> attributes = table.getAttributes();
+            for(int i = 0; i < values.size(); i++){        // add values
+                String value = attributes.get(i).getType();
+                if(value.equals(""))
+                values.get(i);
+            }
+
+        }
         return null;
     }
 
@@ -254,7 +393,8 @@ public class StorageManager {
         System.out.println(makeAttributesString(table));                //print out the attributes
 
         for(int i = 0; i < table.getPages(); i++){                      //for each page in order
-            byte[] page = bm.getPage(tableName, i);                     //gets the next page
+            int pageNum = bm.getPageSize() * i;                         //pageNum is the number of bytes the page starts at
+            byte[] page = bm.getPage(tableName, pageNum);               //gets the next page
             System.out.println(page);                                      //TODO test this print
 
 
@@ -264,87 +404,60 @@ public class StorageManager {
                 numOfRecs = (numOfRecs << 8) + (page[index] & 0xFF);    //turns the first couple bytes into the number of records
                 index++;
             }
-            for (int recordNum = 0; recordNum < numOfRecs; recordNum++){
-                                                                        //iterates through each record of the current page
-                String recordOutput = "| ";                             //Initialize the string of the record
-
-                for (Attribute att:table.getAttributes()) {
-
-                    int offset = 0;                                         //The offset of the
-                    while (index < Integer.SIZE) {
-                        offset = (offset << 8) + (page[index] & 0xFF);
-                        index++;
+            for (int recordNum = 0; recordNum < numOfRecs; recordNum+= (Integer.SIZE * 2)){
+                //iterates through each record of the current page
+                int offset = 0;                                         //The offset of the record
+                while (index < Integer.SIZE) {
+                    offset = (offset << 8) + (page[index] & 0xFF);
+                    index++;
+                }
+                int size = 0;                                           //The size of the record
+                while (index < Integer.SIZE) {
+                    size = (size << 8) + (page[index] & 0xFF);
+                    index++;
+                }
+                String type = table.getAttributes().get(i).getType();   //get the type of the attribute
+                if (type.equals("integer")) {
+                    int intValue = 0;                                           //The size of the record
+                    for (int byteNum = 0; byteNum < Integer.SIZE; byteNum++) {
+                        intValue = (intValue << 8) + (page[offset + byteNum] & 0xFF);
                     }
-                    int size = 0;                                           //The size of the record
-                    while (index < Integer.SIZE) {
-                        size = (size << 8) + (page[index] & 0xFF);
-                        index++;
+
+                }
+                else if (type.equals("double")) {
+                    byte[] bytes = new byte[Double.SIZE];
+                    double doubleValue = 0;                             //The size of the record
+                    for (int byteNum = 0; byteNum < Double.SIZE; byteNum++) {
+                        bytes[byteNum] = page[offset + byteNum];
                     }
-                    String type = att.getType();                                    //get the type of the attribute
-                    if (type.equals("integer")) {
-                        int intValue = 0;                                           //The size of the record
-                        for (int byteNum = 0; byteNum < Integer.SIZE; byteNum++) {
-                            intValue = (intValue << 8) + (page[offset + byteNum] & 0xFF);
-                        }
-                        String tempString = Integer.toString(intValue);
-                        tempString = String.format("%1$"+15+ "s", tempString);
-                        recordOutput = recordOutput + tempString + " | ";
-
-                    }
-                    else if (type.equals("double")) {
-                        byte[] bytes = new byte[Double.SIZE];
-                        double doubleValue = 0;                             //The size of the record
-                        for (int byteNum = 0; byteNum < Double.SIZE; byteNum++) {
-                            bytes[byteNum] = page[offset + byteNum];
-                        }
-                        int attributeSize = att.getSize();
-                        doubleValue = ByteBuffer.wrap(bytes).getDouble();
-                        String tempString = Double.toString(doubleValue);
-                        tempString = String.format("%1$"+20+ "s", tempString);
-                        recordOutput = recordOutput + tempString + " | ";
-
-                    }
-                    else if (type.equals("boolean")) {
-                        boolean boolValue = false;
-                        int temp = 0;
-                        temp = (page[offset] & 0xFF);
-                        boolValue = Boolean.valueOf(Integer.toString(temp));
-                        recordOutput = recordOutput + boolValue + " | ";
-
-                        if (boolValue == false){
-                            recordOutput = recordOutput + "false | ";
-                        }
-                        else{
-                            recordOutput = recordOutput + "true  | ";
-                        }
-
-                    }
-                    else if (type.startsWith("char")) {
-                        int charAmount = Integer.parseInt(type.substring(type.indexOf("(")+1, type.indexOf(")")).strip());
-                        String outputString = "";
-                        for (int byteNum = 0; byteNum < charAmount; byteNum++) {
-                            outputString = outputString +  (char) page[offset + byteNum];
-                        }
-                        recordOutput = recordOutput + outputString + " | ";
-
-                    }
-                    else if (type.startsWith("varchar")) {
-                        String outputString = "";
-                        for (int byteNum = 0; byteNum < size; byteNum++) {
-                            outputString = outputString +  (char) page[offset + byteNum];
-                        }
-                        recordOutput = recordOutput + outputString + " | ";
-
+                    doubleValue = ByteBuffer.wrap(bytes).getDouble();
+                }
+                else if (type.equals("boolean")) {
+                    boolean boolValue = false;
+                    int temp = 0;
+                    temp = (page[offset] & 0xFF);
+                    boolValue = Boolean.valueOf(Integer.toString(temp));
+                }
+                else if (type.startsWith("char")) {
+                    int charAmount = Integer.parseInt(type.substring(type.indexOf("(")+1, type.indexOf(")")).strip());
+                    String outputString = "";
+                    for (int byteNum = 0; byteNum < charAmount; byteNum++) {
+                        outputString = outputString +  (char) page[offset + byteNum];
                     }
                 }
-                System.out.println(recordOutput + "\n");
-
+                else if (type.startsWith("varchar")) {
+                    String outputString = "";
+                    for (int byteNum = 0; byteNum < size; byteNum++) {
+                        outputString = outputString +  (char) page[offset + byteNum];
+                    }
+                }
             }
 
         }
 
         return "SUCCESS";
     }
+
 
     /**
      * Makes a string containing nicely formatted attributes.
