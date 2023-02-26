@@ -28,7 +28,7 @@ public class StorageManager {
      * @return If the insertion was successful or not.
      */
     public String insert(String tableN, ArrayList<ArrayList<String>> tuples) {
-        String tableName = tableN + ".tbl";
+        String tableName = tableN;
         Schema table = c.getSchema(tableName);
         if(table == null){
             return "No such table " + tableName.concat("\nERROR");
@@ -324,7 +324,7 @@ public class StorageManager {
             ArrayList<String> tuple = tuples.get(j);                    // tuple i
             ArrayList<Integer> tupleSizes = sizes.get(j);               // tuple i sizes
             int sizeOfPointers = tupleSizes.size() * 2 * Integer.SIZE;  // size of all pointers
-            int nullBitMapLength = tuple.size() * Byte.SIZE;         // size of null bit map
+            int nullBitMapLength = tuple.size();         // size of null bit map
             int sizeOfNonData = nullBitMapLength + sizeOfPointers;      // adds up size of non data
             int totalSize = sizeOfNonData;
 
