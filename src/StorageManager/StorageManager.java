@@ -3,7 +3,6 @@ package src.StorageManager;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 import src.Catalog.*;
@@ -36,10 +35,11 @@ public class StorageManager {
         if(table == null){
             return "No such table " + tableName.concat("\nERROR");
         }
-        String result = checkAttributes(table, tuples);
-        if(result != null){  // if result equals null, attributes are good.
-            return result;
+        ArrayList<Integer> result = checkAttributes(table, tuples);
+        if(result == null){  // if result equals null, attributes are good.
+            return "ERROR";
         }
+
         byte[] byteArray;
         //Make the byte array
         try{
@@ -90,21 +90,22 @@ public class StorageManager {
      * @return null if the tuples are correct, otherwise a string explaining
      * what is wrong with the string.
      */
-    private String checkAttributes(Schema table,
+    private ArrayList<Integer> checkAttributes(Schema table,
                                    ArrayList<ArrayList<String>> tuples){
+        ArrayList<Integer> attributeSizes = new ArrayList<>();
         ArrayList<Attribute> tableAttributes = table.getAttributes();
         for(ArrayList<String> tuple: tuples){                // for each tuple
             if(tuple.size() > tableAttributes.size()){  // check if too many attributes
-                return "row (" + tuple.toString()+ ")" +
+                 System.out.println("row (" + tuple.toString()+ ")" +
                         "Too few attributes: expected  " +
                         table.getAttributes().toString() +
-                        " got " + tuple.toString();
+                        " got " + tuple.toString());
             }
             else if(tuple.size() < tableAttributes.size()){ //check if enough attributes
-                return "row (" + tuple.toString()+ ")" +
+                System.out.println("row (" + tuple.toString()+ ")" +
                         "Too many attributes: expected  " +
                         table.getAttributes().toString() +
-                        " got " + tuple.toString();
+                        " got " + tuple.toString());
             }
             for(int i = 0; i < tableAttributes.size(); i++){ // for each attribute in the table
                 Attribute attr = tableAttributes.get(i); // get table attribute i
@@ -113,50 +114,54 @@ public class StorageManager {
                 if(type.equals("varchar")){
                     int amount = Integer.parseInt(type.substring(type.indexOf("(")+1, type.indexOf(")")).strip());
                     if(val.length() <= amount){
+                        attributeSizes.add(val.length());
                         continue;
                     }
                     else{
-                        return "TOO BIG ERROR";
+                         System.out.println("TOO BIG ERROR");
                     }
 
                 }
-                else if(type.contains("char")){
+                else if(type.equals("char")){
                     int amount = Integer.parseInt(type.substring(type.indexOf("(")+1, type.indexOf(")")).strip());
                     if(val.length() == amount){
-                        break;
+                        attributeSizes.add(val.length());
+                        continue;
                     }
                     else{
-                        return "WRONG SIZE error";
+                        System.out.println("WRONG SIZE error");
                     }
                 }
                 else if(type.equals("double")){
                     if(isNumeric(val)){
                         if(val.contains(".")){
-                            return "EXPECTED INTEGER, GOT DOUBLE";
+                            System.out.println("EXPECTED INTEGER, GOT DOUBLE");
                         }
                         else{
+                            attributeSizes.add(Double.SIZE);
                             continue;
                         }
                     }
                     else{
-                        return "EXPECTED DOUBLE, GOT NOT DOUBLE ERROR";
+                        System.out.println("EXPECTED DOUBLE, GOT NOT DOUBLE ERROR");
                     }
                 }
                 else if(type.equals("integer")){
                     if(isNumeric(val)){
                         if(val.contains(".")){
-                            return "EXPECTED INTEGER, GOT DOUBLE";
+                            System.out.println("EXPECTED INTEGER, GOT DOUBLE");
                         }
                         else{
+                            attributeSizes.add(Integer.SIZE);
                             continue;
                         }
                     }
                     else{
-                        return "EXPECTED INTEGER, GOT NOT INTEGER ERROR";
+                        System.out.println("EXPECTED INTEGER, GOT NOT INTEGER ERROR");
                     }
                 }
                 else{
-                    return "INVALID TYPE ERROR";
+                    System.out.println("INVALID TYPE ERROR");
                 }
             }
         }
@@ -165,8 +170,8 @@ public class StorageManager {
 
     /**
      * checks if the passed in string is either int or double.
-     * @param str
-     * @return
+     * @param str the string being checked.
+     * @return true if the string is numeric, false otherwise.
      */
     private Boolean isNumeric(String str){
         try {
@@ -213,21 +218,8 @@ public class StorageManager {
      * @return
      */
     private static byte[] convertToBytes(ArrayList<ArrayList<String>> tuples){
-        ByteArrayOutputStream mkBytes = new ByteArrayOutputStream();
-        DataOutputStream out = new DataOutputStream(mkBytes);
-        for(ArrayList<String> list : tuples){
-            for(String entry : list){
-                try{
-                    out.writeUTF(entry);
-                }
-                catch(Exception e){
-                    System.err.println("Error: Could not write out bytes");
-                    return null;
-                }
-            }
-        }
-        byte[] bytes = mkBytes.toByteArray();
-        return bytes;
+        //WILL DO LATER
+        return null;
     }
 
     /**
@@ -252,78 +244,20 @@ public class StorageManager {
     public String getAllRecords(String tableName){
         Schema table = c.getSchema(tableName);
         if(table == null){
-            return "No such table " + tableName.concat("\nERROR");  //returns an error if there is no table
+            return "No such table " + tableName.concat("\nERROR");
         }
         if(table.getPages() == 0){
-            return makeAttributesString(table).concat("\nSUCCESS"); //returns the attributes of the table
+            return makeAttributesString(table).concat("\nSUCCESS");
         }
-        System.out.println(makeAttributesString(table));                //print out the attributes
-
-        for(int i = 0; i < table.getPages(); i++){                      //for each page in order
-            int pageNum = bm.getPageSize() * i;                         //pageNum is the number of bytes the page starts at
-            byte[] page = bm.getPage(tableName, pageNum);               //gets the next page
-            System.out.println(page);                                      //TODO test this print
-
-
-            int numOfRecs = 0;                                          //Initialize the number of records
-            int index = 0;                                              //Index of the page
-            while (index < Integer.SIZE) {
-                numOfRecs = (numOfRecs << 8) + (page[index] & 0xFF);    //turns the first couple bytes into the number of records
-                index++;
-            }
-            for (int recordNum = 0; recordNum < numOfRecs; recordNum+= (Integer.SIZE * 2)){
-                                                                        //iterates through each record of the current page
-                int offset = 0;                                         //The offset of the record
-                while (index < Integer.SIZE) {
-                    offset = (offset << 8) + (page[index] & 0xFF);
-                    index++;
-                }
-                int size = 0;                                           //The size of the record
-                while (index < Integer.SIZE) {
-                    size = (size << 8) + (page[index] & 0xFF);
-                    index++;
-                }
-                String type = table.getAttributes().get(i).getType();   //get the type of the attribute
-                if (type.equals("integer")) {
-                    int intValue = 0;                                           //The size of the record
-                    for (int byteNum = 0; byteNum < Integer.SIZE; byteNum++) {
-                        intValue = (intValue << 8) + (page[offset + byteNum] & 0xFF);
-                    }
-
-                }
-                else if (type.equals("double")) {
-                    byte[] bytes = new byte[Double.SIZE];
-                    double doubleValue = 0;                             //The size of the record
-                    for (int byteNum = 0; byteNum < Double.SIZE; byteNum++) {
-                        bytes[byteNum] = page[offset + byteNum];
-                    }
-                    doubleValue = ByteBuffer.wrap(bytes).getDouble();
-                }
-                else if (type.equals("boolean")) {
-                    boolean boolValue = false;
-                    int temp = 0;
-                    temp = (page[offset] & 0xFF);
-                    boolValue = Boolean.valueOf(Integer.toString(temp));
-                }
-                else if (type.startsWith("char")) {
-                    int charAmount = Integer.parseInt(type.substring(type.indexOf("(")+1, type.indexOf(")")).strip());
-                    String outputString = "";
-                    for (int byteNum = 0; byteNum < charAmount; byteNum++) {
-                        outputString = outputString +  (char) page[offset + byteNum];
-                    }
-                }
-                else if (type.startsWith("varchar")) {
-                    String outputString = "";
-                    for (int byteNum = 0; byteNum < size; byteNum++) {
-                        outputString = outputString +  (char) page[offset + byteNum];
-                    }
-                }
-            }
+        for(int i = 0; i < table.getPages(); i++){
+            int pageNum = bm.getPageSize() * i;
+            byte[] page = bm.getPage(tableName, pageNum);
 
         }
 
-        return "SUCCESS";
+        return "ERROR";
     }
+
 
     /**
      * Makes a string containing nicely formatted attributes.
