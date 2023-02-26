@@ -117,7 +117,7 @@ public class StorageManager {
                 String type = attr.getType();            // get type of attribute i
                 String val = tuple.get(i);
 
-                if(type.equals("varchar")){
+                if(type.startsWith("varchar")){
                     if(val == null){
                         recordAttributeSizes.add(1);
                         values.add(null);
@@ -141,7 +141,7 @@ public class StorageManager {
                     }
 
                 }
-                else if(type.equals("char")){
+                else if(type.startsWith("char")){
                     if(val == null){
                         values.add(null);
                         recordAttributeSizes.add(1);
