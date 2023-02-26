@@ -459,10 +459,11 @@ public class StorageManager {
 
             int numOfRecs = 0;                                          //Initialize the number of records
             int index = 0;                                              //Index of the page
-            while (index < Integer.SIZE) {
+            while (index < Integer.SIZE/8) {
                 numOfRecs = (numOfRecs << 8) + (page[index] & 0xFF);    //turns the first couple bytes into the number of records
                 index++;
             }
+            index += Integer.SIZE/8;
             for (int recordNum = 0; recordNum < numOfRecs; recordNum++){
                 //iterates through each record of the current page
                 String recordOutput = "| ";                             //Initialize the string of the record
@@ -470,19 +471,19 @@ public class StorageManager {
                 for (Attribute att:table.getAttributes()) {
 
                     int offset = 0;                                         //The offset of the
-                    while (index < Integer.SIZE) {
+                    while (index < Integer.SIZE/8) {
                         offset = (offset << 8) + (page[index] & 0xFF);
                         index++;
                     }
                     int size = 0;                                           //The size of the record
-                    while (index < Integer.SIZE) {
+                    while (index < Integer.SIZE/8) {
                         size = (size << 8) + (page[index] & 0xFF);
                         index++;
                     }
                     String type = att.getType();                                    //get the type of the attribute
                     if (type.equals("integer")) {
                         int intValue = 0;                                           //The size of the record
-                        for (int byteNum = 0; byteNum < Integer.SIZE; byteNum++) {
+                        for (int byteNum = 0; byteNum < Integer.SIZE/8; byteNum++) {
                             intValue = (intValue << 8) + (page[offset + byteNum] & 0xFF);
                         }
                         String tempString = Integer.toString(intValue);
@@ -491,9 +492,9 @@ public class StorageManager {
 
                     }
                     else if (type.equals("double")) {
-                        byte[] bytes = new byte[Double.SIZE];
+                        byte[] bytes = new byte[Double.SIZE/8];
                         double doubleValue = 0;                             //The size of the record
-                        for (int byteNum = 0; byteNum < Double.SIZE; byteNum++) {
+                        for (int byteNum = 0; byteNum < Double.SIZE/8; byteNum++) {
                             bytes[byteNum] = page[offset + byteNum];
                         }
                         int attributeSize = att.getSize();
