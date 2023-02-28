@@ -297,8 +297,90 @@ public class Page {
      * @param record the map of name and value that will be converted to bytes.
      * @return a byte array.
      */
-    private void writeBytes(Map<String, Object> record, int arraySize) {
+    private byte[] getBytes(Map<String, Object> record, int arraySize) {
+        byte[] byteArray = new byte[arraySize];
 
+        //create null bitmap
+        BitSet nullBitMap = new BitSet(schema.getAttributes().size());
+
+        //go through each attribute
+        int attributeIndex = 0;
+        for (Attribute attribute : schema.getAttributes()) {
+            Object value = record.get(attribute.getName());
+
+            //check if null
+            if (value == null) {
+                //set null bit
+                nullBitMap.set(attributeIndex);
+                continue;
+            }
+
+            //find the type
+            int valueSize = 0;
+            if (attribute.getType().contains("char")) {
+                //get length of string
+                valueSize = ((String) value).getBytes().length;
+            } else if (attribute.getType().equalsIgnoreCase("integer")) {
+                //integer
+                valueSize = intSize;
+            }
+            else if (attribute.getType().equalsIgnoreCase("boolean")) {
+                //boolean is 1 byte
+                valueSize = 1;
+            }
+            else {
+                //must be double
+                valueSize = Double.SIZE/byteSize;
+            }
+
+            //store index and size
+            int valueIndex = arraySize - valueSize - 1;
+            int trueIndex = attributeIndex * intSize * 2;
+            for (int byteIndex = trueIndex; byteIndex < intSize + trueIndex; byteIndex++) {
+                byteArray[byteIndex] = (byte) (valueIndex >>> ((intSize-1)*byteSize - (byteSize * byteIndex)));
+            }
+            trueIndex = attributeIndex * intSize * 2 + intSize;
+            for (int byteIndex = trueIndex; byteIndex < intSize + trueIndex; byteIndex++) {
+                byteArray[byteIndex] = (byte) (valueSize >>> ((intSize-1)*byteSize - (byteSize * byteIndex)));
+            }
+
+            //get balue bytes
+            byte[] valueBytes = new byte[valueSize];
+            if (attribute.getType().contains("char")) {
+                //String
+                valueBytes = ((String) value).getBytes();
+            } else if (attribute.getType().equalsIgnoreCase("integer")) {
+                //int
+
+            }
+            else if (attribute.getType().equalsIgnoreCase("boolean")) {
+                //boolean
+                boolean bool = (boolean) value;
+                if (bool) {
+                    valueBytes[0] = 1;
+                }
+                else {
+                    valueBytes[0] = 0;
+                }
+            }
+            else {
+                //must be double
+                ByteBuffer buffer = ByteBuffer.allocate(Double.SIZE/byteSize);
+                buffer.putDouble((double)value);
+                valueBytes = buffer.array();
+            }
+
+        }
+
+        //store null bitmap
+        int bitMapLocation = (intSize*2)*schema.getAttributes().size();
+        int bitMapSize = (int) schema.getAttributes().size() / byteSize;
+        byte[] bitMapBytes = nullBitMap.toByteArray();
+        for (int byteIndex = 0; byteIndex < bitMapSize; byteIndex++) {
+            byteArray[byteIndex + bitMapLocation] = bitMapBytes[byteIndex];
+        }
+
+        return byteArray;
     }
 
     /**
