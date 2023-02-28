@@ -1,11 +1,9 @@
 package src.StorageManager;
 
-import src.Catalog.Schema;
+import src.Catalog.*;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.nio.ByteBuffer;
+import java.util.*;
 
 /**
  * The class for the representation of the page. This class
@@ -17,8 +15,10 @@ import java.util.Set;
 public class Page {
     private Schema schema;
     private byte[] data;
-    private Map<Integer, Integer> waste;
     private int pageSize;
+    private int primaryKeyIndex;
+    private int byteSize;
+    private int intSize;
 
     /**
      * Constructor for records when we have a byte array.
@@ -31,7 +31,9 @@ public class Page {
         this.schema = schema;
         this.data = data;
         this.pageSize = pageSize;
-        this.waste = new HashMap<Integer, Integer>();
+        this.primaryKeyIndex = findPrimaryKeyIndex();
+        byteSize = Byte.SIZE;
+        intSize = Integer.SIZE/Byte.SIZE;
     }
 
     /**
@@ -45,21 +47,22 @@ public class Page {
         this.schema = schema;
         this.pageSize = pageSize;
         this.data = new byte[pageSize];
+        this.primaryKeyIndex = findPrimaryKeyIndex();
+        intSize = Integer.SIZE/Byte.SIZE;
 
         //put in the basic structure of the page
         //put zero as the number of records
-        for (int byteIndex = 0; byteIndex < Integer.SIZE; byteIndex++) {
+        for (int byteIndex = 0; byteIndex < intSize; byteIndex++) {
             data[byteIndex] = 0;
         }
         //put the pointer to the next page at the end of page
-        for (int byteIndex = data.length - Integer.SIZE - 1; byteIndex < data.length; byteIndex++) {
-            data[byteIndex] = (byte) (nextPage >>> ((Integer.SIZE-1)*8 - (8 * byteIndex)));
+        for (int byteIndex = data.length - intSize - 1; byteIndex < data.length; byteIndex++) {
+            data[byteIndex] = (byte) (nextPage >>> ((intSize-1)*8 - (8 * byteIndex)));
         }
-
         //put the pointer to the free space
-        int freeSpace = data.length - Integer.SIZE - 2;
-        for (int byteIndex = Integer.SIZE ; byteIndex < Integer.SIZE*2; byteIndex++) {
-            data[byteIndex] = (byte) (freeSpace >>> ((Integer.SIZE/8-1)*8 - (8 * byteIndex)));
+        int freeSpace = data.length - intSize - 2;
+        for (int byteIndex = intSize ; byteIndex < intSize*2; byteIndex++) {
+            data[byteIndex] = (byte) (freeSpace >>> ((intSize/8-1)*8 - (8 * byteIndex)));
         }
     }
 
@@ -80,7 +83,16 @@ public class Page {
      * @return the record represented by a dictionary full of attributes.
      */
     public Map<String, Object> getRecord(Object primaryKeyValue) {
-        //TODO search records for primaryKey and return record.
+       Attribute key = schema.getKey();
+       if (key.getType().equalsIgnoreCase("string")) {
+
+       }
+        if (key.getType().equalsIgnoreCase("integer")) {
+
+        }
+        if (key.getType().equalsIgnoreCase("double")) {
+
+        }
         return null;
     }
 
@@ -116,8 +128,8 @@ public class Page {
     public int split(BufferManager bufferManager, Map<String, Object> attributes) {
         //extract nextPage
         int pagePointer = 0;
-        for (int byteIndex = data.length - Integer.SIZE - 1; byteIndex < data.length; byteIndex++) {
-            pagePointer = (pagePointer << 8) + (data[byteIndex] & 0xFF);
+        for (int byteIndex = data.length - intSize - 1; byteIndex < data.length; byteIndex++) {
+            pagePointer = (pagePointer << byteSize) + (data[byteIndex] & 0xFF);
         }
         Page newPage = new Page(schema, pageSize, pagePointer);
 
@@ -126,8 +138,8 @@ public class Page {
         //add page to buffer
         pagePointer = bufferManager.addPage(schema.getName(), newPage.getPage());
         //put the pointer to the next page at the end of page
-        for (int byteIndex = data.length - Integer.SIZE - 1; byteIndex < data.length; byteIndex++) {
-            data[byteIndex] = (byte) (pagePointer >>> ((Integer.SIZE-1)*8 - (8 * byteIndex)));
+        for (int byteIndex = data.length - intSize - 1; byteIndex < data.length; byteIndex++) {
+            data[byteIndex] = (byte) (pagePointer >>> ((intSize-1)*byteSize - (byteSize * byteIndex)));
         }
         return pagePointer;
     }
@@ -161,8 +173,8 @@ public class Page {
     public int getNextPage() {
         //extract nextPage
         int pagePointer = 0;
-        for (int byteIndex = data.length - Integer.SIZE - 1; byteIndex < data.length; byteIndex++) {
-            pagePointer = (pagePointer << 8) + (data[byteIndex] & 0xFF);
+        for (int byteIndex = data.length - intSize - 1; byteIndex < data.length; byteIndex++) {
+            pagePointer = (pagePointer << byteSize) + (data[byteIndex] & 0xFF);
         }
         return pagePointer;
     }
@@ -181,11 +193,95 @@ public class Page {
      * Looks at the wasted space in the page and shifts over all values, could be potentially
      * high cost, so perhaps some tricks could be used.
      */
-    private void defragment() {
-        //return if no waste is reported.
-        if (waste.isEmpty()) {
-            return;
+    public void defragment() {
+        //get the pointer to free space
+        int freeSpace = 0;
+        for (int byteIndex = intSize; byteIndex < intSize*2; byteIndex++) {
+            freeSpace = (freeSpace << byteSize) + (data[byteIndex] & 0xFF);
         }
+
         //TODO if inneficient reorganise the page to be more space effecient.
+    }
+
+    /**
+     * Finds the position for the pointer to the primary key in each record.
+     *
+     * @return the index of the primary key pointer.
+     */
+    private int findPrimaryKeyIndex() {
+        int index = schema.getAttributes().indexOf(schema.getKey());
+        index = index * intSize * 2; //account for integer size and the 2 ints
+        return index;
+    }
+
+    /**
+     * Gets the attributes of the record starting at the given index.
+     *
+     * @return map of attribute names and their values.
+     */
+    private Map<String, Object> getRecord(int index) {
+        Map<String, Object> record = new HashMap<String, Object>();
+
+        //find null bitmap and get it.
+        int bitMapLocation = index + (intSize*2)*schema.getAttributes().size();
+        int bitMapSize = (int) schema.getAttributes().size() / byteSize;
+        byte[] bitMapBytes = new byte[bitMapSize];
+        for (int byteIndex = 0; byteIndex < bitMapSize; byteIndex++) {
+            bitMapBytes[byteIndex] = data[byteIndex + bitMapLocation];
+        }
+
+        //convert to BitSet
+        BitSet nullBitMap = BitSet.valueOf(bitMapBytes);
+
+        //parse through values
+        for (int attributeIndex = 0; attributeIndex < schema.getAttributes().size(); attributeIndex++) {
+            Attribute currentAttribute = schema.getAttributes().get(attributeIndex);
+
+            //check if null
+            if(nullBitMap.get(attributeIndex)) {
+                record.put(currentAttribute.getName(), null);
+                continue;
+            }
+
+            int attributeLocation = 0;
+            int attributeSize = 0;
+            //get attribute location.
+            int trueIndex = index + attributeIndex*intSize;
+            for (int byteIndex = trueIndex; byteIndex < trueIndex + intSize; byteIndex++) {
+                attributeLocation = (attributeLocation << byteSize) + (data[byteIndex] & 0xFF);
+            }
+            //get attribute size.
+            trueIndex = index + attributeIndex*intSize + intSize;
+            for (int byteIndex = trueIndex; byteIndex < trueIndex + intSize; byteIndex++) {
+                attributeSize = (attributeSize << byteSize) + (data[byteIndex] & 0xFF);
+            }
+
+            //get attribute value
+            byte[] attributeBytes = new byte[attributeSize];
+            for (int byteIndex = 0; byteIndex < attributeSize; byteIndex++) {
+                attributeBytes[byteIndex] = data[byteIndex+attributeLocation];
+            }
+
+            //put into map
+            if (currentAttribute.getType().contains("char")) {
+                record.put(currentAttribute.getName(), new String(attributeBytes));
+            }
+            else if (currentAttribute.getType().equalsIgnoreCase("integer")) {
+                record.put(currentAttribute.getName(), ByteBuffer.wrap(attributeBytes).getInt());
+            }
+            else if (currentAttribute.getType().equalsIgnoreCase("double")) {
+                record.put(currentAttribute.getName(),ByteBuffer.wrap(attributeBytes).getDouble());
+            }
+            else if (currentAttribute.getType().equalsIgnoreCase("boolean")) {
+                int value = attributeBytes[0] & 0xFF;
+                if (value == 0) {
+                    record.put(currentAttribute.getName(), false);
+                }
+                else {
+                    record.put(currentAttribute.getName(), true);
+                }
+            }
+        }
+        return record;
     }
 }
