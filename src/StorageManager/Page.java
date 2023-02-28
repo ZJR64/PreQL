@@ -217,6 +217,7 @@ public class Page {
     /**
      * Gets the attributes of the record starting at the given index.
      *
+     * @param index the index of the record to be read at.
      * @return map of attribute names and their values.
      */
     private Map<String, Object> getRecord(int index) {
@@ -234,8 +235,8 @@ public class Page {
         BitSet nullBitMap = BitSet.valueOf(bitMapBytes);
 
         //parse through values
-        for (int attributeIndex = 0; attributeIndex < schema.getAttributes().size(); attributeIndex++) {
-            Attribute currentAttribute = schema.getAttributes().get(attributeIndex);
+        int attributeIndex = 0;
+        for (Attribute currentAttribute : schema.getAttributes()) {
 
             //check if null
             if(nullBitMap.get(attributeIndex)) {
@@ -245,11 +246,13 @@ public class Page {
 
             int attributeLocation = 0;
             int attributeSize = 0;
+
             //get attribute location.
             int trueIndex = index + attributeIndex*intSize;
             for (int byteIndex = trueIndex; byteIndex < trueIndex + intSize; byteIndex++) {
                 attributeLocation = (attributeLocation << byteSize) + (data[byteIndex] & 0xFF);
             }
+
             //get attribute size.
             trueIndex = index + attributeIndex*intSize + intSize;
             for (int byteIndex = trueIndex; byteIndex < trueIndex + intSize; byteIndex++) {
@@ -281,7 +284,56 @@ public class Page {
                     record.put(currentAttribute.getName(), true);
                 }
             }
+
+            //increment index
+            attributeIndex++;
         }
         return record;
+    }
+
+    /**
+     * turns a map of attributes consisting of names and values into a byte array.
+     *
+     * @param record the map of name and value that will be converted to bytes.
+     * @return a byte array.
+     */
+    private void writeBytes(Map<String, Object> record, int arraySize) {
+
+    }
+
+    /**
+     * finds the size of the byte array required for a record.
+     *
+     * @param record the map of name and value.
+     * @return the potential size of a byte array.
+     */
+    private int getArraySize(Map<String, Object> record) {
+        // calculate the size of the byte array
+        int arraySize = intSize * 2 * schema.getAttributes().size();
+
+        //go through each attribute
+        for (Attribute attribute : schema.getAttributes()) {
+            Object value = record.get(attribute.getName());
+
+            //parse types
+            if (value != null) {
+                if (attribute.getType().contains("char")) {
+                    //get length of string
+                    arraySize += ((String) value).getBytes().length;
+                } else if (attribute.getType().equalsIgnoreCase("integer")) {
+                    //integer
+                    arraySize += intSize;
+                }
+                else if (attribute.getType().equalsIgnoreCase("boolean")) {
+                    //boolean is 1 byte
+                    arraySize += 1;
+                }
+                else {
+                    //must be double
+                    arraySize += Double.SIZE/byteSize;
+                }
+            }
+        }
+        return arraySize;
     }
 }
