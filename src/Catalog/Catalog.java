@@ -35,7 +35,7 @@ public class Catalog {
             //make the catalog read from file
             byte[] byteArray;
             try {
-                FileInputStream inputStream = new FileInputStream(catPath);;
+                FileInputStream inputStream = new FileInputStream(catPath);
                 byteArray = inputStream.readAllBytes();
                 inputStream.close();
             } catch (Exception e) {

@@ -69,28 +69,36 @@ public class Page {
      * @return the records represented by a dictionary full of attributes in a list.
      */
     public Map[] getRecords() {
-        //TODO go through records and return in order.
-        return null;
+        //get list of indeces
+        int[] indexList = getIndexList();
+
+        //now generate the maps
+        Map[] recordList = new Map[indexList.length];
+        for (int recordIndex = 0; recordIndex < indexList.length; recordIndex++) {
+            recordList[recordIndex] = getRecord(indexList[recordIndex]);
+        }
+
+        return recordList;
     }
 
     /**
-     * Gets a specificrecord, based on the primaryKey.
+     * Gets a specific record, based on the primaryKey.
      *
      * @param primaryKeyValue the value of the primary key.
      * @return the record represented by a dictionary full of attributes.
      */
     public Map<String, Object> getRecord(Object primaryKeyValue) {
-        //TODO
-       Attribute key = schema.getKey();
-       if (key.getType().equalsIgnoreCase("string")) {
+        //get list of indeces
+        int[] indexList = getIndexList();
 
-       }
-        if (key.getType().equalsIgnoreCase("integer")) {
-
+        //search through the records to find a matching record
+        for (int index : indexList) {
+            if (primaryKeyValue.equals(findPrimaryKeyValue(index))) {
+                return getRecord(index);
+            }
         }
-        if (key.getType().equalsIgnoreCase("double")) {
 
-        }
+        //return null if not found
         return null;
     }
 
@@ -233,6 +241,33 @@ public class Page {
         return deByte(schema.getKey(), keyBytes);
     }
 
+    private int[] getIndexList() {
+        //get number of records
+        int numRecords = 0;
+        for (int byteIndex = 0; byteIndex < intSize; byteIndex++) {
+            numRecords = (numRecords << byteSize) + (data[byteIndex] & 0xFF);
+        }
+
+        //get a list of all records indexes
+        int[] indexList = new int[numRecords];
+        int trueIndex = intSize;
+        for (int indexIndex = 0; indexIndex < numRecords; indexIndex++) {
+            //increment true index
+            trueIndex += intSize;
+
+            //get index
+            int indexValue = 0;
+            for (int byteIndex = trueIndex; byteIndex < intSize + trueIndex; byteIndex++) {
+                indexValue = (indexValue << byteSize) + (data[byteIndex] & 0xFF);
+            }
+
+            //store
+            indexList[indexIndex] = indexValue;
+        }
+
+        //return
+        return indexList;
+    }
 
     /**
      * turns bytes into a readable object.
