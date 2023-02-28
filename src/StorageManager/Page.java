@@ -16,7 +16,6 @@ public class Page {
     private Schema schema;
     private byte[] data;
     private int pageSize;
-    private int primaryKeyIndex;
     private int byteSize;
     private int intSize;
 
@@ -31,7 +30,6 @@ public class Page {
         this.schema = schema;
         this.data = data;
         this.pageSize = pageSize;
-        this.primaryKeyIndex = findPrimaryKeyIndex();
         byteSize = Byte.SIZE;
         intSize = Integer.SIZE/Byte.SIZE;
     }
@@ -47,7 +45,6 @@ public class Page {
         this.schema = schema;
         this.pageSize = pageSize;
         this.data = new byte[pageSize];
-        this.primaryKeyIndex = findPrimaryKeyIndex();
         intSize = Integer.SIZE/Byte.SIZE;
 
         //put in the basic structure of the page
@@ -83,6 +80,7 @@ public class Page {
      * @return the record represented by a dictionary full of attributes.
      */
     public Map<String, Object> getRecord(Object primaryKeyValue) {
+        //TODO
        Attribute key = schema.getKey();
        if (key.getType().equalsIgnoreCase("string")) {
 
@@ -162,6 +160,7 @@ public class Page {
      */
     public void updateRecord(Map<String, Object> attributes) {
         //TODO update the record with new values.
+        //probably have to
     }
 
     /**
@@ -200,18 +199,70 @@ public class Page {
             freeSpace = (freeSpace << byteSize) + (data[byteIndex] & 0xFF);
         }
 
-        //TODO if inneficient reorganise the page to be more space effecient.
+        //TODO? if inneficient reorganise the page to be more space effecient.
     }
 
     /**
-     * Finds the position for the pointer to the primary key in each record.
+     * Finds the primaryKey value for the record starting at the index.
      *
-     * @return the index of the primary key pointer.
+     * @param index the starting byte of the record
+     * @return the value of the primaryKey.
      */
-    private int findPrimaryKeyIndex() {
-        int index = schema.getAttributes().indexOf(schema.getKey());
-        index = index * intSize * 2; //account for integer size and the 2 ints
-        return index;
+    private Object findPrimaryKeyValue(int index) {
+        //get the location of the key
+        int trueIndex = index + schema.getAttributes().indexOf(schema.getKey()) * intSize * 2;
+        int keyIndex = 0;
+        for (int byteIndex = trueIndex; byteIndex < trueIndex + intSize; byteIndex++) {
+            keyIndex = (keyIndex << byteSize) + (data[byteIndex] & 0xFF);
+        }
+
+        //get length of key
+        trueIndex = trueIndex + intSize;
+        int keySize = 0;
+        for (int byteIndex = trueIndex; byteIndex < trueIndex + intSize; byteIndex++) {
+            keySize = (keySize << byteSize) + (data[byteIndex] & 0xFF);
+        }
+
+        //get keyValue
+        trueIndex = index + keyIndex;
+        byte[] keyBytes = new byte[keySize];
+        for (int byteIndex = 0; byteIndex < keySize; byteIndex++) {
+            keyBytes[byteIndex] = data[byteIndex+trueIndex];
+        }
+
+        return deByte(schema.getKey(), keyBytes);
+    }
+
+
+    /**
+     * turns bytes into a readable object.
+     *
+     * @param attribute the attribute the byteArray is storing.
+     * @param byteArray the byte array holding the value.
+     * @return the value of the byteArray.
+     */
+    private Object deByte(Attribute attribute, byte[] byteArray) {
+        //string
+        if (attribute.getType().contains("char")) {
+            return new String(byteArray);
+        }
+        //int
+        else if (attribute.getType().equalsIgnoreCase("integer")) {
+            return ByteBuffer.wrap(byteArray).getInt();
+        }
+        //double
+        else if (attribute.getType().equalsIgnoreCase("double")) {
+            return ByteBuffer.wrap(byteArray).getDouble();
+        }
+        //must be boolean
+        else {
+            if (byteArray[0] == 0) {
+                return false;
+            }
+            else {
+                return true;
+            }
+        }
     }
 
     /**
@@ -254,7 +305,7 @@ public class Page {
             }
 
             //get attribute size.
-            trueIndex = index + attributeIndex*intSize + intSize;
+            trueIndex = trueIndex + intSize;
             for (int byteIndex = trueIndex; byteIndex < trueIndex + intSize; byteIndex++) {
                 attributeSize = (attributeSize << byteSize) + (data[byteIndex] & 0xFF);
             }
@@ -266,24 +317,7 @@ public class Page {
             }
 
             //put into map
-            if (currentAttribute.getType().contains("char")) {
-                record.put(currentAttribute.getName(), new String(attributeBytes));
-            }
-            else if (currentAttribute.getType().equalsIgnoreCase("integer")) {
-                record.put(currentAttribute.getName(), ByteBuffer.wrap(attributeBytes).getInt());
-            }
-            else if (currentAttribute.getType().equalsIgnoreCase("double")) {
-                record.put(currentAttribute.getName(),ByteBuffer.wrap(attributeBytes).getDouble());
-            }
-            else if (currentAttribute.getType().equalsIgnoreCase("boolean")) {
-                int value = attributeBytes[0] & 0xFF;
-                if (value == 0) {
-                    record.put(currentAttribute.getName(), false);
-                }
-                else {
-                    record.put(currentAttribute.getName(), true);
-                }
-            }
+            record.put(currentAttribute.getName(), deByte(currentAttribute, attributeBytes));
 
             //increment index
             attributeIndex++;
@@ -317,9 +351,13 @@ public class Page {
 
             //find the type
             int valueSize = 0;
-            if (attribute.getType().contains("char")) {
-                //get length of string
+            if (attribute.getType().startsWith("varchar")) {
+                //varchar
                 valueSize = ((String) value).getBytes().length;
+            } else if (attribute.getType().startsWith("char")){
+                //char
+                String type = attribute.getType();
+                valueSize = Integer.parseInt(type.substring(type.indexOf("(")+1, type.indexOf(")")).strip());
             } else if (attribute.getType().equalsIgnoreCase("integer")) {
                 //integer
                 valueSize = intSize;
@@ -339,19 +377,21 @@ public class Page {
             for (int byteIndex = trueIndex; byteIndex < intSize + trueIndex; byteIndex++) {
                 byteArray[byteIndex] = (byte) (valueIndex >>> ((intSize-1)*byteSize - (byteSize * byteIndex)));
             }
-            trueIndex = attributeIndex * intSize * 2 + intSize;
+            trueIndex = trueIndex + intSize;
             for (int byteIndex = trueIndex; byteIndex < intSize + trueIndex; byteIndex++) {
                 byteArray[byteIndex] = (byte) (valueSize >>> ((intSize-1)*byteSize - (byteSize * byteIndex)));
             }
 
-            //get balue bytes
+            //get value bytes
             byte[] valueBytes = new byte[valueSize];
             if (attribute.getType().contains("char")) {
                 //String
                 valueBytes = ((String) value).getBytes();
             } else if (attribute.getType().equalsIgnoreCase("integer")) {
                 //int
-
+                ByteBuffer buffer = ByteBuffer.allocate(intSize);
+                buffer.putInt((int)value);
+                valueBytes = buffer.array();
             }
             else if (attribute.getType().equalsIgnoreCase("boolean")) {
                 //boolean
@@ -399,9 +439,13 @@ public class Page {
 
             //parse types
             if (value != null) {
-                if (attribute.getType().contains("char")) {
-                    //get length of string
+                if (attribute.getType().startsWith("varchar")) {
+                    //varchar
                     arraySize += ((String) value).getBytes().length;
+                } else if (attribute.getType().startsWith("char")){
+                    //char
+                    String type = attribute.getType();
+                    arraySize += Integer.parseInt(type.substring(type.indexOf("(")+1, type.indexOf(")")).strip());
                 } else if (attribute.getType().equalsIgnoreCase("integer")) {
                     //integer
                     arraySize += intSize;
