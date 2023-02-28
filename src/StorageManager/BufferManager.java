@@ -188,7 +188,7 @@ public class BufferManager {
     /**
      * Adds 1 to the number of pages
      *
-     * @param fileName he name of the file to increment
+     * @param fileName the name of the file to increment
      * @throws IOException
      */
     private void addPageNumber(String fileName) throws IOException {

@@ -5,6 +5,8 @@ import src.Catalog.Schema;
 import java.util.Map;
 
 /**
+ * Hmmm... Maybe we don't need this class, maybe it would be
+ * illegal to use it, I'll keep it here for now.
  *
  * @author Zak Rutherford zjr6302@rit.edu
  */
@@ -60,7 +62,7 @@ public class Record {
      * @param data the byte array to be looked through.
      */
     private void makeSense(byte[] data) {
-
+        //TODO
     }
 
     /**
@@ -69,6 +71,7 @@ public class Record {
      * @return the byte array representation of the record.
      */
     private byte[] makeNonsense() {
+        //TODO
         return null;
     }
 }
