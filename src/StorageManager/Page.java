@@ -54,7 +54,7 @@ public class Page {
             data[byteIndex] = 0;
         }
         //put the pointer to the next page at the end of page
-        for (int byteIndex = data.length - intSize - 1; byteIndex < data.length; byteIndex++) {
+        for (int byteIndex = data.length - intSize; byteIndex < data.length; byteIndex++) {
             data[byteIndex] = (byte) (nextPage >>> ((intSize-1)*byteSize - (byteSize * byteIndex)));
         }
         //put the pointer to the free space
@@ -177,17 +177,15 @@ public class Page {
         }
 
         //store index for new record
-        for (int byteIndex = endFree ; byteIndex < endFree + intSize; byteIndex++) {
-            data[byteIndex] = (byte) (newIndex >>> ((intSize-1)*byteSize - (byteSize * byteIndex)));
-        }
+        addIndex(arrayIndex, attributes.get(schema.getKey().getName()));
 
         //record added successfully
         return true;
     }
 
     /**
-     * Splits the page, sending back a page object of the new page.
-     * to the page
+     * Splits the page, sending back the number of the page that was created.
+     *
      * @param bufferManager the buffer manager, to add
      * @param attributes the attributes of the record that is being added.
      * @return the number of the newly created page.
@@ -195,19 +193,35 @@ public class Page {
     public int split(BufferManager bufferManager, Map<String, Object> attributes) {
         //extract nextPage
         int pagePointer = 0;
-        for (int byteIndex = data.length - intSize - 1; byteIndex < data.length; byteIndex++) {
+        for (int byteIndex = data.length - intSize; byteIndex < data.length; byteIndex++) {
             pagePointer = (pagePointer << byteSize) + (data[byteIndex] & 0xFF);
         }
         Page newPage = new Page(schema, pageSize, pagePointer);
 
-        //TODO add records to the page
+        //split indices in half
+        int[] index = getIndexList();
+        int[] thisPageIndex = Arrays.copyOfRange(index, 0, index.length/2);
+        int[] newPageIndex = Arrays.copyOfRange(index, index.length/2, index.length);
+
+        //remove records and add them to the new page
+        for (int movingIndex: newPageIndex) {
+            newPage.addRecord(removeRecord(findPrimaryKeyValue(movingIndex)));
+        }
 
         //add page to buffer
         pagePointer = bufferManager.addPage(schema.getName(), newPage.getPage());
         //put the pointer to the next page at the end of page
-        for (int byteIndex = data.length - intSize - 1; byteIndex < data.length; byteIndex++) {
+        for (int byteIndex = data.length - intSize; byteIndex < data.length; byteIndex++) {
             data[byteIndex] = (byte) (pagePointer >>> ((intSize-1)*byteSize - (byteSize * byteIndex)));
         }
+
+        //find new free space
+        recalcFreeSpace();
+
+        //add new record
+        addRecord(attributes);
+
+        //return pointer to newly create page
         return pagePointer;
     }
 
@@ -215,20 +229,24 @@ public class Page {
      * Removes a record from the table.
      *
      * @param primaryKeyValue the value of the primary key.
-     * @return the bytes of the record being removed.
+     * @return attributes of removed record.
      */
-    public byte[] removeRecord(Object primaryKeyValue) {
+    public Map<String,Object> removeRecord(Object primaryKeyValue) {
         //get list of indeces
         int[] indexList = getIndexList();
+        Map<String,Object> attributes = null;
 
         //search through the records to find a matching record
         for (int index : indexList) {
             if (primaryKeyValue.equals(findPrimaryKeyValue(index))) {
-                //removeIndex()
-                //TODO
+                attributes = getRecord(index);
+                removeIndex(index);
+                break;
             }
         }
-        return null;
+
+        recalcFreeSpace();
+        return attributes;
     }
 
     /**
@@ -262,22 +280,7 @@ public class Page {
      * @return the byte array of the page.
      */
     public byte[] getPage() {
-        defragment();
         return data;
-    }
-
-    /**
-     * Looks at the wasted space in the page and shifts over all values, could be potentially
-     * high cost, so perhaps some tricks could be used.
-     */
-    public void defragment() {
-        //get the pointer to free space
-        int freeSpace = 0;
-        for (int byteIndex = intSize; byteIndex < intSize*2; byteIndex++) {
-            freeSpace = (freeSpace << byteSize) + (data[byteIndex] & 0xFF);
-        }
-
-        //TODO? if inneficient reorganise the page to be more space effecient.
     }
 
     /**
@@ -581,7 +584,7 @@ public class Page {
         int[] indexList = getIndexList();
 
         //calculate least index
-        int leastIndex = data.length - 1;
+        int leastIndex = data.length - intSize; //index of page pointer
         for (int index : indexList) {
             if (index < leastIndex) {
                 leastIndex = index;
@@ -596,9 +599,95 @@ public class Page {
     }
 
     /**
-     * Overwrite the index by shifting indexes by 1 to the left
+     * Add new index, and shift all indeces left that are greater than the
+     * current one
+     *
+     * @param index the index to be added
+     * @param primaryKeyValue the primaryKeyValue for the data
      */
-    private void removeIndex(int numIndex) {
-        //TODO
+    private void addIndex(int index, Object primaryKeyValue) {
+        //get number of records
+        int numRecords = 0;
+        for (int byteIndex = 0; byteIndex < intSize; byteIndex++) {
+            numRecords = (numRecords << byteSize) + (data[byteIndex] & 0xFF);
+        }
+
+        //parse through all indexes backwards
+        int trueIndex = intSize*numRecords + intSize*2; //intSize*2 accounts for the numRecords and freespace pointer
+        while (trueIndex > 0) {
+            trueIndex -= intSize;
+            //get index
+            int indexValue = 0;
+            for (int byteIndex = trueIndex; byteIndex < intSize + trueIndex; byteIndex++) {
+                indexValue = (indexValue << byteSize) + (data[byteIndex] & 0xFF);
+            }
+
+            //shift right
+            for (int byteIndex = trueIndex + intSize; byteIndex < trueIndex + intSize*2; byteIndex++) {
+                data[byteIndex] = (byte) (indexValue >>> ((intSize-1)*byteSize - (byteSize * byteIndex)));
+            }
+
+            Object currentKeyValue = findPrimaryKeyValue(indexValue);
+            //check if less, write index and return
+            if(currentKeyValue instanceof Comparable && ((Comparable) currentKeyValue).compareTo(primaryKeyValue) < 0) {
+                for (int byteIndex = trueIndex + intSize; byteIndex < trueIndex + intSize*2; byteIndex++) {
+                    data[byteIndex] = (byte) (index >>> ((intSize-1)*byteSize - (byteSize * byteIndex)));
+                }
+                return;
+            }
+        }
+
+        //overwrite numRecords
+        numRecords++;
+        for (int byteIndex = 0; byteIndex < intSize; byteIndex++) {
+            data[byteIndex] = (byte) (numRecords >>> ((intSize-1)*byteSize - (byteSize * byteIndex)));
+        }
+    }
+
+    /**
+     * Overwrite the index by shifting indexes by 1 to the left
+     *
+     * @param index the index to be removed
+     */
+    private void removeIndex(int index) {
+        //get number of records
+        int numRecords = 0;
+        for (int byteIndex = 0; byteIndex < intSize; byteIndex++) {
+            numRecords = (numRecords << byteSize) + (data[byteIndex] & 0xFF);
+        }
+
+        //indicator for when to ovewrite
+        boolean write = false;
+
+        //parse through all indexes
+        int trueIndex = intSize;
+        for (int indexIndex = 0; indexIndex < numRecords; indexIndex++) {
+            //increment true index
+            trueIndex += intSize;
+
+            //get index
+            int indexValue = 0;
+            for (int byteIndex = trueIndex; byteIndex < intSize + trueIndex; byteIndex++) {
+                indexValue = (indexValue << byteSize) + (data[byteIndex] & 0xFF);
+            }
+
+            //if index value is found
+            if (indexValue == index) {
+                write = true;
+            }
+
+            //if overwriting
+            if (write) {
+                for (int byteIndex = trueIndex - intSize; byteIndex < trueIndex; byteIndex++) {
+                    data[byteIndex] = (byte) (indexValue >>> ((intSize-1)*byteSize - (byteSize * byteIndex)));
+                }
+            }
+        }
+
+        //overwrite numRecords
+        numRecords--;
+        for (int byteIndex = 0; byteIndex < intSize; byteIndex++) {
+            data[byteIndex] = (byte) (numRecords >>> ((intSize-1)*byteSize - (byteSize * byteIndex)));
+        }
     }
 }
