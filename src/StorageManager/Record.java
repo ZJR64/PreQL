@@ -8,8 +8,9 @@ import java.util.Map;
  * @author Zak Rutherford zjr6302@rit.edu
  */
 public class Record {
-    Map<String, Object> attributes;
-    Schema schema;
+    private Map<String, Object> attributes;
+    private int size;
+    private Schema schema;
 
     /**
      * Constructor for records when we have a byte array.
@@ -32,12 +33,13 @@ public class Record {
     public Record (Schema schema, Map<String, Object> attributes) {
         this.schema = schema;
         this.attributes = attributes;
+        this.size = calcSize();
     }
 
     /**
      * getter method for the attributes in the record
      *
-     * @return a map with name of attribute and value.
+     * @return a map with names of attribute and value.
      */
     public Map<String, Object> getAttributes() {
         return attributes;
@@ -46,8 +48,8 @@ public class Record {
     /**
      * Gets the value of an attribute.
      *
-     * @param name the name of the value.
-     * @return a map with name of attribute and value.
+     * @param name the name of the attribute.
+     * @return an object that corresponds to the attribute name.
      */
     public Object getValue(String name) {
         return attributes.get(name);
@@ -69,5 +71,13 @@ public class Record {
      */
     private byte[] makeNonsense() {
         return null;
+    }
+
+    /**
+     * calculate the size of the record
+     */
+    private int calcSize() {
+        //TODO
+        return -1;
     }
 }
