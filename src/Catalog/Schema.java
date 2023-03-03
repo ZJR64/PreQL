@@ -16,6 +16,8 @@ public class Schema {
     private int pages;
     private int records;
     private ArrayList<Attribute> attributes;
+    private ArrayList<Integer> pageOrder;
+    private ArrayList<Integer> openPages;
 
     /**
      * Constructor for a new Schema object
@@ -26,6 +28,7 @@ public class Schema {
     public Schema (String name, ArrayList<Attribute> attributes) {
         this.name = name;
         this.attributes = attributes;
+        this.pageOrder = new ArrayList<Integer>();
         this.pages = 0;
         this.records = 0;
     }
@@ -43,9 +46,14 @@ public class Schema {
         this.pages = Integer.parseInt(filtered[2]);
         //then records
         this.records = Integer.parseInt(filtered[3]);
+        //get pageOrder
+        this.pageOrder = new ArrayList<Integer>();
+        for (int i = 4; i < pages; i++) {
+            pageOrder.add(Integer.parseInt(filtered[i]));
+        }
         //get rest of attributes
         this.attributes = new ArrayList<Attribute>();
-        for (int i = 4; i < filtered.length; i++) {
+        for (int i = 4 + pages; i < filtered.length; i++) {
             attributes.add(new Attribute(filtered[i]));
         }
     }
@@ -74,6 +82,9 @@ public class Schema {
      */
     public String writeable() {
         String output = name + seperator + seperator + pages + seperator + records;
+        for (int page : pageOrder) {
+            output += seperator + page;
+        }
         for (Attribute a: attributes) {
             output += seperator + a.writeable();
         }
@@ -102,14 +113,59 @@ public class Schema {
     public int getPages() {return pages;}
 
     /**
-     * Adds one to the number of pages the table takes up
+     * Adds a page to the pageOrder. If this is the first page being
+     * added, then before does not matter.
+     *
+     * @param before the page immediately before the one added.
+     * @param page the page number being added.
      */
-    public void addPage() {this.pages++;}
+    public void addPage(int before, int page) {
+        //check if first page added
+        if (pages == 0) {
+            pageOrder.add(page);
+        }
+        else {
+            //add page to pageOrder
+            pageOrder.add(pageOrder.indexOf(before) + 1, page);
+        }
+        //check if in openPages, and if so, then remove
+        if (openPages.indexOf(page) != -1) {
+            openPages.remove(openPages.indexOf(page));
+        }
+        //increment pages
+        this.pages++;
+    }
 
     /**
      * Subtracts one to the number of pages the table takes up
+     *
+     * @param page the page to be removed.
      */
-    public void subPage() {this.pages--;}
+    public void subPage(int page) {
+        //remove from pageOrder then add to openPages
+        pageOrder.remove(pageOrder.indexOf(page));
+        openPages.add(page);
+        //increment pages
+        this.pages--;
+    }
+
+    /**
+     * getter method for page order.
+     *
+     * @return ArrayList of page order.
+     */
+    public ArrayList<Integer> getPageOrder() {
+        return pageOrder;
+    }
+
+    /**
+     * getter method for the list of open pages.
+     *
+     * @return ArrayList of open pages.
+     */
+    public ArrayList<Integer> getOpenPages() {
+        return openPages;
+    }
 
     /**
      * getter method for the number of records the table has.
@@ -119,12 +175,12 @@ public class Schema {
     public int getRecords() {return records;}
 
     /**
-     * Adds one to the number of pages the table takes up
+     * Adds one to the number of records the table has.
      */
     public void addRecord() {this.records++;}
 
     /**
-     * Subtracts one to the number of pages the table takes up
+     * Subtracts one to the number of records the table has.
      */
     public void subRecord() {this.records--;}
 

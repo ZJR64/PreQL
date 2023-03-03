@@ -58,7 +58,7 @@ public class StorageManager {
                 if(i == 0){
                     pageNum = bm.addPage(tableName,records.get(i));
                     table.addRecord();
-                    table.addPage();
+                    table.addPage(0, 0);
                 }
                 bm.writePage(tableName, pageNum, records.get(i));
 
