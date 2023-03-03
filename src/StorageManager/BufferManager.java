@@ -168,6 +168,15 @@ public class BufferManager {
     }
 
     /**
+     * Method that deletes the file and purges pages from buffer.
+     *
+     * @param fileName the name of the file to be deleted.
+     */
+    public void purge(String fileName) {
+        //TODO
+    }
+
+    /**
      * Method that safely stores the Catalog when the database is shut down.
      */
     public void shutDown(){

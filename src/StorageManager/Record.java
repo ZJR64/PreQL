@@ -54,6 +54,14 @@ public class Record {
     public Object getValue(String name) {
         return attributes.get(name);
     }
+    /**
+     * Gets the size of the record.
+     *
+     * @return the size of the record.
+     */
+    public int getSize() {
+        return size;
+    }
 
     /**
      * Takes a byte array and puts the attributes into the map.
