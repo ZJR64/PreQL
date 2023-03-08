@@ -4,6 +4,7 @@ import src.Catalog.*;
 
 import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.function.Predicate;
 
 /**
  * The class for the representation of the page. This class

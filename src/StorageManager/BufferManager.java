@@ -173,7 +173,17 @@ public class BufferManager {
      * @param fileName the name of the file to be deleted.
      */
     public void purge(String fileName) {
-        //TODO
+        //find any pages that need to be removed
+        for (String key : buffer.keySet()) {
+            //if page from file, remove from buffer
+            if (key.startsWith(fileName)) {
+                buffer.remove(key);
+                recentlyUsed.remove(key);
+            }
+        }
+        //delete file
+        File tableFile = new File(storagePath + fileName);
+        tableFile.delete();
     }
 
     /**
