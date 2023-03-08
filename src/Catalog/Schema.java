@@ -29,6 +29,7 @@ public class Schema {
         this.name = name;
         this.attributes = attributes;
         this.pageOrder = new ArrayList<Integer>();
+        this.openPages = new ArrayList<Integer>();
         this.pages = 0;
         this.records = 0;
     }
@@ -48,8 +49,13 @@ public class Schema {
         this.records = Integer.parseInt(filtered[3]);
         //get pageOrder
         this.pageOrder = new ArrayList<Integer>();
-        for (int i = 4; i < pages; i++) {
+        for (int i = 4; i < pages + 4; i++) {
             pageOrder.add(Integer.parseInt(filtered[i]));
+        }
+        //get openPages
+        this.openPages = new ArrayList<Integer>();
+        for (int i = pages + 4; i < pages*2 + 4; i++) {
+            openPages.add(Integer.parseInt(filtered[i]));
         }
         //get rest of attributes
         this.attributes = new ArrayList<Attribute>();
@@ -83,6 +89,9 @@ public class Schema {
     public String writeable() {
         String output = name + seperator + seperator + pages + seperator + records;
         for (int page : pageOrder) {
+            output += seperator + page;
+        }
+        for (int page : openPages) {
             output += seperator + page;
         }
         for (Attribute a: attributes) {

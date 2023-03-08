@@ -15,10 +15,9 @@ import java.util.function.Predicate;
  */
 public class Page {
     private Schema schema;
-    private byte[] data;
+    private ArrayList<Record> recordList;
     private int pageSize;
-    private int byteSize;
-    private int intSize;
+    private int pageNum;
 
     /**
      * Constructor for records when we have a byte array.
@@ -27,12 +26,11 @@ public class Page {
      * @param pageSize the size of the page.
      * @param data the byte array that composes the record.
      */
-    public Page (Schema schema, int pageSize, byte[] data) {
+    public Page (int pageNum, Schema schema, int pageSize, byte[] data) {
+        this.pageNum = pageNum;
         this.schema = schema;
-        this.data = data;
+        this.recordList = makeRecords(data);
         this.pageSize = pageSize;
-        byteSize = Byte.SIZE;
-        intSize = Integer.SIZE/Byte.SIZE;
     }
 
     /**
@@ -42,27 +40,11 @@ public class Page {
      * @param pageSize the size of the page.
      * @param nextPage the next page to point to.
      */
-    public Page (Schema schema, int pageSize, int nextPage) {
+    public Page (int pageNum, Schema schema, int pageSize) {
+        this.pageNum = pageNum;
         this.schema = schema;
         this.pageSize = pageSize;
-        this.data = new byte[pageSize];
-        byteSize = Byte.SIZE;
-        intSize = Integer.SIZE/Byte.SIZE;
-
-        //put in the basic structure of the page
-        //put zero as the number of records
-        for (int byteIndex = 0; byteIndex < intSize; byteIndex++) {
-            data[byteIndex] = 0;
-        }
-        //put the pointer to the next page at the end of page
-        for (int byteIndex = data.length - intSize; byteIndex < data.length; byteIndex++) {
-            data[byteIndex] = (byte) (nextPage >>> ((intSize-1)*byteSize - (byteSize * byteIndex)));
-        }
-        //put the pointer to the free space
-        int freeSpace = data.length - intSize - 2;
-        for (int byteIndex = intSize ; byteIndex < intSize*2; byteIndex++) {
-            data[byteIndex] = (byte) (freeSpace >>> ((intSize-1)*byteSize - (byteSize * byteIndex)));
-        }
+        this.recordList = new ArrayList<Record>();
     }
 
     /**
@@ -70,37 +52,22 @@ public class Page {
      *
      * @return the records represented by a dictionary full of attributes in a list.
      */
-    public Map[] getRecords() {
-        //get list of indeces
-        int[] indexList = getIndexList();
-
-        //now generate the maps
-        Map[] recordList = new Map[indexList.length];
-        for (int recordIndex = 0; recordIndex < indexList.length; recordIndex++) {
-            recordList[recordIndex] = getRecord(indexList[recordIndex]);
-        }
-
-        return recordList;
+    public ArrayList<Record> getRecords() {
+        return this.recordList;
     }
 
     /**
      * Gets a specific record, based on the primaryKey.
      *
      * @param primaryKeyValue the value of the primary key.
-     * @return the record represented by a dictionary full of attributes.
+     * @return the record, or null if not found.
      */
-    public Map<String, Object> getRecord(Object primaryKeyValue) {
-        //get list of indeces
-        int[] indexList = getIndexList();
-
-        //search through the records to find a matching record
-        for (int index : indexList) {
-            if (primaryKeyValue.equals(findPrimaryKeyValue(index))) {
-                return getRecord(index);
+    public Record getRecord(Object primaryKeyValue) {
+        for (Record record : recordList) {
+            if (record.getPrimaryKey().equals(primaryKeyValue)) {
+                return record;
             }
         }
-
-        //return null if not found
         return null;
     }
 
@@ -111,18 +78,15 @@ public class Page {
      * @return true primary key exists, or could potentially exist in page, false otherwise.
      */
     public boolean belongs(Object primaryKeyValue) {
-        //get list of indeces
-        int[] indexList = getIndexList();
-
         //search through the records to find a matching record
-        for (int index : indexList) {
-            Object currentKeyValue = findPrimaryKeyValue(index);
+        for (Record record : recordList) {
+            Object currentKeyValue = record.getPrimaryKey();
             //check if equal
             if (primaryKeyValue.equals(currentKeyValue)) {
                 return true;
             }
-            //check if less than
-            if(currentKeyValue instanceof Comparable && ((Comparable) currentKeyValue).compareTo(primaryKeyValue) < 0) {
+            //check if greater than
+            if(currentKeyValue instanceof Comparable && ((Comparable) currentKeyValue).compareTo(primaryKeyValue) > 0) {
                 return true;
             }
         }
@@ -136,49 +100,36 @@ public class Page {
      * @return true if operation completed, false if page needs to be split.
      */
     public boolean addRecord(Map<String, Object> attributes) {
-        //get number of records
-        int numRecords = 0;
-        for (int byteIndex = 0; byteIndex < intSize; byteIndex++) {
-            numRecords = (numRecords << byteSize) + (data[byteIndex] & 0xFF);
-        }
-        //get freeSpace pointer
-        int freePointer = 0;
-        for (int byteIndex = intSize; byteIndex < intSize*2; byteIndex++) {
-            freePointer = (freePointer << byteSize) + (data[byteIndex] & 0xFF);
+        //get size already used
+        int usedSize = 0;
+        for (Record record : recordList) {
+            //add an Integer for the size indicator
+            usedSize += Integer.SIZE/Byte.SIZE;
+            usedSize += record.getSize();
         }
 
-        //calculate end of free space
-        int endFree= 0;
-        //add ints for numr records and pointer to free space
-        endFree += 2*intSize;
-        //add int for every record
-        endFree += intSize*numRecords;
+        //create Record
+        Record newRecord = new Record(this.schema, attributes);
 
         //now check to see if length of new record would exceed free space
-        int arraySize = getArraySize(attributes);
-        if (arraySize + intSize > endFree - freePointer) {
+        if (usedSize + newRecord.getSize() > pageSize) {
             //need to split page
             return false;
         }
 
-        //create byte representation
-        byte[] newRecord = getBytes(attributes, arraySize);
-
-        //set new freePointer
-        freePointer = freePointer - arraySize;
-        int newIndex = freePointer + 1;
-        for (int byteIndex = intSize ; byteIndex < intSize*2; byteIndex++) {
-            data[byteIndex] = (byte) (freePointer >>> ((intSize-1)*byteSize - (byteSize * byteIndex)));
+        //find where record belongs
+        for (Record record : recordList) {
+            Object currentKey = record.getPrimaryKey();
+            //check if greater than
+            if(currentKey instanceof Comparable && ((Comparable) currentKey).compareTo(newRecord.getPrimaryKey()) > 0) {
+                //add new record to arraylist
+                recordList.add(recordList.indexOf(record), newRecord);
+                break;
+            }
         }
 
-        //store record
-        int arrayIndex = 0;
-        for (int byteIndex = newIndex; byteIndex < arraySize; byteIndex++, arrayIndex++) {
-            data[byteIndex] = newRecord[arrayIndex];
-        }
-
-        //store index for new record
-        addIndex(arrayIndex, attributes.get(schema.getKey().getName()));
+        //increment schema
+        schema.addRecord();
 
         //record added successfully
         return true;
@@ -189,65 +140,56 @@ public class Page {
      *
      * @param bufferManager the buffer manager, to add
      * @param attributes the attributes of the record that is being added.
+     * @param pageNum this page's number.
      * @return the number of the newly created page.
      */
     public int split(BufferManager bufferManager, Map<String, Object> attributes) {
-        //extract nextPage
-        int pagePointer = 0;
-        for (int byteIndex = data.length - intSize; byteIndex < data.length; byteIndex++) {
-            pagePointer = (pagePointer << byteSize) + (data[byteIndex] & 0xFF);
-        }
-        Page newPage = new Page(schema, pageSize, pagePointer);
-
-        //split indices in half
-        int[] index = getIndexList();
-        int[] thisPageIndex = Arrays.copyOfRange(index, 0, index.length/2);
-        int[] newPageIndex = Arrays.copyOfRange(index, index.length/2, index.length);
-
-        //remove records and add them to the new page
-        for (int movingIndex: newPageIndex) {
-            newPage.addRecord(removeRecord(findPrimaryKeyValue(movingIndex)));
-        }
-
         //add page to buffer
-        pagePointer = bufferManager.addPage(schema.getName(), newPage.getPage());
-        //put the pointer to the next page at the end of page
-        for (int byteIndex = data.length - intSize; byteIndex < data.length; byteIndex++) {
-            data[byteIndex] = (byte) (pagePointer >>> ((intSize-1)*byteSize - (byteSize * byteIndex)));
+        int newPageNum = bufferManager.addPage(schema.getName(), schema.getOpenPages());
+
+        //create new page
+        Page newPage = new Page(newPageNum, schema, pageSize);
+
+        //add half the records to new page and then remove them
+        int cutoffPoint = recordList.size()/2;
+        while (cutoffPoint < recordList.size() - 1) {
+            Record currentRecord = recordList.get(cutoffPoint);
+            newPage.addRecord(currentRecord.getAttributes());
+            recordList.remove(currentRecord);
         }
 
-        //find new free space
-        recalcFreeSpace();
+        //write new page to buffer
+        bufferManager.writePage(schema.getFileName() , newPageNum, newPage.getPage());      //TODO what is file name??
+
+        //add page to schema
+        schema.addPage(this.pageNum, newPageNum);
 
         //add new record
         addRecord(attributes);
 
-        //return pointer to newly create page
-        return pagePointer;
+        //return number of page
+        return newPageNum;
     }
 
     /**
-     * Removes a record from the table.
+     * Removes a record from the table by primary key.
      *
      * @param primaryKeyValue the value of the primary key.
-     * @return attributes of removed record.
      */
-    public Map<String,Object> removeRecord(Object primaryKeyValue) {
-        //get list of indeces
-        int[] indexList = getIndexList();
-        Map<String,Object> attributes = null;
-
-        //search through the records to find a matching record
-        for (int index : indexList) {
-            if (primaryKeyValue.equals(findPrimaryKeyValue(index))) {
-                attributes = getRecord(index);
-                removeIndex(index);
-                break;
+    public void removeRecord(Object primaryKeyValue) {
+        for (Record record : recordList) {
+            if(record.getPrimaryKey().equals(primaryKeyValue)) {
+                recordList.remove(record);
             }
         }
+        //increment schema
+        schema.subRecord();
 
-        recalcFreeSpace();
-        return attributes;
+        //check if there are no more records
+        if (recordList.isEmpty()) {
+            //delete page
+            schema.subPage(this.pageNum);
+        }
     }
 
     /**
@@ -256,23 +198,12 @@ public class Page {
      * @param attributes the attributes to overwrite with.
      */
     public void updateRecord(Map<String, Object> attributes) {
-        //TODO update the record with new values.
-        //probably have to
-    }
-
-    /**
-     * Returns the page number of the page this page points to.
-     * Quite the tounge twister.
-     *
-     * @return the number of the next page.
-     */
-    public int getNextPage() {
-        //extract nextPage
-        int pagePointer = 0;
-        for (int byteIndex = data.length - intSize - 1; byteIndex < data.length; byteIndex++) {
-            pagePointer = (pagePointer << byteSize) + (data[byteIndex] & 0xFF);
+        Object primaryKey = attributes.get(schema.getKey().getName());
+        for (Record record : recordList) {
+            if (record.getPrimaryKey().equals(primaryKey)) {
+                record.setAttributes(attributes);
+            }
         }
-        return pagePointer;
     }
 
     /**
@@ -281,414 +212,14 @@ public class Page {
      * @return the byte array of the page.
      */
     public byte[] getPage() {
-        return data;
+        //TODO
+        return null;
     }
 
-    /**
-     * Finds the primaryKey value for the record starting at the index.
-     *
-     * @param index the starting byte of the record
-     * @return the value of the primaryKey.
-     */
-    private Object findPrimaryKeyValue(int index) {
-        //get the location of the key
-        int trueIndex = index + schema.getAttributes().indexOf(schema.getKey()) * intSize * 2;
-        int keyIndex = 0;
-        for (int byteIndex = trueIndex; byteIndex < trueIndex + intSize; byteIndex++) {
-            keyIndex = (keyIndex << byteSize) + (data[byteIndex] & 0xFF);
-        }
+    private ArrayList<Record> makeRecords(byte[] data) {
+        //setup
+        ArrayList<Record> records = new ArrayList<Record>();
 
-        //get length of key
-        trueIndex = trueIndex + intSize;
-        int keySize = 0;
-        for (int byteIndex = trueIndex; byteIndex < trueIndex + intSize; byteIndex++) {
-            keySize = (keySize << byteSize) + (data[byteIndex] & 0xFF);
-        }
-
-        //get keyValue
-        trueIndex = index + keyIndex;
-        byte[] keyBytes = new byte[keySize];
-        for (int byteIndex = 0; byteIndex < keySize; byteIndex++) {
-            keyBytes[byteIndex] = data[byteIndex+trueIndex];
-        }
-
-        return deByte(schema.getKey(), keyBytes);
-    }
-
-    /**
-     * Turns bytes into a readable object.
-     *
-     * @return the list of indeces for records in the page.
-     */
-    private int[] getIndexList() {
-        //get number of records
-        int numRecords = 0;
-        for (int byteIndex = 0; byteIndex < intSize; byteIndex++) {
-            numRecords = (numRecords << byteSize) + (data[byteIndex] & 0xFF);
-        }
-
-        //get a list of all records indexes
-        int[] indexList = new int[numRecords];
-        int trueIndex = intSize;
-        for (int indexIndex = 0; indexIndex < numRecords; indexIndex++) {
-            //increment true index
-            trueIndex += intSize;
-
-            //get index
-            int indexValue = 0;
-            for (int byteIndex = trueIndex; byteIndex < intSize + trueIndex; byteIndex++) {
-                indexValue = (indexValue << byteSize) + (data[byteIndex] & 0xFF);
-            }
-
-            //store
-            indexList[indexIndex] = indexValue;
-        }
-
-        //return
-        return indexList;
-    }
-
-    /**
-     * Turns bytes into a readable object.
-     *
-     * @param attribute the attribute the byteArray is storing.
-     * @param byteArray the byte array holding the value.
-     * @return the value of the byteArray.
-     */
-    private Object deByte(Attribute attribute, byte[] byteArray) {
-        //string
-        if (attribute.getType().contains("char")) {
-            return new String(byteArray);
-        }
-        //int
-        else if (attribute.getType().equalsIgnoreCase("integer")) {
-            return ByteBuffer.wrap(byteArray).getInt();
-        }
-        //double
-        else if (attribute.getType().equalsIgnoreCase("double")) {
-            return ByteBuffer.wrap(byteArray).getDouble();
-        }
-        //must be boolean
-        else {
-            if (byteArray[0] == 0) {
-                return false;
-            }
-            else {
-                return true;
-            }
-        }
-    }
-
-    /**
-     * Gets the attributes of the record starting at the given index.
-     *
-     * @param index the index of the record to be read at.
-     * @return map of attribute names and their values.
-     */
-    private Map<String, Object> getRecord(int index) {
-        Map<String, Object> record = new HashMap<String, Object>();
-
-        //find null bitmap and get it.
-        int bitMapLocation = index + (intSize*2)*schema.getAttributes().size();
-        int bitMapSize = (int) schema.getAttributes().size() / byteSize;
-        byte[] bitMapBytes = new byte[bitMapSize];
-        for (int byteIndex = 0; byteIndex < bitMapSize; byteIndex++) {
-            bitMapBytes[byteIndex] = data[byteIndex + bitMapLocation];
-        }
-
-        //convert to BitSet
-        BitSet nullBitMap = BitSet.valueOf(bitMapBytes);
-
-        //parse through values
-        int attributeIndex = 0;
-        for (Attribute currentAttribute : schema.getAttributes()) {
-
-            //check if null
-            if(nullBitMap.get(attributeIndex)) {
-                record.put(currentAttribute.getName(), null);
-                continue;
-            }
-
-            int attributeLocation = 0;
-            int attributeSize = 0;
-
-            //get attribute location.
-            int trueIndex = index + attributeIndex*intSize;
-            for (int byteIndex = trueIndex; byteIndex < trueIndex + intSize; byteIndex++) {
-                attributeLocation = (attributeLocation << byteSize) + (data[byteIndex] & 0xFF);
-            }
-
-            //get attribute size.
-            trueIndex = trueIndex + intSize;
-            for (int byteIndex = trueIndex; byteIndex < trueIndex + intSize; byteIndex++) {
-                attributeSize = (attributeSize << byteSize) + (data[byteIndex] & 0xFF);
-            }
-
-            //get attribute value
-            byte[] attributeBytes = new byte[attributeSize];
-            for (int byteIndex = 0; byteIndex < attributeSize; byteIndex++) {
-                attributeBytes[byteIndex] = data[byteIndex+attributeLocation];
-            }
-
-            //put into map
-            record.put(currentAttribute.getName(), deByte(currentAttribute, attributeBytes));
-
-            //increment index
-            attributeIndex++;
-        }
-        return record;
-    }
-
-    /**
-     * turns a map of attributes consisting of names and values into a byte array.
-     *
-     * @param record the map of name and value that will be converted to bytes.
-     * @return a byte array.
-     */
-    private byte[] getBytes(Map<String, Object> record, int arraySize) {
-        byte[] byteArray = new byte[arraySize];
-
-        //create null bitmap
-        BitSet nullBitMap = new BitSet(schema.getAttributes().size());
-
-        //go through each attribute
-        int attributeIndex = 0;
-        for (Attribute attribute : schema.getAttributes()) {
-            Object value = record.get(attribute.getName());
-
-            //check if null
-            if (value == null) {
-                //set null bit
-                nullBitMap.set(attributeIndex);
-                continue;
-            }
-
-            //find the type
-            int valueSize = 0;
-            if (attribute.getType().startsWith("varchar")) {
-                //varchar
-                valueSize = ((String) value).getBytes().length;
-            } else if (attribute.getType().startsWith("char")){
-                //char
-                String type = attribute.getType();
-                valueSize = Integer.parseInt(type.substring(type.indexOf("(")+1, type.indexOf(")")).strip());
-            } else if (attribute.getType().equalsIgnoreCase("integer")) {
-                //integer
-                valueSize = intSize;
-            }
-            else if (attribute.getType().equalsIgnoreCase("boolean")) {
-                //boolean is 1 byte
-                valueSize = 1;
-            }
-            else {
-                //must be double
-                valueSize = Double.SIZE/byteSize;
-            }
-
-            //store index and size
-            int valueIndex = arraySize - valueSize - 1;
-            int trueIndex = attributeIndex * intSize * 2;
-            for (int byteIndex = trueIndex; byteIndex < intSize + trueIndex; byteIndex++) {
-                byteArray[byteIndex] = (byte) (valueIndex >>> ((intSize-1)*byteSize - (byteSize * byteIndex)));
-            }
-            trueIndex = trueIndex + intSize;
-            for (int byteIndex = trueIndex; byteIndex < intSize + trueIndex; byteIndex++) {
-                byteArray[byteIndex] = (byte) (valueSize >>> ((intSize-1)*byteSize - (byteSize * byteIndex)));
-            }
-
-            //get value bytes
-            byte[] valueBytes = new byte[valueSize];
-            if (attribute.getType().contains("char")) {
-                //String
-                valueBytes = ((String) value).getBytes();
-            } else if (attribute.getType().equalsIgnoreCase("integer")) {
-                //int
-                ByteBuffer buffer = ByteBuffer.allocate(intSize);
-                buffer.putInt((int)value);
-                valueBytes = buffer.array();
-            }
-            else if (attribute.getType().equalsIgnoreCase("boolean")) {
-                //boolean
-                boolean bool = (boolean) value;
-                if (bool) {
-                    valueBytes[0] = 1;
-                }
-                else {
-                    valueBytes[0] = 0;
-                }
-            }
-            else {
-                //must be double
-                ByteBuffer buffer = ByteBuffer.allocate(Double.SIZE/byteSize);
-                buffer.putDouble((double)value);
-                valueBytes = buffer.array();
-            }
-
-        }
-
-        //store null bitmap
-        int bitMapLocation = (intSize*2)*schema.getAttributes().size();
-        int bitMapSize = (int) schema.getAttributes().size() / byteSize;
-        byte[] bitMapBytes = nullBitMap.toByteArray();
-        for (int byteIndex = 0; byteIndex < bitMapSize; byteIndex++) {
-            byteArray[byteIndex + bitMapLocation] = bitMapBytes[byteIndex];
-        }
-
-        return byteArray;
-    }
-
-    /**
-     * finds the size of the byte array required for a record.
-     *
-     * @param record the map of name and value.
-     * @return the potential size of a byte array.
-     */
-    private int getArraySize(Map<String, Object> record) {
-        // calculate the size of the byte array
-        int arraySize = intSize * 2 * schema.getAttributes().size();
-
-        //go through each attribute
-        for (Attribute attribute : schema.getAttributes()) {
-            Object value = record.get(attribute.getName());
-
-            //parse types
-            if (value != null) {
-                if (attribute.getType().startsWith("varchar")) {
-                    //varchar
-                    arraySize += ((String) value).getBytes().length;
-                } else if (attribute.getType().startsWith("char")){
-                    //char
-                    String type = attribute.getType();
-                    arraySize += Integer.parseInt(type.substring(type.indexOf("(")+1, type.indexOf(")")).strip());
-                } else if (attribute.getType().equalsIgnoreCase("integer")) {
-                    //integer
-                    arraySize += intSize;
-                }
-                else if (attribute.getType().equalsIgnoreCase("boolean")) {
-                    //boolean is 1 byte
-                    arraySize += 1;
-                }
-                else {
-                    //must be double
-                    arraySize += Double.SIZE/byteSize;
-                }
-            }
-        }
-        return arraySize;
-    }
-
-    /**
-     * Checks the indeces of all the records to see where the freespace starts.
-     * Basically boils down to freespace pointer = leftmost index - 1;
-     */
-    private void recalcFreeSpace() {
-        int[] indexList = getIndexList();
-
-        //calculate least index
-        int leastIndex = data.length - intSize; //index of page pointer
-        for (int index : indexList) {
-            if (index < leastIndex) {
-                leastIndex = index;
-            }
-        }
-
-        //set free space to 1 off least index
-        int freeSpace = leastIndex - 1;
-        for (int byteIndex = intSize ; byteIndex < intSize*2; byteIndex++) {
-            data[byteIndex] = (byte) (freeSpace >>> ((intSize-1)*byteSize - (byteSize * byteIndex)));
-        }
-    }
-
-    /**
-     * Add new index, and shift all indeces left that are greater than the
-     * current one
-     *
-     * @param index the index to be added
-     * @param primaryKeyValue the primaryKeyValue for the data
-     */
-    private void addIndex(int index, Object primaryKeyValue) {
-        //get number of records
-        int numRecords = 0;
-        for (int byteIndex = 0; byteIndex < intSize; byteIndex++) {
-            numRecords = (numRecords << byteSize) + (data[byteIndex] & 0xFF);
-        }
-
-        //parse through all indexes backwards
-        int trueIndex = intSize*numRecords + intSize*2; //intSize*2 accounts for the numRecords and freespace pointer
-        while (trueIndex > 0) {
-            trueIndex -= intSize;
-            //get index
-            int indexValue = 0;
-            for (int byteIndex = trueIndex; byteIndex < intSize + trueIndex; byteIndex++) {
-                indexValue = (indexValue << byteSize) + (data[byteIndex] & 0xFF);
-            }
-
-            //shift right
-            for (int byteIndex = trueIndex + intSize; byteIndex < trueIndex + intSize*2; byteIndex++) {
-                data[byteIndex] = (byte) (indexValue >>> ((intSize-1)*byteSize - (byteSize * byteIndex)));
-            }
-
-            Object currentKeyValue = findPrimaryKeyValue(indexValue);
-            //check if less, write index and return
-            if(currentKeyValue instanceof Comparable && ((Comparable) currentKeyValue).compareTo(primaryKeyValue) < 0) {
-                for (int byteIndex = trueIndex + intSize; byteIndex < trueIndex + intSize*2; byteIndex++) {
-                    data[byteIndex] = (byte) (index >>> ((intSize-1)*byteSize - (byteSize * byteIndex)));
-                }
-                return;
-            }
-        }
-
-        //overwrite numRecords
-        numRecords++;
-        for (int byteIndex = 0; byteIndex < intSize; byteIndex++) {
-            data[byteIndex] = (byte) (numRecords >>> ((intSize-1)*byteSize - (byteSize * byteIndex)));
-        }
-    }
-
-    /**
-     * Overwrite the index by shifting indexes by 1 to the left
-     *
-     * @param index the index to be removed
-     */
-    private void removeIndex(int index) {
-        //get number of records
-        int numRecords = 0;
-        for (int byteIndex = 0; byteIndex < intSize; byteIndex++) {
-            numRecords = (numRecords << byteSize) + (data[byteIndex] & 0xFF);
-        }
-
-        //indicator for when to ovewrite
-        boolean write = false;
-
-        //parse through all indexes
-        int trueIndex = intSize;
-        for (int indexIndex = 0; indexIndex < numRecords; indexIndex++) {
-            //increment true index
-            trueIndex += intSize;
-
-            //get index
-            int indexValue = 0;
-            for (int byteIndex = trueIndex; byteIndex < intSize + trueIndex; byteIndex++) {
-                indexValue = (indexValue << byteSize) + (data[byteIndex] & 0xFF);
-            }
-
-            //if index value is found
-            if (indexValue == index) {
-                write = true;
-            }
-
-            //if overwriting
-            if (write) {
-                for (int byteIndex = trueIndex - intSize; byteIndex < trueIndex; byteIndex++) {
-                    data[byteIndex] = (byte) (indexValue >>> ((intSize-1)*byteSize - (byteSize * byteIndex)));
-                }
-            }
-        }
-
-        //overwrite numRecords
-        numRecords--;
-        for (int byteIndex = 0; byteIndex < intSize; byteIndex++) {
-            data[byteIndex] = (byte) (numRecords >>> ((intSize-1)*byteSize - (byteSize * byteIndex)));
-        }
+        return records;
     }
 }

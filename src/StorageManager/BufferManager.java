@@ -104,10 +104,10 @@ public class BufferManager {
      * Adds the created page to the buffer manager.
      *
      * @param fileName the name of the file.
-     * @param pageData the data to be written to the new page.
+     * @param openPages the list of open pages from schema.
      * @return the page number of the new page.
      */
-    public int addPage(String fileName, byte[] pageData) {
+    public int addPage(String fileName, ArrayList<Integer> openPages) {
         //if the try method fails, returns -1 to indicate failure
         int pageNumber = -1;
 
@@ -148,12 +148,17 @@ public class BufferManager {
             //write some nonsense bytes to add to the file
             byte[] padding = new byte[pageSize];
             file.write(padding);
-            //add to buffer
-            pageNumber = (int) fileLength / pageSize;
-            getPage(fileName, pageNumber);
 
-            //write to page
-            writePage(fileName, pageNumber, pageData);
+            //getpage number
+            if (openPages.isEmpty()) {
+                pageNumber = (int) Math.ceil( fileLength / pageSize);
+            }
+            else {
+                pageNumber = openPages.indexOf(0);
+            }
+
+            //add to buffer
+            getPage(fileName, pageNumber);
 
             //close
             file.close();

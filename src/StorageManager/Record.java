@@ -99,6 +99,16 @@ public class Record {
     }
 
     /**
+     * Gets the key of the record.
+     *
+     * @return the key value of the record.
+     */
+    public Object getPrimaryKey() {
+        String keyName = schema.getKey().getName();
+        return attributes.get(keyName);
+    }
+
+    /**
      * Takes a byte array and puts the attributes into the map.
      *
      * @param data the byte array to be looked through.
