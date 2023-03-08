@@ -2,6 +2,7 @@ package src.Catalog;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  * This class is used mostly to organise and store the attribute objects. It
@@ -187,6 +188,8 @@ public class Schema {
         //remove from pageOrder then add to openPages
         pageOrder.remove(pageOrder.indexOf(page));
         openPages.add(page);
+        //sort openPages so earlier gaps are filled first
+        Collections.sort(openPages);
         //increment pages
         this.pages--;
     }
