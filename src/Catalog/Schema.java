@@ -1,5 +1,6 @@
 package src.Catalog;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 /**
@@ -11,7 +12,6 @@ import java.util.ArrayList;
  */
 public class Schema {
 
-    String seperator = "!@#%&_";
     private String name;
     private int pages;
     private int records;
@@ -39,28 +39,39 @@ public class Schema {
      *
      * @param input the String containing the schema.
      */
-    public Schema (String input) {
-        String[] filtered = input.split(seperator);
-        //name is always first
-        this.name = filtered[0];
-        //next is pages
-        this.pages = Integer.parseInt(filtered[2]);
-        //then records
-        this.records = Integer.parseInt(filtered[3]);
+    public Schema (ByteBuffer buffer) {
+        //get name
+        int nameSize = buffer.getInt();
+        byte[] nameArray = new byte[nameSize];
+        buffer.get(nameArray);
+        this.name = new String(nameArray);
+
+        //get pages
+        this.pages = buffer.getInt();
+
+        //get records
+        this.records = buffer.getInt();
+
         //get pageOrder
         this.pageOrder = new ArrayList<Integer>();
-        for (int i = 4; i < pages + 4; i++) {
-            pageOrder.add(Integer.parseInt(filtered[i]));
+        while(pageOrder.size() < this.pages) {
+            pageOrder.add(buffer.getInt());
         }
+
+        //get number of open pages
+        int numOpen = buffer.getInt();
         //get openPages
         this.openPages = new ArrayList<Integer>();
-        for (int i = pages + 4; i < pages*2 + 4; i++) {
-            openPages.add(Integer.parseInt(filtered[i]));
+        while(openPages.size() < numOpen) {
+            openPages.add(buffer.getInt());
         }
+
+        //get number of attributes
+        int numAttributes = buffer.getInt();
         //get rest of attributes
         this.attributes = new ArrayList<Attribute>();
-        for (int i = 4 + pages; i < filtered.length; i++) {
-            attributes.add(new Attribute(filtered[i]));
+        while(attributes.size() < numAttributes) {
+            attributes.add(new Attribute(buffer));
         }
     }
 
@@ -86,18 +97,40 @@ public class Schema {
      *
      * @return the schema in writable form.
      */
-    public String writeable() {
-        String output = name + seperator + seperator + pages + seperator + records;
+    public byte[] toBytes() {
+        ByteBuffer buffer = ByteBuffer.wrap(new byte[getSchemaByteSize()]);
+
+        //set name
+        buffer.putInt(this.name.length());
+        buffer.put(this.name.getBytes());
+
+        //set pages
+        buffer.putInt(this.pages);
+
+        //set records
+        buffer.putInt(this.records);
+
+        //set pageOrder
         for (int page : pageOrder) {
-            output += seperator + page;
+            buffer.putInt(page);
         }
+
+        //set number of open pages
+        buffer.putInt(openPages.size());
+        //set openPages
         for (int page : openPages) {
-            output += seperator + page;
+            buffer.putInt(page);
         }
-        for (Attribute a: attributes) {
-            output += seperator + a.writeable();
+
+        //set number of attributes
+        buffer.putInt(attributes.size());
+        //set rest of attributes
+        for (Attribute attribute: attributes) {
+            byte[] attributeBytes = attribute.toBytes();
+            buffer.put(attributeBytes);
         }
-        return output;
+
+        return buffer.array();
     }
 
     /**
@@ -232,6 +265,43 @@ public class Schema {
             }
         }
         return null;
+    }
+
+    /**
+     * get the size of a byte array for the schema
+     *
+     * @return the size of a byte array
+     */
+    public int getSchemaByteSize() {
+        int arraySize = 0;
+
+        //add an integer and string for name
+        arraySize += Integer.SIZE/Byte.SIZE;
+        arraySize += this.name.length();
+
+        //add integer for pages
+        arraySize += Integer.SIZE/Byte.SIZE;
+
+        //add integer for records
+        arraySize += Integer.SIZE/Byte.SIZE;
+
+        //add integer for each page
+        arraySize += (Integer.SIZE/Byte.SIZE) * pageOrder.size();
+
+        //add integer for num of open pages
+        arraySize += Integer.SIZE/Byte.SIZE;
+        //add integer for each open page
+        arraySize += (Integer.SIZE/Byte.SIZE) * openPages.size();
+
+        //add integer for number of attributes
+        arraySize += Integer.SIZE/Byte.SIZE;
+        //add the size of each attribute
+        for (Attribute attribute : attributes) {
+            arraySize += attribute.getAttributeByteSize();
+        }
+
+        //return array size
+        return arraySize;
     }
 
 }

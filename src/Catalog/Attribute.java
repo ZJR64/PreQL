@@ -1,5 +1,6 @@
 package src.Catalog;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 /**
@@ -36,18 +37,30 @@ public class Attribute {
      *
      * @param input the String containing the attribute.
      */
-    public Attribute (String input) {
-        String[] filtered = input.split(" ");
-        //type is always first
-        this.type = filtered[0];
-        //size is next
-        this.size = Integer.parseInt(filtered[1]);
-        //then name
-        this.name = filtered[2];
-        //the rest are descriptors
+    public Attribute (ByteBuffer buffer) {
+        //get type
+        int typeSize = buffer.getInt();
+        byte[] typeArray = new byte[typeSize];
+        buffer.get(typeArray);
+        this.type = new String(typeArray);
+
+        //get size
+        this.size = buffer.getInt();
+
+        //get name
+        int nameSize = buffer.getInt();
+        byte[] nameArray = new byte[nameSize];
+        buffer.get(nameArray);
+        this.name = new String(nameArray);
+
+        //get descriptors
+        int numDescriptors = buffer.getInt();
         descriptors = new ArrayList<String>();
-        for (int i = 3; i < filtered.length; i++) {
-            descriptors.add(filtered[i]);
+        for (int i = 0; i < numDescriptors; i++) {
+            int descriptorSize = buffer.getInt();
+            byte[] descriptorArray = new byte[descriptorSize];
+            buffer.get(descriptorArray);
+            descriptors.add(new String(descriptorArray));
         }
     }
 
@@ -77,14 +90,30 @@ public class Attribute {
      *
      * @return the attribute in writable form.
      */
-    public String writeable() {
-        String output = type + " " + size + " " + name;
-        if (descriptors != null) {
-            for (String descriptor: descriptors) {
-                output += " " + descriptor;
-            }
+    public byte[] toBytes() {
+        ByteBuffer buffer = ByteBuffer.wrap(new byte[getAttributeByteSize()]);
+
+        //set type
+        buffer.putInt(this.type.length());
+        buffer.put(this.type.getBytes());
+
+        //set size
+        buffer.putInt(this.size);
+
+        //set name
+        buffer.putInt(this.name.length());
+        buffer.put(this.name.getBytes());
+
+        //set numDescriptors
+        buffer.putInt(descriptors.size());
+
+        //set each descriptor
+        for (String descriptor : descriptors) {
+            buffer.putInt(descriptor.length());
+            buffer.put(descriptor.getBytes());
         }
-        return output;
+
+        return buffer.array();
     }
 
     /**
@@ -114,4 +143,36 @@ public class Attribute {
      * @return an arraylist of the descriptors
      */
     public ArrayList<String> getDescriptors() {return descriptors;}
+
+    /**
+     * get the size of a byte array for the attribute
+     *
+     * @return the size of a byte array
+     */
+    public int getAttributeByteSize() {
+        int arraySize = 0;
+
+        //add an integer and string for type
+        arraySize += Integer.SIZE/Byte.SIZE;
+        arraySize += this.type.length();
+
+        //size is an int
+        arraySize += Integer.SIZE/Byte.SIZE;
+
+        //add an integer and string for name
+        arraySize += Integer.SIZE/Byte.SIZE;
+        arraySize += this.name.length();
+
+        //num descriptors will be an integer
+        arraySize += Integer.SIZE/Byte.SIZE;
+
+        //add each descriptor
+        for (String descriptor : descriptors) {
+            arraySize += Integer.SIZE/Byte.SIZE;
+            arraySize += descriptor.length();
+        }
+
+        //return size
+        return arraySize;
+    }
 }

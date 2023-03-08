@@ -17,7 +17,6 @@ import java.util.ArrayList;
  */
 public class Catalog {
 
-    String seperator = "567785";
     private String catPath;
     public ArrayList<Schema> schemas;
 
@@ -42,18 +41,16 @@ public class Catalog {
                 System.err.println("Error: catalog file could not be read");
                 return;
             }
-            //extract info
-            byte[] inverse = Helper.invertBits(byteArray);
-            String unfiltered = new String(inverse);
-            //get rid of page size
-            String[] filtered = unfiltered.split(seperator);
-            //add schemas
-            for (String s : filtered) {
-                if (!s.equals("")) {
-                    schemas.add(new Schema(s));
-                }
-            }
+            //put into ByteBuffer
+            ByteBuffer buffer = ByteBuffer.wrap(Helper.invertBits(byteArray));
 
+            //get numSchemas
+            int numSchemas = buffer.getInt();
+
+            //get schemas
+            while (schemas.size() < numSchemas) {
+                schemas.add(new Schema(buffer));
+            }
         }
     }
 
@@ -61,17 +58,28 @@ public class Catalog {
      * Method that safely stores the Catalog when the database is shut down.
      */
     public void shutDown(){
-        //record page size
+        //make bytes
+        ByteBuffer buffer = ByteBuffer.wrap(new byte[getCatalogByteSize()]);
+
+        //set numSchemas
+        buffer.putInt(schemas.size());
+
+        //set each schema
+        for (Schema schema : schemas) {
+            byte[] schemaBytes = schema.toBytes();
+            buffer.put(schemaBytes);
+        }
+
+        //get bytes to write
+        byte[] output = Helper.invertBits(buffer.array());
+
         try {
             FileOutputStream outputStream = new FileOutputStream(catPath);
-            //make sure schemas is populated
-            if (!schemas.isEmpty()) {
-                for (Schema s : schemas) {
-                    byte[] inverse = Helper.invertBits((s.writeable() + seperator).getBytes());
-                    outputStream.write(inverse);
-                    outputStream.flush();
-                }
-            }
+
+            //write bytes
+            outputStream.write(output);
+
+            //close
             outputStream.close();
 
         } catch (Exception e) {
@@ -123,5 +131,24 @@ public class Catalog {
             }
         }
         return null;
+    }
+
+    /**
+     * get the size of a byte array for the schema
+     *
+     * @return the size of a byte array
+     */
+    private int getCatalogByteSize() {
+        int arraySize = 0;
+
+        //add Integer for the number of schemas
+        arraySize += Integer.SIZE/Byte.SIZE;
+
+        //add bytes of each schema
+        for (Schema schema : schemas) {
+            arraySize += schema.getSchemaByteSize();
+        }
+
+        return arraySize;
     }
 }
