@@ -23,11 +23,11 @@ public class Record {
      * @param schema the schema the record uses.
      * @param data the byte array that composes the record.
      */
-    public Record (Schema schema, byte[] data) {
+    public Record (Schema schema, ByteBuffer byteBuffer) {
         this.schema = schema;
-        this.size = data.length;
         //put data in the map
-        this.attributes = makeSense(data);
+        this.attributes = makeSense(byteBuffer);
+        this.size = calcSize();
     }
 
     /**
@@ -113,9 +113,8 @@ public class Record {
      *
      * @param data the byte array to be looked through.
      */
-    private Map<String, Object> makeSense(byte[] data) {
+    private Map<String, Object> makeSense(ByteBuffer buffer) {
         //setup
-        ByteBuffer buffer = ByteBuffer.wrap(data);
         Map<String, Object> attributeMap = new HashMap<>();
 
         //get nulls
@@ -177,7 +176,6 @@ public class Record {
             if (attributes.get(attribute.getName()) == null) {
                 //set null bit
                 nullBitMap.set(attributeIndex);
-                continue;
             }
         }
         buffer.put(nullBitMap.toByteArray());
@@ -185,6 +183,11 @@ public class Record {
         //go through each attribute
         for (Attribute attribute : schema.getAttributes()) {
             Object value = attributes.get(attribute.getName());
+
+            //make sure not null
+            if (attributes.get(attribute.getName()) == null) {
+                continue;
+            }
 
             //look to see what type of attribute it is
             if (attribute.getType().contains("char")) {
@@ -218,12 +221,6 @@ public class Record {
 
     /**
      * calculate the size of the record
-     */
-    /**
-     * finds the size of the byte array required for a record.
-     *
-     * @param record the map of name and value.
-     * @return the potential size of a byte array.
      */
     private int calcSize() {
         int recordSize = 0;

@@ -152,14 +152,14 @@ public class Page {
 
         //add half the records to new page and then remove them
         int cutoffPoint = recordList.size()/2;
-        while (cutoffPoint < recordList.size() - 1) {
+        while (cutoffPoint < recordList.size()) {
             Record currentRecord = recordList.get(cutoffPoint);
             newPage.addRecord(currentRecord.getAttributes());
             recordList.remove(currentRecord);
         }
 
         //write new page to buffer
-        bufferManager.writePage(schema.getFileName() , newPageNum, newPage.getPage());      //TODO what is file name??
+        bufferManager.writePage(schema.getFileName() , newPageNum, newPage.getBytes());      //TODO what is file name??
 
         //add page to schema
         schema.addPage(this.pageNum, newPageNum);
@@ -207,19 +207,50 @@ public class Page {
     }
 
     /**
-     * Getter method for the page's byte array. Calls defragment first to reduce fragmentation.
+     * Makes the page into a byteArray.
      *
      * @return the byte array of the page.
      */
-    public byte[] getPage() {
-        //TODO
-        return null;
+    public byte[] getBytes() {
+        //setup
+        ByteBuffer buffer = ByteBuffer.wrap(new byte[this.pageSize]);
+
+        //store number of records
+        int numRecords = recordList.size();
+        buffer.putInt(numRecords);
+
+        //store records
+        for (Record record : recordList) {
+            byte[] recordBytes = record.getBytes();
+            buffer.put(recordBytes);
+        }
+
+        //return byte array
+        return buffer.array();
     }
 
+    /**
+     * Creates the records for the page.
+     *
+     * @param data the byte array of the page.
+     * @return the arraylist of records.
+     */
     private ArrayList<Record> makeRecords(byte[] data) {
         //setup
         ArrayList<Record> records = new ArrayList<Record>();
 
+        //create ByteManager
+        ByteBuffer buffer = ByteBuffer.wrap(data);
+
+        //get numRecords
+        int numRecords = buffer.getInt();
+
+        for (int recordInt = 0; recordInt < numRecords; recordInt++) {
+            Record newRecord = new Record(schema, buffer);
+            records.add(newRecord);
+        }
+
+        //return records
         return records;
     }
 }
