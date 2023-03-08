@@ -192,6 +192,22 @@ public class BufferManager {
     }
 
     /**
+     * Removes page from buffer.
+     * WARNING: DOES NOT SAVE THE PAGE
+     *
+     * @param fileName the filename the page belongs to.
+     * @param pageNum the number of the page.
+     */
+    public void removePage(String fileName, int pageNum) {
+        //create key
+        String key = getPageKey(fileName, pageNum);
+
+        //remove from buffer
+        buffer.remove(key);
+        recentlyUsed.remove(key);
+    }
+
+    /**
      * Method that safely stores the Catalog when the database is shut down.
      */
     public void shutDown(){

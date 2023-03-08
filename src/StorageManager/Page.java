@@ -94,7 +94,7 @@ public class Page {
     }
 
     /**
-     * Attempts to add the record to the page.
+     * Attempts to add the record to the page via an attribute map.
      *
      * @param attributes the attributes of the record that is being added.
      * @return true if operation completed, false if page needs to be split.
@@ -110,6 +110,45 @@ public class Page {
 
         //create Record
         Record newRecord = new Record(this.schema, attributes);
+
+        //now check to see if length of new record would exceed free space
+        if (usedSize + newRecord.getSize() > pageSize) {
+            //need to split page
+            return false;
+        }
+
+        //find where record belongs
+        for (Record record : recordList) {
+            Object currentKey = record.getPrimaryKey();
+            //check if greater than
+            if(currentKey instanceof Comparable && ((Comparable) currentKey).compareTo(newRecord.getPrimaryKey()) > 0) {
+                //add new record to arraylist
+                recordList.add(recordList.indexOf(record), newRecord);
+                break;
+            }
+        }
+
+        //increment schema
+        schema.addRecord();
+
+        //record added successfully
+        return true;
+    }
+
+    /**
+     * Attempts to add the record to the page via a Record object.
+     *
+     * @param newRecord the record being added.
+     * @return true if operation completed, false if page needs to be split.
+     */
+    public boolean addRecord(Record newRecord) {
+        //get size already used
+        int usedSize = 0;
+        for (Record record : recordList) {
+            //add an Integer for the size indicator
+            usedSize += Integer.SIZE/Byte.SIZE;
+            usedSize += record.getSize();
+        }
 
         //now check to see if length of new record would exceed free space
         if (usedSize + newRecord.getSize() > pageSize) {
@@ -227,6 +266,18 @@ public class Page {
 
         //return byte array
         return buffer.array();
+    }
+
+    /**
+     * Add an attribute to each record with a default value.
+     *
+     * @param name the name of the attribute.
+     * @param value the default value of the attribute.
+     * @return the arraylist of records.
+     */
+    public ArrayList<Record> deletePage() {
+        schema.subPage(this.pageNum);
+        return recordList;
     }
 
     /**
