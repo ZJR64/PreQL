@@ -63,10 +63,7 @@ public class Database {
                 return;
             }
             //extract info
-            pageSize = 0;
-            for (byte b : byteArray) {
-                pageSize = (pageSize << 8) + (b & 0xFF);
-            }
+            this.pageSize = ByteBuffer.wrap(byteArray).getInt();
         }
         else {
             System.out.println("No existing db found");
@@ -74,14 +71,11 @@ public class Database {
 
             //create file
             try {
-                int integerSize = Integer.SIZE/8;
-                byte[] pageBytes= new byte[integerSize];
+                ByteBuffer buffer = ByteBuffer.wrap(new byte[Integer.SIZE/Byte.SIZE]);
                 FileOutputStream outputStream = new FileOutputStream(dbFile);
                 //store page size
-                for (int i = 0; i < integerSize; i++) {
-                    pageBytes[i] = (byte) (pageSize >>> ((integerSize-1)*8 - (8 * i)));
-                }
-                outputStream.write(pageBytes);
+                buffer.putInt(pageSize);
+                outputStream.write(buffer.array());
                 outputStream.flush();
                 outputStream.close();
             } catch (Exception e) {
