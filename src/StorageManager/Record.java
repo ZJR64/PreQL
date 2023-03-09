@@ -5,6 +5,7 @@ import src.Catalog.Schema;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.sql.SQLOutput;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -205,6 +206,107 @@ public class Record {
             }
         }
         return buffer.array();
+    }
+
+    @Override
+    public boolean equals(Object primaryKey) {
+        try {
+            String primaryAttribute = this.schema.getKey().getType();
+            //look to see what type of attribute it is
+            if (primaryAttribute.contains("char")) {
+                //string
+                String primaryKeyOther = (String) primaryKey;
+                String primaryKeyNative = (String) this.getPrimaryKey();
+
+                //compare
+                if (primaryKeyNative.equals(primaryKeyOther)) {
+                    return true;
+                }
+            }
+            else if (primaryAttribute.equalsIgnoreCase("integer")) {
+                //integer
+                Integer primaryKeyOther = (Integer) primaryKey;
+                Integer primaryKeyNative = (Integer) this.getPrimaryKey();
+
+                //compare
+                if (primaryKeyNative.equals(primaryKeyOther)) {
+                    return true;
+                }
+            }
+            else if (primaryAttribute.equalsIgnoreCase("boolean")) {
+                //boolean, technincally it could be a key
+                boolean primaryKeyOther = (boolean) primaryKey;
+                boolean primaryKeyNative = (boolean) this.getPrimaryKey();
+
+                //compare
+                if (primaryKeyNative == primaryKeyOther) {
+                    return true;
+                }
+            }
+            else {
+                //must be double
+                double primaryKeyOther = (double) primaryKey;
+                double primaryKeyNative = (double) this.getPrimaryKey();
+
+                //compare
+                if (primaryKeyNative == primaryKeyOther) {
+                    return true;
+                }
+            }
+        }
+        catch (Exception e) {
+            System.err.println(e);
+        }
+        return false;
+    }
+
+    public boolean greaterThan(Object primaryKey) {
+        try {
+            String primaryAttribute = this.schema.getKey().getType();
+            //look to see what type of attribute it is
+            if (primaryAttribute.contains("char")) {
+                //string
+                String primaryKeyOther = (String) primaryKey;
+                String primaryKeyNative = (String) this.getPrimaryKey();
+
+                //compare
+                if (primaryKeyNative.compareTo(primaryKeyOther) > 0) {
+                    return true;
+                }
+            }
+            else if (primaryAttribute.equalsIgnoreCase("integer")) {
+                //integer
+                int primaryKeyOther = (int) primaryKey;
+                int primaryKeyNative = (int) this.getPrimaryKey();
+
+                //compare
+                if (primaryKeyNative > primaryKeyOther) {
+                    return true;
+                }
+            }
+            else if (primaryAttribute.equalsIgnoreCase("boolean")) {
+                //boolean, technincally it could be a key
+                boolean primaryKeyOther = (boolean) primaryKey;
+                boolean primaryKeyNative = (boolean) this.getPrimaryKey();
+
+                //compare
+                if (primaryKeyNative != primaryKeyOther) {
+                    return true;
+                }
+            }
+            else {
+                //must be double
+                double primaryKeyOther = (double) primaryKey;
+                double primaryKeyNative = (double) this.getPrimaryKey();
+
+                //compare
+                if (primaryKeyNative > primaryKeyOther) {
+                    return true;
+                }
+            }
+        }
+        catch (Exception e) {}
+        return false;
     }
 
     /**

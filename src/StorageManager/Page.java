@@ -67,7 +67,8 @@ public class Page {
     public Record getRecord(Object primaryKeyValue) {
         for (Record record : recordList) {
             System.out.println(record.getPrimaryKey() + ":" + primaryKeyValue);
-            if (record.getPrimaryKey().equals(primaryKeyValue)) {
+            System.out.println(record.equals(primaryKeyValue));
+            if (record.equals(primaryKeyValue)) {
                 return record;
             }
         }
@@ -94,13 +95,12 @@ public class Page {
 
         //search through the records to find a matching record
         for (Record record : recordList) {
-            Object currentKeyValue = record.getPrimaryKey();
             //check if equal
-            if (primaryKeyValue.equals(currentKeyValue)) {
+            if (record.equals(primaryKeyValue)) {
                 return true;
             }
             //check if greater than
-            if(currentKeyValue instanceof Comparable && ((Comparable) currentKeyValue).compareTo(primaryKeyValue) > 0) {
+            if(record.greaterThan(primaryKeyValue)) {
                 return true;
             }
         }
@@ -134,10 +134,9 @@ public class Page {
         //find where record belongs
         for (int recordIndex = 0; recordIndex < recordList.size(); recordIndex++) {
             Record record = recordList.get(recordIndex);
-            Object currentKey = record.getPrimaryKey();
 
             //check if greater than
-            if(currentKey instanceof Comparable && ((Comparable) currentKey).compareTo(newRecord.getPrimaryKey()) > 0) {
+            if(record.greaterThan(newRecord.getPrimaryKey())) {
                 //add new record to arraylist
                 recordList.add(recordList.indexOf(record), newRecord);
                 break;
@@ -286,7 +285,7 @@ public class Page {
      */
     public void removeRecord(Object primaryKeyValue) {
         for (Record record : recordList) {
-            if(record.getPrimaryKey().equals(primaryKeyValue)) {
+            if(record.equals(primaryKeyValue)) {
                 recordList.remove(record);
             }
         }
@@ -308,7 +307,7 @@ public class Page {
     public void updateRecord(Map<String, Object> attributes) {
         Object primaryKey = attributes.get(schema.getKey().getName());
         for (Record record : recordList) {
-            if (record.getPrimaryKey().equals(primaryKey)) {
+            if (record.equals(primaryKey)) {
                 record.setAttributes(attributes);
             }
         }

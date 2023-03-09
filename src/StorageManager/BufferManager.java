@@ -62,10 +62,6 @@ public class BufferManager {
     public byte[] getPage(String fileName, int pageNumber) {
         String pageKey = getPageKey(fileName, pageNumber);
         byte[] pageData = buffer.get(pageKey);
-        //TODO
-        System.out.println("Buffer: " + buffer.get(pageKey));
-        System.out.println("FileName: " + fileName);
-        System.out.println("pageNumber: " + pageNumber);
 
         if (pageData == null) {
             // Page not in buffer, read from file and add to buffer
@@ -79,6 +75,7 @@ public class BufferManager {
         }
         //modify recently used for LRU
         else {
+            System.out.println("Read:");
             for (byte b : pageData) {
                 System.out.print(b + ",");
             }
