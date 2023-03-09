@@ -117,7 +117,7 @@ public class StorageManagerHelper {
                                     boolean notNull, String atrName,
                                     Map<String, Object> attributes){
         if(tupAttr == null && notNull){
-            return atrName + " Cannot have null values";
+            return "Attribute " + atrName + " Cannot have null values";
         }
         else{
             if(tupAttr == null){
@@ -130,7 +130,7 @@ public class StorageManagerHelper {
                 attributes.put(atrName, tupAttr);
                 return null;
             }
-            return atrName + " Expected a char of length " + length
+            return "Attribute " + atrName + " Expected a char of length " + length
                     + ", but got a char of length " + attrLength;
         }
     }
@@ -150,7 +150,7 @@ public class StorageManagerHelper {
                                        boolean notNull, String atrName,
                                        Map<String, Object> attributes){
         if(tupAttr == null && notNull){
-            return atrName + " Cannot have null values";
+            return "Attribute " + atrName + " Cannot have null values";
         }
         else{
             if(tupAttr == null){
@@ -163,7 +163,7 @@ public class StorageManagerHelper {
                 attributes.put(atrName, tupAttr);
                 return null;
             }
-            return atrName + " Expected a varChar of length " + length +
+            return "Attribute " + atrName + " Expected a varChar of length " + length +
                     " or less, but got a char of length " + attrLength;
         }
     }
@@ -182,7 +182,7 @@ public class StorageManagerHelper {
     private static String checkBoolean(String tupAttr, boolean notNull,
                                        String atrName, Map<String, Object> attributes){
         if(tupAttr == null && notNull){
-            return atrName + " Cannot have null values";
+            return "Attribute " + atrName + " Cannot have null values";
         }
         else{
             if(tupAttr == null){
@@ -195,7 +195,7 @@ public class StorageManagerHelper {
                 return null;
             }
             else{
-                return atrName + " Expected a boolean value, but got: " + tupAttr;
+                return "Attribute " + atrName + " Expected a boolean value, but got: " + tupAttr;
             }
         }
     }
@@ -213,7 +213,7 @@ public class StorageManagerHelper {
     private static String checkInteger(String tupAttr, boolean notNull,
                                        String atrName, Map<String, Object> attributes){
         if(tupAttr == null && notNull){
-            return atrName + " Cannot have null values";
+            return "Attribute " + atrName + " Cannot have null values";
         }
         else{
             if(tupAttr == null){
@@ -221,12 +221,12 @@ public class StorageManagerHelper {
                 return null;
             }
             try{
-                Double tupDouble = Double.parseDouble(tupAttr);
-                attributes.put(atrName, tupDouble);
+                int tupInteger = Integer.parseInt(tupAttr);
+                attributes.put(atrName, tupInteger);
                 return null;
             }
             catch(NumberFormatException e){
-                return atrName + " Expected an integer value, but got: " + tupAttr;
+                return "Attribute " + atrName + " Expected an integer value, but got: " + tupAttr;
             }
         }
     }
@@ -245,7 +245,7 @@ public class StorageManagerHelper {
     private static String checkDouble(String tupAttr, boolean notNull,
                                       String atrName, Map<String, Object> attributes){
         if(tupAttr == null && notNull){
-            return atrName + " Cannot have null values";
+            return "Attribute " + atrName + " Cannot have null values";
         }
         else{
             if(tupAttr == null){
@@ -253,12 +253,12 @@ public class StorageManagerHelper {
                 return null;
             }
             try{
-                int tupInteger = Integer.parseInt(tupAttr);
-                attributes.put(atrName, tupInteger);
+                Double tupDouble = Double.parseDouble(tupAttr);
+                attributes.put(atrName, tupDouble);
                 return null;
             }
             catch(NumberFormatException e){
-                return atrName + " Expected an integer value, but got: " + tupAttr;
+                return "Attribute " + atrName + " Expected an integer value, but got: " + tupAttr;
             }
         }
     }
