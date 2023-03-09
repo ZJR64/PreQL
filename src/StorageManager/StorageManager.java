@@ -2,6 +2,8 @@ package src.StorageManager;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import src.Catalog.*;
 
@@ -29,17 +31,29 @@ public class StorageManager {
      */
     public String insert(String tableName, ArrayList<ArrayList<String>> tuples) {
         Schema table = c.getSchema(tableName);
+        Map<String, Object> attributes;
         if(table == null){
             return "No such table " + tableName.concat("\nERROR");
         }
+        String fileName = table.getFileName();
 
         for(ArrayList<String> tuple : tuples){  // for tuple in tuples, for loop will create tuples into records.
-            String checkResult = StorageManagerHelper.checkAttributes(table, tuple, bm);
-            if(checkResult == null){ // we're good, the tuple is valid and we can make the record.
-
+            attributes = StorageManagerHelper.checkAttributes(table, tuple, bm);
+            if(attributes != null){ // we're good, the tuple is valid and we can make the record.
+                ArrayList<Integer> pgOrder = table.getPageOrder();
+                for(Integer i : pgOrder){
+                    Page pg = new Page(i, table, bm.getPageSize(), bm.getPage(fileName, i));
+                    Record rec = new Record(table, attributes);
+                    if(!pg.addRecord(rec)){
+                        pg.split(bm, attributes); // Do I need to update values here like pgOrder? etc.
+                    }
+                    else{
+                        return "SUCCESS";
+                    }
+                }
             }
             else{
-                return checkResult + "\nERROR";
+                return "\nERROR";
             }
         }
         return null;
@@ -71,9 +85,9 @@ public class StorageManager {
             return "No such table " + tableName.concat("\nERROR");  //returns an error if there is no table
         }
         if(table.getPages() == 0){
-            return makeAttributesString(table).concat("\nSUCCESS"); //returns the attributes of the table
+            return StorageManagerHelper.makeAttributesString(table).concat("\nSUCCESS"); //returns the attributes of the table
         }
-        System.out.println(makeAttributesString(table));                //print out the attributes
+        System.out.println(StorageManagerHelper.makeAttributesString(table));  //print out the attributes
 
         for(int i = 0; i < table.getPages(); i++){                      //for each page in order
             byte[] page = bm.getPage(tableName, i);                     //gets the next page
@@ -171,65 +185,6 @@ public class StorageManager {
 
 
     /**
-     * Makes a string containing nicely formatted attributes.
-     * @param table The table the attributes are pulled from.
-     * @return The completed attributes string.
-     */
-    public String makeAttributesString(Schema table){
-        ArrayList<Attribute> attributes = table.getAttributes();
-        StringBuilder str = new StringBuilder();
-        str.append("\n");
-        StringBuilder topStr = new StringBuilder();
-        StringBuilder midStr = new StringBuilder();
-        StringBuilder botStr = new StringBuilder();
-        for(int i = 0; i < attributes.size(); i++){
-            Attribute atr = attributes.get(i);
-            String atrName = atr.getName();
-            int atrSize = atrName.length();
-            int typeSize = 0;
-            String type = atr.getType();
-            if (type.equals("integer")) {
-                typeSize = 15;
-            }
-            else if (type.equals("double")) {
-                typeSize = 20;
-            }
-            else if (type.equals("boolean")) {
-                typeSize = 5;
-            }
-            else {
-                String size = type;
-                size = size.substring(size.indexOf("(") + 1);
-                size = size.substring(0, size.indexOf(")"));
-                typeSize = Integer.parseInt(size);
-            }
-
-            //check what is bigger
-            if (atrSize < typeSize) {
-                atrSize = typeSize;
-            }
-
-            for(int j = 0; j < atrSize + 4; j++){ // attribute "size" would make
-                topStr.append("-");                  // "--------"
-            }
-            String bottomBox = str.toString();
-            if(i == 0){
-                midStr.append("| ");
-            }
-            atrName = String.format("%1$"+atrSize+ "s", atrName);
-            midStr.append(atrName);
-            midStr.append(" | ");
-         }
-        botStr.append(topStr);
-        str.append(topStr);
-        str.append("\n");
-        str.append(midStr);
-        str.append("\n");
-        str.append(botStr);
-        return str.toString();
-    }
-
-    /**
      * Deletes a record from a given table using the given primary key.
      */
     public void deleteRecord(){
@@ -243,6 +198,13 @@ public class StorageManager {
 
     }
 
+    /**
+     * Attempts to create a new table in the database.
+     *
+     * @param name The name of the table being created.
+     * @param attributes The list of attributes the table will have.
+     * @return A string reporting success or failure.
+     */
     public String createTable(String name, ArrayList<Attribute> attributes){
         for (Schema i : c.getSchemas()) {
             if(i.getName().equals(name)){

@@ -3,8 +3,10 @@ package src.StorageManager;
 
 import src.Catalog.Attribute;
 import src.Catalog.Schema;
-
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Holds the many functions needed by StorageManager.
@@ -19,13 +21,15 @@ public class StorageManagerHelper {
      * @param table the table the values are being checked against.
      * @param tuple the tuple being checked.
      * @param bm the buffer manager for the database.
-     * @return null if the tuple is correct, an error string otherwise.
+     * @return null if the tuple is invalid, a map containing the attributes otherwise.
      */
-    public static String checkAttributes(Schema table, ArrayList<String> tuple, BufferManager bm){
+    public static Map<String, Object> checkAttributes(Schema table, ArrayList<String> tuple, BufferManager bm){
+        Map<String, Object> attributes = new HashMap<>();
         ArrayList<Attribute> tableAttributes = table.getAttributes();
         if(tuple.size() != tableAttributes.size()){
-            return "Expected " + tableAttributes.size() + "attributes, got "
-                    + tuple.size() + "attributes.";
+            System.out.println("Expected " + tableAttributes.size() + "attributes, got "
+                    + tuple.size() + "attributes.");
+            return null;
         }
 
         for(int i = 0; i < tableAttributes.size(); i++){
@@ -51,44 +55,50 @@ public class StorageManagerHelper {
             if(tblType.contains("char")){
                 int length = Integer.parseInt(tblType.substring(
                         tblType.indexOf("(") + 1, tblType.indexOf(")")).strip());
-                checkRes = checkChar(length, tupleAttribute, notNull, atrName);
+                checkRes = checkChar(length, tupleAttribute, notNull, atrName, attributes);
             }
             else if(tblType.contains("varchar")){
                 int length = Integer.parseInt(tblType.substring(
                         tblType.indexOf("(") + 1, tblType.indexOf(")")).strip());
-                checkRes = checkVarChar(length, tupleAttribute, notNull, atrName);
+                checkRes = checkVarChar(length, tupleAttribute, notNull, atrName, attributes);
             }
             else if(tblType.contains("boolean")) {
-                checkRes = checkBoolean(tupleAttribute, notNull, atrName);
+                checkRes = checkBoolean(tupleAttribute, notNull, atrName, attributes);
             }
             else if (tblType.contains("integer")){
-                checkRes = checkInteger(tupleAttribute, notNull, atrName);
+                checkRes = checkInteger(tupleAttribute, notNull, atrName, attributes);
             }
 
             else if(tblType.contains("double")){
-                checkRes = checkDouble(tupleAttribute, notNull, atrName);
+                checkRes = checkDouble(tupleAttribute, notNull, atrName, attributes);
             }
             else{
-                return "tblType did not match any type, something wrong in checkAttributes.";
+                System.out.println("tblType did not match any type, " +
+                        "something wrong in checkAttributes.");
+                return null;
             }
 
             if(checkRes != null){
-                return checkRes;
+                System.out.println(checkRes);
+                return null;
             }
             if(primaryKey){
                 if(!checkPrimaryKey(table, tupleAttribute, bm)){
-                    return "Non-unique or null primarykey: " + tupleAttribute;
+                    System.out.println("Non-unique or null primarykey: " +
+                            tupleAttribute);
+                    return null;
                 }
             }
             if(unique){
                 if(!checkUniqueness(table, tupleAttribute, bm)){
-                    return "Non-unique attribute: " + tupleAttribute;
+                    System.out.println("Non-unique attribute: " +
+                            tupleAttribute);
+                    return null;
                 }
             }
 
-
         }
-        return null;
+        return attributes;
     }
 
 
@@ -100,24 +110,28 @@ public class StorageManagerHelper {
      * @param tupAttr The value whose length is being checked.
      * @param notNull Tells whether this value can be null or not.
      * @param atrName Name of the attribute whose length is being enforced.
+     * @param attributes The map of attributes that might be added to.
      * @return Either a string of null if the char passes, or an error message.
      */
     private static String checkChar(int length, String tupAttr,
-                                    boolean notNull, String atrName){
+                                    boolean notNull, String atrName,
+                                    Map<String, Object> attributes){
         if(tupAttr == null && notNull){
             return atrName + " Cannot have null values";
         }
         else{
             if(tupAttr == null){
+                attributes.put(atrName, null);
                 return null;
             }
 
             int attrLength = tupAttr.length();
             if(attrLength == length){
+                attributes.put(atrName, tupAttr);
                 return null;
             }
-            return atrName + " Expected a char of length " + length + ", but got a char of length "
-                    + attrLength;
+            return atrName + " Expected a char of length " + length
+                    + ", but got a char of length " + attrLength;
         }
     }
 
@@ -129,20 +143,24 @@ public class StorageManagerHelper {
      * @param tupAttr The value whose length is being checked.
      * @param notNull Tells whether this value can be null or not.
      * @param atrName Name of the attribute whose length is being enforced.
+     * @param attributes The map of attributes that might be added to.
      * @return Either a string of null if the char passes, or an error message.
      */
     private static String checkVarChar(int length, String tupAttr,
-                                       boolean notNull, String atrName){
+                                       boolean notNull, String atrName,
+                                       Map<String, Object> attributes){
         if(tupAttr == null && notNull){
             return atrName + " Cannot have null values";
         }
         else{
             if(tupAttr == null){
+                attributes.put(atrName, null);
                 return null;
             }
 
             int attrLength = tupAttr.length();
             if(attrLength <= length){
+                attributes.put(atrName, tupAttr);
                 return null;
             }
             return atrName + " Expected a varChar of length " + length +
@@ -158,18 +176,22 @@ public class StorageManagerHelper {
      * @param tupAttr The value being checked if it is a boolean.
      * @param notNull Tells whether this value can be null or not.
      * @param atrName Name of the attribute whose length is being enforced.
+     * @param attributes The map of attributes that might be added to.
      * @return Either a string of null if the char passes, or an error message.
      */
     private static String checkBoolean(String tupAttr, boolean notNull,
-                                       String atrName){
+                                       String atrName, Map<String, Object> attributes){
         if(tupAttr == null && notNull){
             return atrName + " Cannot have null values";
         }
         else{
             if(tupAttr == null){
+                attributes.put(atrName, null);
                 return null;
             }
             if(tupAttr.equals("true") || tupAttr.equals("false")){
+                boolean tupBool = Boolean.parseBoolean(tupAttr);
+                attributes.put(atrName, tupBool);
                 return null;
             }
             else{
@@ -185,19 +207,22 @@ public class StorageManagerHelper {
      * @param tupAttr The value being checked if it is an integer.
      * @param notNull Tells whether this value can be null or not.
      * @param atrName Name of the attribute whose length is being enforced.
+     * @param attributes The map of attributes that might be added to.
      * @return Either a string of null if the char passes, or an error message.
      */
     private static String checkInteger(String tupAttr, boolean notNull,
-                                       String atrName){
+                                       String atrName, Map<String, Object> attributes){
         if(tupAttr == null && notNull){
             return atrName + " Cannot have null values";
         }
         else{
             if(tupAttr == null){
+                attributes.put(atrName, null);
                 return null;
             }
             try{
-                Double.parseDouble(tupAttr);
+                Double tupDouble = Double.parseDouble(tupAttr);
+                attributes.put(atrName, tupDouble);
                 return null;
             }
             catch(NumberFormatException e){
@@ -214,19 +239,22 @@ public class StorageManagerHelper {
      * @param tupAttr The value being checked if it is a double.
      * @param notNull Tells whether this value can be null or not.
      * @param atrName Name of the attribute whose length is being enforced.
+     * @param attributes The map of attributes that might be added to.
      * @return Either a string of null if the char passes, or an error message.
      */
     private static String checkDouble(String tupAttr, boolean notNull,
-                                      String atrName){
+                                      String atrName, Map<String, Object> attributes){
         if(tupAttr == null && notNull){
             return atrName + " Cannot have null values";
         }
         else{
             if(tupAttr == null){
+                attributes.put(atrName, null);
                 return null;
             }
             try{
-                Integer.parseInt(tupAttr);
+                int tupInteger = Integer.parseInt(tupAttr);
+                attributes.put(atrName, tupInteger);
                 return null;
             }
             catch(NumberFormatException e){
@@ -289,5 +317,66 @@ public class StorageManagerHelper {
              }
         }
         return true;
+    }
+
+
+    /**
+     * Makes a string containing nicely formatted attributes.
+     *
+     * @param table The table the attributes are pulled from.
+     * @return The completed attributes string.
+     */
+    public static String makeAttributesString(Schema table){
+        ArrayList<Attribute> attributes = table.getAttributes();
+        StringBuilder str = new StringBuilder();
+        str.append("\n");
+        StringBuilder topStr = new StringBuilder();
+        StringBuilder midStr = new StringBuilder();
+        StringBuilder botStr = new StringBuilder();
+        for(int i = 0; i < attributes.size(); i++){
+            Attribute atr = attributes.get(i);
+            String atrName = atr.getName();
+            int atrSize = atrName.length();
+            int typeSize = 0;
+            String type = atr.getType();
+            if (type.equals("integer")) {
+                typeSize = 15;
+            }
+            else if (type.equals("double")) {
+                typeSize = 20;
+            }
+            else if (type.equals("boolean")) {
+                typeSize = 5;
+            }
+            else {
+                String size = type;
+                size = size.substring(size.indexOf("(") + 1);
+                size = size.substring(0, size.indexOf(")"));
+                typeSize = Integer.parseInt(size);
+            }
+
+            //check what is bigger
+            if (atrSize < typeSize) {
+                atrSize = typeSize;
+            }
+
+            for(int j = 0; j < atrSize + 4; j++){ // attribute "size" would make
+                topStr.append("-");               // "--------"
+            }
+            String bottomBox = str.toString();
+            if(i == 0){
+                midStr.append("| ");
+            }
+            atrName = String.format("%1$"+atrSize+ "s", atrName);
+            midStr.append(atrName);
+            midStr.append(" | ");
+        }
+        botStr.append(topStr);
+        str.append(topStr);
+        str.append("\n");
+        str.append(midStr);
+        str.append("\n");
+        str.append(botStr);
+        return str.toString();
     }
 }
