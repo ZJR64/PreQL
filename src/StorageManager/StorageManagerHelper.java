@@ -276,14 +276,16 @@ public class StorageManagerHelper {
         if(obj == null){
             return true;
         }
-        ArrayList<Integer> pgOrder = table.getPageOrder();
-        String fileName = table.getFileName();
-        for(Integer i : pgOrder){
-            Page pg = new Page(i, table, bm.getPageSize(), bm.getPage(fileName, i));
-            ArrayList<Record> recs = pg.getRecords();
-            for(Record rec : recs){
-                if(rec.getAttributes().containsValue(obj)){
-                    return false;
+        if(table.getPages() > 0) {
+            ArrayList<Integer> pgOrder = table.getPageOrder();
+            String fileName = table.getFileName();
+            for (Integer i : pgOrder) {
+                Page pg = new Page(i, table, bm.getPageSize(), bm.getPage(fileName, i));
+                ArrayList<Record> recs = pg.getRecords();
+                for (Record rec : recs) {
+                    if (rec.getAttributes().containsValue(obj)) {
+                        return false;
+                    }
                 }
             }
         }
@@ -298,23 +300,24 @@ public class StorageManagerHelper {
      * @param bm The buffer manager for the database.
      * @return True if primarykey is unique in the column, false otherwise.
      */
-    private static boolean checkPrimaryKey(Schema table, Object obj, BufferManager bm){
-        if(obj == null){
+    private static boolean checkPrimaryKey(Schema table, Object obj, BufferManager bm) {
+        if (obj == null) {
             return false;
         }
-        ArrayList<Integer> pgOrder = table.getPageOrder();
-        String fileName = table.getFileName();
-        for(Integer i : pgOrder){
-             Page pg = new Page(i, table, bm.getPageSize(), bm.getPage(fileName, i));
-             if(pg.belongs(obj)){
-                 if(pg.getRecord(obj) != null){
-                     return false;
-                 }
-             }
-             else{
-                 System.out.println("CheckAttributes error, passed a obj that doesn't belong.");
-                 return false;
-             }
+        if (table.getPages() > 0) {
+            ArrayList<Integer> pgOrder = table.getPageOrder();
+            String fileName = table.getFileName();
+            for (Integer i : pgOrder) {
+                Page pg = new Page(i, table, bm.getPageSize(), bm.getPage(fileName, i));
+                if (pg.belongs(obj)) {
+                    if (pg.getRecord(obj) != null) {
+                        return false;
+                    }
+                } else {
+                    System.out.println("CheckAttributes error, passed a obj that doesn't belong.");
+                    return false;
+                }
+            }
         }
         return true;
     }

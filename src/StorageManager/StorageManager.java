@@ -42,6 +42,7 @@ public class StorageManager {
             if(attributes != null){ // we're good, the tuple is valid and we can make the record.
                 if(table.getPages() == 0){
                     bm.addPage(fileName, table.getOpenPages());
+                    Page pg = new Page(0, table, bm.getPageSize(), 0);
                 }
                 else {
                     ArrayList<Integer> pgOrder = table.getPageOrder();
