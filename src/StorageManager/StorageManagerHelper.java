@@ -321,6 +321,7 @@ public class StorageManagerHelper {
             Page pg = new Page(i, table, bm.getPageSize(), bm.getPage(fileName, i));
             if (pg.belongs(obj)) {
                 if (pg.getRecord(obj) == null) {
+                    System.out.println("aaahhhh");
                     return true;
                 }else {
                     break;

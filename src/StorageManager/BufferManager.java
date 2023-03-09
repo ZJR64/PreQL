@@ -3,6 +3,7 @@ package src.StorageManager;
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -117,19 +118,16 @@ public class BufferManager {
             try {
                 tableFile.createNewFile();
 
-                //write 0 page number to file
+                //create ByteBuffer and file
+                ByteBuffer buffer = ByteBuffer.wrap(new byte[Integer.SIZE/Byte.SIZE]);
                 RandomAccessFile file = new RandomAccessFile(storagePath + fileName, "rw");
-                int intSize = Integer.SIZE / 8;
-                byte[] numPageBytes = new byte[intSize];
 
-                //fill with bits
-                for (int i = 0; i < intSize; i++) {
-                    numPageBytes[i] = 0;
-                }
+                //write 0 page number to buffer
+                buffer.putInt(0);
 
                 //store
                 file.seek(0);
-                file.write(numPageBytes);
+                file.write(buffer.array());
 
                 file.close();
             } catch (Exception e) {
@@ -144,18 +142,29 @@ public class BufferManager {
             long fileLength = file.length();
 
             file.seek(fileLength);
-
-            //write some nonsense bytes to add to the file
-            byte[] padding = new byte[pageSize];
-            file.write(padding);
-
-            //getpage number
+            //get page number
             if (openPages.isEmpty()) {
-                pageNumber = (int) Math.ceil( fileLength / pageSize);
+                //get pageCount
+                byte[] numPagesArray = new byte[Integer.SIZE/Byte.SIZE];
+                file.seek(0);
+                file.read(numPagesArray);
+                ByteBuffer buffer = ByteBuffer.wrap(numPagesArray);
+
+                //get number then increment and return to buffer
+                pageNumber = buffer.getInt();
+                buffer.putInt(0,pageNumber + 1);
+
+                //store
+                file.seek(0);
+                file.write(buffer.array());
             }
             else {
                 pageNumber = openPages.indexOf(0);
             }
+
+            //write some nonsense bytes to add to the file
+            byte[] padding = new byte[pageSize];
+            file.write(padding);
 
             //add to buffer
             getPage(fileName, pageNumber);
@@ -163,8 +172,6 @@ public class BufferManager {
             //close
             file.close();
 
-            //increment page
-            addPageNumber(fileName);
         } catch (IOException e) {
             System.err.println("Could not add page to file " + fileName);
             System.err.println(e);

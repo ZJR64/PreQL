@@ -40,20 +40,31 @@ public class StorageManager {
         for(ArrayList<String> tuple : tuples){  // for tuple in tuples, for loop will create tuples into records.
             attributes = StorageManagerHelper.checkAttributes(table, tuple, bm);
             if(attributes != null){ // we're good, the tuple is valid and we can make the record.
+                //check if first page
                 if(table.getPages() == 0){
                     bm.addPage(fileName, table.getOpenPages());
                     Page pg = new Page(0, table, bm.getPageSize(), 0);
-                    Record rec = new Record(table, attributes);
-                    pg.addRecord(rec);
+                    bm.writePage(fileName, 0, pg.getBytes());
                 }
-                else {
-                    ArrayList<Integer> pgOrder = table.getPageOrder();
-                    for (Integer i : pgOrder) {
-                        Page pg = new Page(i, table, bm.getPageSize(), bm.getPage(fileName, i));
-                        Record rec = new Record(table, attributes);
+                ArrayList<Integer> pgOrder = table.getPageOrder();
+                //create record
+                Record rec = new Record(table, attributes);
+                //iterate through pages
+                for (Integer i : pgOrder) {
+                    //get page from buffer
+                    Page pg = new Page(i, table, bm.getPageSize(), bm.getPage(fileName, i));
+                    //check if belongs
+                    if (pg.belongs(rec.getPrimaryKey())) {
+                        //add to page if belongs
                         if (!pg.addRecord(rec)) {
-                            pg.split(bm, attributes); // Do I need to update values here like pgOrder? etc.
+                            //split page if false
+                            pg.split(bm, attributes);
                         }
+                        //write to buffer
+                        bm.writePage(fileName, 0, pg.getBytes());
+
+                        //break because record has been added
+                        break;
                     }
                 }
             }

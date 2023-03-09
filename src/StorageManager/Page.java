@@ -64,7 +64,9 @@ public class Page {
      * @return the record, or null if not found.
      */
     public Record getRecord(Object primaryKeyValue) {
+        System.out.println(recordList.size());
         for (Record record : recordList) {
+            System.out.println(record.getPrimaryKey() + ":" + primaryKeyValue);
             if (record.getPrimaryKey().equals(primaryKeyValue)) {
                 return record;
             }
@@ -81,13 +83,12 @@ public class Page {
     public boolean belongs(Object primaryKeyValue) {
         //for first record added to table
         if (recordList.isEmpty()) {
-            System.out.println(recordList);
             return true;
         }
 
         //if last page then it definitely belongs
         ArrayList<Integer> order = schema.getPageOrder();
-        if (order.get(order.size()) - 1 == this.pageNum) {
+        if (order.get(order.size() - 1) == this.pageNum) {
             return true;
         }
 
@@ -140,6 +141,16 @@ public class Page {
                 recordList.add(recordList.indexOf(record), newRecord);
                 break;
             }
+
+            //check if last record
+            if (recordList.indexOf(record) == recordList.size() - 1) {
+                recordList.add(newRecord);
+            }
+        }
+
+        //insert if first record
+        if (recordList.isEmpty()) {
+            recordList.add(newRecord);
         }
 
         //increment schema
@@ -173,12 +184,23 @@ public class Page {
         //find where record belongs
         for (Record record : recordList) {
             Object currentKey = record.getPrimaryKey();
+
             //check if greater than
             if(currentKey instanceof Comparable && ((Comparable) currentKey).compareTo(newRecord.getPrimaryKey()) > 0) {
                 //add new record to arraylist
                 recordList.add(recordList.indexOf(record), newRecord);
                 break;
             }
+
+            //check if last record
+            if (recordList.indexOf(record) == recordList.size() - 1) {
+                recordList.add(newRecord);
+            }
+        }
+
+        //insert if first record
+        if (recordList.isEmpty()) {
+            recordList.add(newRecord);
         }
 
         //increment schema
