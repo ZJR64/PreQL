@@ -3,6 +3,7 @@ package src.StorageManager;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import src.Catalog.*;
 
 
@@ -12,8 +13,8 @@ import src.Catalog.*;
  */
 public class StorageManager {
 
-    public static BufferManager bm;
-    private static Catalog c;
+    public BufferManager bm;
+    private Catalog c;
 
     public StorageManager(BufferManager bm, Catalog c){
         this.bm = bm;
@@ -23,291 +24,33 @@ public class StorageManager {
     /**
      * Inserts into a table a number of records.
      *
-     * @param tableNThe table being inserted into
+     * @param tableName table being inserted into
      * @param tuples the records to be inserted into the table.
      * @return If the insertion was successful or not.
      */
-    public String insert(String tableN, ArrayList<ArrayList<String>> tuples) {
-        String tableName = tableN;
+    public String insert(String tableName, ArrayList<ArrayList<String>> tuples) {
         Schema table = c.getSchema(tableName);
         if(table == null){
             return "No such table " + tableName.concat("\nERROR");
         }
-        ArrayList[] result = checkAttributes(table, tuples);
-        if(result == null){  // if result equals null, attributes are not good.
-            return "ERROR";
-        }
-        ArrayList<Object> values = result[0];
-        ArrayList<ArrayList<Integer>> sizes = result[1];
-        ArrayList<byte[]> records = new ArrayList<>();
-        try{
-            records = convertToBytes(tuples, sizes, values, table);
-            if(records.isEmpty()){
-                System.err.println("Error: Could not write out bytes");
-                return "FILE ERROR";
+
+        for(ArrayList<String> tuple : tuples){  // for tuple in tuples, for loop will create tuples into records.
+            String checkResult = StorageManagerHelper.checkAttributes(table, tuple);
+            if(checkResult == null){ // we're good, the tuple is valid and we can make the record.
+                Record rec = new Record(table, );
+            }
+            else{
+                return checkResult + "\nERROR";
             }
         }
-        catch(Exception e){
-            System.err.println("Error: tuples could not be read");
-            return "FILE ERROR";
-        }
-        //if table doesnt yet have pages.
-        if(table.getPages() == 0){
-            int pageNum = 0;
-            for(int i = 0; i < records.size(); i++){
-                if(i == 0){
-                    pageNum = bm.addPage(tableName, table.getOpenPages());
-                    table.addRecord();
-                    table.addPage(0, 0);
-                }
-                bm.writePage(tableName, pageNum, records.get(i));
-
-            }
-           return "SUCCESS";
-        }
-        int page_num = bm.getPageSize() * 0;
-        byte[] page = bm.getPage(tableName, page_num);
-        int freeSpace = page[0];
-        for(int i = 0; i < records.size(); i++){
-            byte[] record = records.get(i);
-            for(int j = 0; j < record.length; j++){
-                page[freeSpace + i] = record[j];
-            }
-        }
-        return "SUCCESS";
-    }
-
-    private ArrayList<byte[]> split(){
-
         return null;
     }
 
 
-    /**
-     * Checks if the user is trying to insert the correct number and types of
-     * values into the table.
-     *
-     * @param table the table that contains the attributes being checked against.
-     * @param tuples the tuples containing the attributes being checked
-     * @return null if the tuples are correct, otherwise a string explaining
-     * what is wrong with the string.
-     */
-    private ArrayList[] checkAttributes(Schema table,
-                                        ArrayList<ArrayList<String>> tuples){
-        ArrayList[] toReturn = new ArrayList[tuples.size() + 1];
-        ArrayList<Object> values = new ArrayList<>();
-        ArrayList<ArrayList<Integer>> allRecordsAttributeSizes = new ArrayList<>();
-        ArrayList<Attribute> tableAttributes = table.getAttributes();
-        for(ArrayList<String> tuple: tuples){                // for each tuple
-            ArrayList<Integer> recordAttributeSizes = new ArrayList<>();
-            if(tuple.size() > tableAttributes.size()){  // check if too many attributes
-                 System.out.println("row (" + tuple.toString()+ ")" +
-                        "Too few attributes: expected  " +
-                        table.getAttributes().toString() +
-                        " got " + tuple.toString());
-            }
-            else if(tuple.size() < tableAttributes.size()){ //check if enough attributes
-                System.out.println("row (" + tuple.toString()+ ")" +
-                        "Too many attributes: expected  " +
-                        table.getAttributes().toString() +
-                        " got " + tuple.toString());
-            }
-            for(int i = 0; i < tableAttributes.size(); i++){ // for each attribute in the table
-                Attribute attr = tableAttributes.get(i); // get table attribute i
-                String type = attr.getType();            // get type of attribute i
-                String val = tuple.get(i);
-
-                if(type.startsWith("varchar")){
-                    if(val == null){
-                        recordAttributeSizes.add(1);
-                        values.add(null);
-                        if(i == tableAttributes.size()-1){
-                            allRecordsAttributeSizes.add(recordAttributeSizes);
-                        }
-                        continue;
-                    }
-                    int amount = Integer.parseInt(type.substring(type.indexOf("(")+1, type.indexOf(")")).strip());
-                    if(val.length() <= amount){
-                        values.add(val);
-                        recordAttributeSizes.add(val.length());
-                        if(i == tableAttributes.size()-1){
-                            allRecordsAttributeSizes.add(recordAttributeSizes);
-                        }
-                        continue;
-                    }
-                    else{
-                         System.out.println("TOO BIG ERROR");
-                        return null;
-                    }
-
-                }
-                else if(type.startsWith("char")){
-                    if(val == null){
-                        values.add(null);
-                        recordAttributeSizes.add(1);
-                        if(i == tableAttributes.size()-1){
-                            allRecordsAttributeSizes.add(recordAttributeSizes);
-                        }
-                        continue;
-                    }
-                    int amount = Integer.parseInt(type.substring(type.indexOf("(")+1, type.indexOf(")")).strip());
-                    if(val.length() == amount){
-                        values.add(val);
-                        recordAttributeSizes.add(val.length());
-                        if(i == tableAttributes.size()-1){
-                            allRecordsAttributeSizes.add(recordAttributeSizes);
-                        }
-                        continue;
-                    }
-                    else{
-                        System.out.println("WRONG SIZE error");
-                        return null;
-                    }
-                }
-                else if(type.equals("double")){
-                    if(val == null){
-                        values.add(null);
-                        recordAttributeSizes.add(1);
-                        if(i == tableAttributes.size()-1){
-                            allRecordsAttributeSizes.add(recordAttributeSizes);
-                        }
-                        continue;
-                    }
-                    if(isNumeric(val)){
-                        if(val.contains(".")){
-                            System.out.println("EXPECTED INTEGER, GOT DOUBLE");
-                            return null;
-                        }
-                        else{
-                            values.add(Double.parseDouble(val));
-                            recordAttributeSizes.add(Double.SIZE/8);
-                            if(i == tableAttributes.size()-1){
-                                allRecordsAttributeSizes.add(recordAttributeSizes);
-                            }
-                            continue;
-                        }
-                    }
-                    else{
-                        System.out.println("EXPECTED DOUBLE, GOT NOT DOUBLE ERROR");
-                        return null;
-                    }
-                }
-                else if(type.equals("integer")){
-                    if(val == null){
-                        values.add(null);
-                        recordAttributeSizes.add(1);
-                        if(i == tableAttributes.size()-1){
-                            allRecordsAttributeSizes.add(recordAttributeSizes);
-                        }
-                        continue;
-                    }
-                    if(isNumeric(val)){
-                        if(val.contains(".")){
-                            System.out.println("EXPECTED INTEGER, GOT DOUBLE");
-                            return null;
-                        }
-                        else{
-                            values.add(Integer.parseInt(val));
-                            recordAttributeSizes.add(Integer.SIZE/8);
-                            if(i == tableAttributes.size()-1){
-                                allRecordsAttributeSizes.add(recordAttributeSizes);
-                            }
-                            continue;
-                        }
-                    }
-                    else{
-                        System.out.println("EXPECTED INTEGER, GOT NOT INTEGER ERROR");
-                        return null;
-                    }
-                }
-                else if(type.equals("boolean")){
-                    if(val == null){
-                        values.add(null);
-                        recordAttributeSizes.add(1);
-                        if(i == tableAttributes.size()-1){
-                            allRecordsAttributeSizes.add(recordAttributeSizes);
-                        }
-                        continue;
-                    }
-                    if(val.equals("true")){
-                        values.add(Boolean.parseBoolean(val));
-                        recordAttributeSizes.add(1);
-                        if(i == tableAttributes.size()-1){
-                            allRecordsAttributeSizes.add(recordAttributeSizes);
-                        }
-                        continue;
-                    }
-                    else if(val.equals("false")) {
-                        values.add(Boolean.parseBoolean(val));
-                        recordAttributeSizes.add(1);
-                        if (i == tableAttributes.size() - 1) {
-                            allRecordsAttributeSizes.add(recordAttributeSizes);
-                        }
-                        continue;
-                    }
-                    else{
-                        return null;
-                    }
-                }
-                else{
-                    System.out.println("INVALID TYPE ERROR");
-                    return null;
-                }
-            }
-        }
-        toReturn[0] = values;
-        toReturn[1] = allRecordsAttributeSizes;
-        return toReturn;
-    }
-
-    /**
-     * checks if the passed in string is either int or double.
-     * @param str the string being checked.
-     * @return true if the string is numeric, false otherwise.
-     */
-    private Boolean isNumeric(String str){
-        try {
-            if(str.contains(".")){
-                double val = Double.parseDouble(str);
-            }
-            else{
-                int val = Integer.parseInt(str);
-            }
-
-        } catch (NumberFormatException nfe) {
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * Takes in a table and page number, gets the number of records in that
-     * page.
-     * @param tableName the tabble whose page's number of records is being
-     *                  gotten from.
-     * @param pageNum the page number whose number of records is being gotten
-     *                from.
-     * @return The number of records in the passed page.
-     */
-    private int getNumRecords(String tableName, int pageNum){
-        byte[] first_page = bm.getPage(tableName, pageNum); // get page
-
-        byte[] bytesNumRecs = new byte[Integer.SIZE]; // byte array for number of records
-
-        for (int j = 0; j < Integer.SIZE; j++) {
-            bytesNumRecs[j] = first_page[j]; // set each byte of numrecs to byte of page
-        }
-        int numRecs = 0;
-        for (byte b : bytesNumRecs) {
-            numRecs = (numRecs << 8) + (b & 0xFF); //convert bytes of num recs to actual value.
-        }
-        return numRecs;
-    }
 
     /**
      * Converts the passed in tuples to a byte array.
      *
-     * @param result
      * @param tuples the arraylist of tuples.
      * @param values
      * @param table

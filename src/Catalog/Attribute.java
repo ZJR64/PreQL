@@ -133,7 +133,7 @@ public class Attribute {
     /**
      * getter method for type of the attribute
      *
-     * @return tyoe of the attribute.
+     * @return type of the attribute.
      */
     public String getType() {return type;}
 
