@@ -118,17 +118,11 @@ public class Record {
         //setup
         Map<String, Object> attributeMap = new HashMap<>();
 
-        //get nulls
-        BitSet nullBitMap = new BitSet(schema.getAttributes().size());
-        byte[] nullBytes = nullBitMap.toByteArray();
-        buffer.get(nullBytes);
-        nullBitMap = BitSet.valueOf(nullBytes);
-
         //read each attribute
         int attributeIndex = 0;
         for (Attribute attribute : schema.getAttributes()) {
             //check if null
-            if (nullBitMap.get(attributeIndex)) {
+            if (buffer.get() == 1) {
                 attributeMap.put(attribute.getName(), null);
                 continue;
             }
@@ -170,26 +164,18 @@ public class Record {
         //setup
         ByteBuffer buffer = ByteBuffer.wrap(new byte[this.size]).order(ByteOrder.BIG_ENDIAN);
 
-        //create null bitmap
-        BitSet nullBitMap = new BitSet(schema.getAttributes().size());
-        int attributeIndex = 0;
-        for (Attribute attribute : schema.getAttributes()) {
-            //check if null
-            if (attributes.get(attribute.getName()) == null) {
-                //set null bit
-                nullBitMap.set(attributeIndex);
-            }
-        }
-        buffer.put(nullBitMap.toByteArray());
-
         //go through each attribute
         for (Attribute attribute : schema.getAttributes()) {
             Object value = attributes.get(attribute.getName());
 
-            //make sure not null
+            //check if null
+            byte nullValue = 0;
             if (attributes.get(attribute.getName()) == null) {
+                nullValue = 1;
                 continue;
             }
+            buffer.put(nullValue);
+
 
             //look to see what type of attribute it is
             if (attribute.getType().contains("char")) {
@@ -227,12 +213,11 @@ public class Record {
     private int calcSize() {
         int recordSize = 0;
 
-        //count null bitmap
-        recordSize = (int) (schema.getAttributes().size() + Byte.SIZE - 1) / Byte.SIZE;
-
         //count each attribute
         for (Attribute attribute : schema.getAttributes()) {
-            //do not count null values
+            //add 1 for null indicator
+            recordSize += 1;
+            //do not count rest of null values
             if (attributes.get(attribute.getName()) == null) {
                 continue;
             }
