@@ -90,7 +90,7 @@ public class StorageManagerHelper {
                 }
             }
             if(unique){
-                if(!checkUniqueness(table, tupleAttribute, bm)){
+                if(!checkUniqueness(table, tupleAttribute, bm, atrName)){
                     System.out.println("Non-unique attribute: " +
                             tupleAttribute);
                     return null;
@@ -270,9 +270,11 @@ public class StorageManagerHelper {
      * @param table The table whose column is being checked.
      * @param obj The value whose being checked for uniqueness.
      * @param bm The buffer manager for the database.
+     * @param atrName
      * @return True if the obj  is unique in the column, false otherwise.
      */
-    private static boolean checkUniqueness(Schema table, Object obj, BufferManager bm){
+    private static boolean checkUniqueness(Schema table, Object obj,
+                                           BufferManager bm, String atrName){
         if(obj == null){
             return true;
         }
@@ -283,8 +285,13 @@ public class StorageManagerHelper {
                 Page pg = new Page(i, table, bm.getPageSize(), bm.getPage(fileName, i));
                 ArrayList<Record> recs = pg.getRecords();
                 for (Record rec : recs) {
-                    if (rec.getAttributes().containsValue(obj)) {
-                        return false;
+                    Map<String, Object> attributes = rec.getAttributes();
+                    for(Map.Entry<String, Object> entry : attributes.entrySet()){
+                        if(entry.getKey().equals(atrName)){
+                            if(entry.getValue().equals(obj)){
+                                return false;
+                            }
+                        }
                     }
                 }
             }
@@ -311,7 +318,7 @@ public class StorageManagerHelper {
                 Page pg = new Page(i, table, bm.getPageSize(), bm.getPage(fileName, i));
                 if (pg.belongs(obj)) {
                     if (pg.getRecord(obj) != null) {
-                        return false;
+                        return true;
                     }
                 } else {
                     System.out.println("CheckAttributes error, passed a obj that doesn't belong.");

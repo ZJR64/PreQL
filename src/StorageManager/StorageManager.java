@@ -43,6 +43,8 @@ public class StorageManager {
                 if(table.getPages() == 0){
                     bm.addPage(fileName, table.getOpenPages());
                     Page pg = new Page(0, table, bm.getPageSize(), 0);
+                    Record rec = new Record(table, attributes);
+                    pg.addRecord(rec);
                 }
                 else {
                     ArrayList<Integer> pgOrder = table.getPageOrder();
