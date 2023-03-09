@@ -4,6 +4,7 @@ import src.Catalog.Attribute;
 import src.Catalog.Schema;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -118,9 +119,10 @@ public class Record {
         Map<String, Object> attributeMap = new HashMap<>();
 
         //get nulls
-        byte[] nullBytes = new byte[(int) (schema.getAttributes().size() + Byte.SIZE - 1) / Byte.SIZE];
+        BitSet nullBitMap = new BitSet(schema.getAttributes().size());
+        byte[] nullBytes = nullBitMap.toByteArray();
         buffer.get(nullBytes);
-        BitSet nullBitMap = BitSet.valueOf(nullBytes);
+        nullBitMap = BitSet.valueOf(nullBytes);
 
         //read each attribute
         int attributeIndex = 0;
@@ -166,7 +168,7 @@ public class Record {
      */
     private byte[] makeNonsense() {
         //setup
-        ByteBuffer buffer = ByteBuffer.wrap(new byte[this.size]);
+        ByteBuffer buffer = ByteBuffer.wrap(new byte[this.size]).order(ByteOrder.BIG_ENDIAN);
 
         //create null bitmap
         BitSet nullBitMap = new BitSet(schema.getAttributes().size());

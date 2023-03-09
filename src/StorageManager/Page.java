@@ -3,6 +3,7 @@ package src.StorageManager;
 import src.Catalog.*;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.*;
 import java.util.function.Predicate;
 
@@ -64,7 +65,6 @@ public class Page {
      * @return the record, or null if not found.
      */
     public Record getRecord(Object primaryKeyValue) {
-        System.out.println(recordList.size());
         for (Record record : recordList) {
             System.out.println(record.getPrimaryKey() + ":" + primaryKeyValue);
             if (record.getPrimaryKey().equals(primaryKeyValue)) {
@@ -132,7 +132,8 @@ public class Page {
         }
 
         //find where record belongs
-        for (Record record : recordList) {
+        for (int recordIndex = 0; recordIndex < recordList.size(); recordIndex++) {
+            Record record = recordList.get(recordIndex);
             Object currentKey = record.getPrimaryKey();
 
             //check if greater than
@@ -182,7 +183,8 @@ public class Page {
         }
 
         //find where record belongs
-        for (Record record : recordList) {
+        for (int recordIndex = 0; recordIndex < recordList.size(); recordIndex++) {
+            Record record = recordList.get(recordIndex);
             Object currentKey = record.getPrimaryKey();
 
             //check if greater than
@@ -319,7 +321,8 @@ public class Page {
      */
     public byte[] getBytes() {
         //setup
-        ByteBuffer buffer = ByteBuffer.wrap(new byte[this.pageSize]);
+
+        ByteBuffer buffer = ByteBuffer.wrap(new byte[this.pageSize]).order(ByteOrder.BIG_ENDIAN);
 
         //store number of records
         int numRecords = recordList.size();
@@ -332,7 +335,9 @@ public class Page {
         }
 
         //return byte array
-        return buffer.array();
+        byte[] array = buffer.array();
+        buffer.clear();
+        return array;
     }
 
     /**
@@ -356,7 +361,7 @@ public class Page {
         ArrayList<Record> records = new ArrayList<Record>();
 
         //create ByteManager
-        ByteBuffer buffer = ByteBuffer.wrap(data);
+        ByteBuffer buffer = ByteBuffer.wrap(data).order(ByteOrder.BIG_ENDIAN);
 
         //get numRecords
         int numRecords = buffer.getInt();
@@ -367,6 +372,7 @@ public class Page {
         }
 
         //return records
+        buffer.clear();
         return records;
     }
 }

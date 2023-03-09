@@ -51,6 +51,7 @@ public class StorageManager {
                 Record rec = new Record(table, attributes);
                 //iterate through pages
                 for (Integer i : pgOrder) {
+
                     //get page from buffer
                     Page pg = new Page(i, table, bm.getPageSize(), bm.getPage(fileName, i));
                     //check if belongs
@@ -61,7 +62,7 @@ public class StorageManager {
                             pg.split(bm, attributes);
                         }
                         //write to buffer
-                        bm.writePage(fileName, 0, pg.getBytes());
+                        bm.writePage(fileName, i, pg.getBytes());
 
                         //break because record has been added
                         break;
@@ -110,9 +111,7 @@ public class StorageManager {
         for (Integer pgNum : pageList){
             Page pg = new Page(pgNum, table, bm.getPageSize(), bm.getPage(table.getFileName(), pgNum));
             for (Record rec : pg.getRecords()) {
-                for (String att: rec.getAttributes().keySet()) {
-                    System.out.println(rec.getAttributes().get(att) + "  |  ");
-                }
+                for (String att: rec.getAttributes().keySet())
                 System.out.println("\n");
             }
         }

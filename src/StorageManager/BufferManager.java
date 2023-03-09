@@ -7,6 +7,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The class for the buffer. The buffer hold pages to use and modify.
@@ -22,7 +23,7 @@ public class BufferManager {
     String storagePath;
     private int pageSize;
     private int bufferSize;
-    private HashMap<String, byte[]> buffer;
+    private Map<String, byte[]> buffer;
     private ArrayList<String> recentlyUsed;
 
     /**
@@ -36,6 +37,7 @@ public class BufferManager {
         this.pageSize = pageSize;
         this.bufferSize = bufferSize;
         this.buffer = new HashMap<String, byte[]>();
+        buffer.clear();
         recentlyUsed = new ArrayList<String>();
         this.storagePath = databaseLocation + File.separator;
     }
@@ -60,6 +62,10 @@ public class BufferManager {
     public byte[] getPage(String fileName, int pageNumber) {
         String pageKey = getPageKey(fileName, pageNumber);
         byte[] pageData = buffer.get(pageKey);
+        //TODO
+        System.out.println("Buffer: " + buffer.get(pageKey));
+        System.out.println("FileName: " + fileName);
+        System.out.println("pageNumber: " + pageNumber);
 
         if (pageData == null) {
             // Page not in buffer, read from file and add to buffer
@@ -73,6 +79,10 @@ public class BufferManager {
         }
         //modify recently used for LRU
         else {
+            for (byte b : pageData) {
+                System.out.print(b + ",");
+            }
+            System.out.println();
             recentlyUsed.add(recentlyUsed.remove(recentlyUsed.indexOf(pageKey)));
         }
 
@@ -89,6 +99,11 @@ public class BufferManager {
      */
     public void writePage(String fileName, int pageNumber, byte[] pageData) {
         String pageKey = getPageKey(fileName, pageNumber);
+        System.out.println("Write:");
+        for (byte b : pageData) {
+            System.out.print(b + ",");
+        }
+        System.out.println();
 
         if (buffer.containsKey(pageKey)) {
             // Page is in the buffer, so overwrite the data
@@ -230,48 +245,6 @@ public class BufferManager {
         //cleanse buffer
         buffer.clear();
         recentlyUsed.clear();
-    }
-
-    /**
-     * Adds 1 to the number of pages
-     *
-     * @param fileName the name of the file to increment
-     * @throws IOException
-     */
-    private void addPageNumber(String fileName) throws IOException {
-        //open file to write to
-        RandomAccessFile file = new RandomAccessFile(storagePath + fileName, "r");
-
-        //get the current page Size
-        int intSize = Integer.SIZE / 8;
-        //size bytes
-        byte[] numPageBytes = new byte[intSize];
-
-        //read from file
-        file.seek(0);
-        file.readFully(numPageBytes);
-        file.close();
-
-        //extract info
-        int numPages = 0;
-        for (byte b : numPageBytes) {
-            numPages = (numPages << 8) + (b & 0xFF);
-        }
-
-        //add 1
-        numPages++;
-        file = new RandomAccessFile(storagePath + fileName, "rw");
-
-        //convert again
-        for (int i = 0; i < intSize; i++) {
-            numPageBytes[i] = (byte) (pageSize >>> ((intSize-1)*8 - (8 * i)));
-        }
-
-        //store
-        file.seek(0);
-        file.write(numPageBytes);
-
-        file.close();
     }
 
     /**
