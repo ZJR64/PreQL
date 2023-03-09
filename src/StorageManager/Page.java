@@ -66,8 +66,6 @@ public class Page {
      */
     public Record getRecord(Object primaryKeyValue) {
         for (Record record : recordList) {
-            System.out.println(record.getPrimaryKey() + ":" + primaryKeyValue);
-            System.out.println(record.equals(primaryKeyValue));
             if (record.equals(primaryKeyValue)) {
                 return record;
             }
