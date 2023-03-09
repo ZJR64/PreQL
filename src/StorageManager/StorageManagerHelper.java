@@ -311,22 +311,24 @@ public class StorageManagerHelper {
         if (obj == null) {
             return false;
         }
-        if (table.getPages() > 0) {
-            ArrayList<Integer> pgOrder = table.getPageOrder();
-            String fileName = table.getFileName();
-            for (Integer i : pgOrder) {
-                Page pg = new Page(i, table, bm.getPageSize(), bm.getPage(fileName, i));
-                if (pg.belongs(obj)) {
-                    if (pg.getRecord(obj) != null) {
-                        return true;
-                    }
-                } else {
-                    System.out.println("CheckAttributes error, passed a obj that doesn't belong.");
-                    return false;
+        //for first record
+        if (table.getPages() < 1) {
+            return true;
+        }
+        ArrayList<Integer> pgOrder = table.getPageOrder();
+        String fileName = table.getFileName();
+        for (Integer i : pgOrder) {
+            Page pg = new Page(i, table, bm.getPageSize(), bm.getPage(fileName, i));
+            if (pg.belongs(obj)) {
+                if (pg.getRecord(obj) == null) {
+                    return true;
+                }else {
+                    break;
                 }
             }
         }
-        return true;
+        System.out.println("CheckAttributes error, passed a obj that doesn't belong.");
+        return false;
     }
 
 

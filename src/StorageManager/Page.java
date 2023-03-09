@@ -79,6 +79,18 @@ public class Page {
      * @return true primary key exists, or could potentially exist in page, false otherwise.
      */
     public boolean belongs(Object primaryKeyValue) {
+        //for first record added to table
+        if (recordList.isEmpty()) {
+            System.out.println(recordList);
+            return true;
+        }
+
+        //if last page then it definitely belongs
+        ArrayList<Integer> order = schema.getPageOrder();
+        if (order.get(order.size()) - 1 == this.pageNum) {
+            return true;
+        }
+
         //search through the records to find a matching record
         for (Record record : recordList) {
             Object currentKeyValue = record.getPrimaryKey();
