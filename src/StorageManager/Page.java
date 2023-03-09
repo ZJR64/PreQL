@@ -40,11 +40,12 @@ public class Page {
      * @param pageSize the size of the page.
      * @param pageNum The page number.
      */
-    public Page (int pageNum, Schema schema, int pageSize) {
+    public Page (int pageNum, Schema schema, int pageSize, int beforePage) {
         this.pageNum = pageNum;
         this.schema = schema;
         this.pageSize = pageSize;
         this.recordList = new ArrayList<Record>();
+        schema.addPage(beforePage, this.pageNum);
     }
 
     /**
@@ -187,7 +188,7 @@ public class Page {
         int newPageNum = bufferManager.addPage(schema.getName(), schema.getOpenPages());
 
         //create new page
-        Page newPage = new Page(newPageNum, schema, pageSize);
+        Page newPage = new Page(newPageNum, schema, pageSize, this.pageNum);
 
         //add half the records to new page and then remove them
         int cutoffPoint = recordList.size()/2;
@@ -199,9 +200,6 @@ public class Page {
 
         //write new page to buffer
         bufferManager.writePage(schema.getFileName() , newPageNum, newPage.getBytes());
-
-        //add page to schema
-        schema.addPage(this.pageNum, newPageNum);
 
         //add new record
         addRecord(attributes);
@@ -222,7 +220,7 @@ public class Page {
         int newPageNum = bufferManager.addPage(schema.getName(), schema.getOpenPages());
 
         //create new page
-        Page newPage = new Page(newPageNum, schema, pageSize);
+        Page newPage = new Page(newPageNum, schema, pageSize, this.pageNum);
 
         //add half the records to new page and then remove them
         int cutoffPoint = recordList.size()/2;
