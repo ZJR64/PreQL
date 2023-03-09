@@ -35,7 +35,7 @@ public class Attribute {
     /**
      * Constructor for the Attribute object when read from file.
      *
-     * @param input the String containing the attribute.
+     * @param buffer The buffer the attributes are being read from.
      */
     public Attribute (ByteBuffer buffer) {
         //get type

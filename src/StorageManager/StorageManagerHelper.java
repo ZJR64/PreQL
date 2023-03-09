@@ -18,7 +18,7 @@ public class StorageManagerHelper {
      *
      * @param table the table the values are being checked against.
      * @param tuple the tuple being checked.
-     * @param bm the buffer manager for the databse.
+     * @param bm the buffer manager for the database.
      * @return null if the tuple is correct, an error string otherwise.
      */
     public static String checkAttributes(Schema table, ArrayList<String> tuple, BufferManager bm){
@@ -263,7 +263,7 @@ public class StorageManagerHelper {
     }
 
     /**
-     * Checks whether the passed in priamry key is unique in its column.
+     * Checks whether the passed in primary key is unique in its column.
      *
      * @param table The table whose column is being checked.
      * @param obj The primary key whose being checked for uniqueness.

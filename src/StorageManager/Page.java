@@ -38,7 +38,7 @@ public class Page {
      *
      * @param schema the schema the record uses.
      * @param pageSize the size of the page.
-     * @param nextPage the next page to point to.
+     * @param pageNum The page number.
      */
     public Page (int pageNum, Schema schema, int pageSize) {
         this.pageNum = pageNum;
@@ -180,7 +180,6 @@ public class Page {
      *
      * @param bufferManager the buffer manager.
      * @param attributes the attributes of the record that is being added.
-     * @param pageNum this page's number.
      * @return the number of the newly created page.
      */
     public int split(BufferManager bufferManager, Map<String, Object> attributes) {
@@ -307,8 +306,6 @@ public class Page {
     /**
      * Add an attribute to each record with a default value.
      *
-     * @param name the name of the attribute.
-     * @param value the default value of the attribute.
      * @return the arraylist of records.
      */
     public ArrayList<Record> deletePage() {

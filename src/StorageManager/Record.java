@@ -21,7 +21,7 @@ public class Record {
      * Constructor for records when we have a byte array.
      *
      * @param schema the schema the record uses.
-     * @param data the byte array that composes the record.
+     * @param byteBuffer the byteBuffer that composes the record.
      */
     public Record (Schema schema, ByteBuffer byteBuffer) {
         this.schema = schema;
@@ -111,7 +111,7 @@ public class Record {
     /**
      * Takes a byte array and puts the attributes into the map.
      *
-     * @param data the byte array to be looked through.
+     * @param buffer the buffer to be looked through.
      */
     private Map<String, Object> makeSense(ByteBuffer buffer) {
         //setup

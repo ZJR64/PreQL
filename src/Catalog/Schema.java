@@ -29,8 +29,8 @@ public class Schema {
     public Schema (String name, ArrayList<Attribute> attributes) {
         this.name = name;
         this.attributes = attributes;
-        this.pageOrder = new ArrayList<Integer>();
-        this.openPages = new ArrayList<Integer>();
+        this.pageOrder = new ArrayList<>();
+        this.openPages = new ArrayList<>();
         this.pages = 0;
         this.records = 0;
     }
@@ -38,7 +38,7 @@ public class Schema {
     /**
      * Constructor for the Schema object when read from file.
      *
-     * @param input the String containing the schema.
+     * @param buffer the buffer containing the schema.
      */
     public Schema (ByteBuffer buffer) {
         //get name
@@ -54,7 +54,7 @@ public class Schema {
         this.records = buffer.getInt();
 
         //get pageOrder
-        this.pageOrder = new ArrayList<Integer>();
+        this.pageOrder = new ArrayList<>();
         while(pageOrder.size() < this.pages) {
             pageOrder.add(buffer.getInt());
         }
@@ -62,7 +62,7 @@ public class Schema {
         //get number of open pages
         int numOpen = buffer.getInt();
         //get openPages
-        this.openPages = new ArrayList<Integer>();
+        this.openPages = new ArrayList<>();
         while(openPages.size() < numOpen) {
             openPages.add(buffer.getInt());
         }
@@ -70,7 +70,7 @@ public class Schema {
         //get number of attributes
         int numAttributes = buffer.getInt();
         //get rest of attributes
-        this.attributes = new ArrayList<Attribute>();
+        this.attributes = new ArrayList<>();
         while(attributes.size() < numAttributes) {
             attributes.add(new Attribute(buffer));
         }
