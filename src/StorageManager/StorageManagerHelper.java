@@ -311,7 +311,7 @@ public class StorageManagerHelper {
                 Page pg = new Page(i, table, bm.getPageSize(), bm.getPage(fileName, i));
                 if (pg.belongs(obj)) {
                     if (pg.getRecord(obj) != null) {
-                        return false;
+                        return true;
                     }
                 } else {
                     System.out.println("CheckAttributes error, passed a obj that doesn't belong.");
