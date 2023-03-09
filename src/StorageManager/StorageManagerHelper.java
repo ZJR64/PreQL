@@ -15,10 +15,10 @@ public class StorageManagerHelper {
     /**
      * Checks the given tuple
      * @param table
-     * @param tuples
+     * @param 
      * @return
      */
-    public static String checkAttributes(Schema table, ArrayList<String> tuple){
+    public static String checkAttributes(Schema table, ArrayList<String> tuple, BufferManager bm){
         ArrayList<Attribute> tableAttributes = table.getAttributes();
         if(tuple.size() != tableAttributes.size()){
             return "Expected " + tableAttributes.size() + "attributes, got "
@@ -44,72 +44,22 @@ public class StorageManagerHelper {
             String tupleAttribute = tuple.get(i);
 
 
-
-            if(tblType.contains("char")){ // val must be char
-                int charSize = Integer.parseInt(tblType.substring(
-                        tblType.indexOf("(")+1, tblType.indexOf(")")).strip());
-                if(tupleAttribute.length() != charSize){
-                    return
-                }
-                if(unique){
-                    if(checkUniqueness(table, ))
-                }
-                if(notNull){
-
-                }
-                if(primaryKey){
-
-                }
-            }
-            else if(tblType.contains("varchar")){ // val must be varchar
-
-                if(unique){
-
-                }
-                if(notNull){
-
-                }
-                if(primaryKey){
-
-                }
-            }
-            else if(tblType.contains("boolean")) { // val must be bool
-                if(unique){
-
-                }
-                if(primaryKey){
-
-                }
-                if(notNull){
-
-                }
-                else{
-
-                }
+            if(tblType.contains("char")){
 
             }
-            else if (tblType.contains("integer")){ // val must be int
-                if(unique){
-
-                }
-                if(primaryKey){
-
-                }
-                if(notNull){
-
-                }
+            else if(tblType.contains("varchar")){
 
             }
-            else if(tblType.contains("double")){ // val must be double
-                if(unique){
+            else if(tblType.contains("boolean")) {
 
-                }
-                if(primaryKey){
 
-                }
-                if(notNull){
+            }
+            else if (tblType.contains("integer")){
 
-                }
+
+            }
+            else if(tblType.contains("double")){
+
             }
 
 
@@ -118,10 +68,53 @@ public class StorageManagerHelper {
         return null;
     }
 
-    private String checkUniqueness(Schema table,Object obj){
-        for(){
 
+    /**
+     * Checks whether a non primary key is unique in its column.
+     *
+     * @param table The table whose column is being checked.
+     * @param obj The value whose being checked for uniqueness.
+     * @param bm The buffer manager for the database.
+     * @return True if the obj  is unique in the column, false otherwise.
+     */
+    private static boolean checkUniquness(Schema table, Object obj, BufferManager bm){
+        ArrayList<Integer> pgOrder = table.getPageOrder();
+        String fileName = table.getFileName();
+        for(Integer i : pgOrder){
+            Page pg = new Page(i, table, bm.getPageSize(), bm.getPage(fileName, i));
+            ArrayList<Record> recs = pg.getRecords();
+            for(Record rec : recs){
+                if(rec.getAttributes().containsValue(obj)){
+                    return false;
+                }
+            }
         }
-        return null;
+        return true;
+    }
+
+    /**
+     * Checks whether the passed in priamry key is unique in its column.
+     *
+     * @param table The table whose column is being checked.
+     * @param obj The primary key whose being checked for uniqueness.
+     * @param bm The buffer manager for the database.
+     * @return True if primarykey is unique in the column, false otherwise.
+     */
+    private static boolean checkPrimaryKey(Schema table, Object obj, BufferManager bm){
+        ArrayList<Integer> pgOrder = table.getPageOrder();
+        String fileName = table.getFileName();
+        for(Integer i : pgOrder){
+             Page pg = new Page(i, table, bm.getPageSize(), bm.getPage(fileName, i));
+             if(pg.belongs(obj)){
+                 if(pg.getRecord(obj) != null){
+                     return false;
+                 }
+             }
+             else{
+                 System.out.println("CheckAttributes error, passed a obj that doesn't belong.");
+                 return false;
+             }
+        }
+        return true;
     }
 }

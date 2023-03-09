@@ -35,9 +35,9 @@ public class StorageManager {
         }
 
         for(ArrayList<String> tuple : tuples){  // for tuple in tuples, for loop will create tuples into records.
-            String checkResult = StorageManagerHelper.checkAttributes(table, tuple);
+            String checkResult = StorageManagerHelper.checkAttributes(table, tuple, bm);
             if(checkResult == null){ // we're good, the tuple is valid and we can make the record.
-                Record rec = new Record(table, );
+
             }
             else{
                 return checkResult + "\nERROR";
@@ -46,125 +46,6 @@ public class StorageManager {
         return null;
     }
 
-
-
-    /**
-     * Converts the passed in tuples to a byte array.
-     *
-     * @param tuples the arraylist of tuples.
-     * @param values
-     * @param table
-     * @return
-     */
-    private static ArrayList<byte[]> convertToBytes(ArrayList<ArrayList<String>> tuples,
-                                                    ArrayList<ArrayList<Integer>> sizes,
-                                                    ArrayList<Object> values,
-                                                    Schema table){
-        ArrayList<byte[]> byteArrays = new ArrayList<>();
-        int intSize = Integer.SIZE/8;
-        for(int j = 0; j < tuples.size(); j++){ //for each tuple in tuples
-
-            ArrayList<String> tuple = tuples.get(j);                    // tuple i
-            ArrayList<Integer> tupleSizes = sizes.get(j);               // tuple i sizes
-            int sizeOfPointers = tupleSizes.size() * 2 * Integer.SIZE;  // size of all pointers
-            int nullBitMapLength = tuple.size();         // size of null bit map
-            int sizeOfNonData = nullBitMapLength + sizeOfPointers;      // adds up size of non data
-            int totalSize = sizeOfNonData;
-
-            for(int i = 0; i < tupleSizes.size(); i++){
-                totalSize += tupleSizes.get(i);                        // total size = nondata + data
-            }
-
-            byte[] bytes = new byte[totalSize];                        //
-
-            int dataLoc = sizeOfNonData;
-            int location = 0;
-            int prevSizes = 0;
-            int curLocation = 0;
-            ArrayList<Integer> locations = new ArrayList<>();
-            for(int i = 0; i < tuple.size(); i++) { // for each attribute in each tuple
-
-                int size = tupleSizes.get(i);       // gets the size of the attribute
-                if(i == 0){
-                    location = dataLoc;
-                }
-                else{
-                    location += prevSizes;
-                }
-                prevSizes += size;
-                locations.add(location);
-                for(int k = 0; k < intSize; k++){
-                    bytes[curLocation + k] = (byte) (location >>> ((intSize-1)*8 - (8 * k))); //add attribute location
-                    bytes[curLocation + k + intSize] = (byte) (size >>> ((intSize-1)*8 - (8 * k))); //add attribute size
-                }
-                curLocation += intSize * 2;
-
-            }
-            for(int i = 0; i < nullBitMapLength; i++){      // add null bitMap
-                curLocation += i;
-                if(tuple.get(i) == null){
-                    bytes[curLocation] = 1;
-                }
-                else{
-                    bytes[curLocation] = 0;
-                }
-            }
-            ArrayList<Attribute> attributes = table.getAttributes();
-            for(int i = 0; i < values.size(); i++){        // add values
-                String value = attributes.get(i).getType();
-                Object obj = values.get(i);
-                if(value.equals("integer")){
-                    int num = (int) obj;
-                    for(int k = 0; k < intSize; k++){
-                        bytes[curLocation + k] = (byte) (num >>> ((intSize-1)*8 - (8 * k)));
-                    }
-                    curLocation += intSize;
-
-                }
-                else if(value.equals("double")){
-                    double valDouble = (double) obj;
-                    long longValue = Double.doubleToLongBits(valDouble);
-                    byte[] byteArray = ByteBuffer.allocate(Long.BYTES).putLong(longValue).array();
-                    for(int k = 0; k < byteArray.length; k++){
-                        bytes[curLocation + k] = byteArray[k];
-                        curLocation += k;
-                    }
-                }
-                else if(value.equals("boolean")){
-                    boolean valBool = (boolean) obj;
-                    if(valBool){
-                        bytes[curLocation + 1] = 1;
-                        curLocation++;
-                    }
-                    else{
-                        bytes[curLocation + 1] = 1;
-                        curLocation++;
-                    }
-
-                }
-                else if(value.equals("char")){
-                    String valBool = (String) obj;
-                    byte[] byteArray = valBool.getBytes();
-                    for(int k = 0; k < byteArray.length; k++){
-                        bytes[curLocation + k] = byteArray[k];
-                        curLocation += k;
-                    }
-
-                }
-                else if(value.equals("varchar")){
-                    String valDouble = (String) obj;
-                    byte[] byteArray = valDouble.getBytes();
-                    for(int k = 0; k < byteArray.length; k++){
-                        bytes[curLocation + k] = byteArray[k];
-                        curLocation += k;
-                    }
-                }
-            }
-            byteArrays.add(bytes);
-
-        }
-        return byteArrays;
-    }
 
     /**
      * Gets a record by using its primary key.
