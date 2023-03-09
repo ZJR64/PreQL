@@ -120,6 +120,7 @@ public class Page {
         //find where record belongs
         for (Record record : recordList) {
             Object currentKey = record.getPrimaryKey();
+
             //check if greater than
             if(currentKey instanceof Comparable && ((Comparable) currentKey).compareTo(newRecord.getPrimaryKey()) > 0) {
                 //add new record to arraylist
@@ -151,7 +152,7 @@ public class Page {
         }
 
         //now check to see if length of new record would exceed free space
-        if (usedSize + newRecord.getSize() > pageSize) {
+        if (usedSize + newRecord.getSize() + Integer.SIZE/Byte.SIZE>  pageSize) {
             //need to split page
             return false;
         }
@@ -177,7 +178,7 @@ public class Page {
     /**
      * Splits the page, sending back the number of the page that was created.
      *
-     * @param bufferManager the buffer manager, to add
+     * @param bufferManager the buffer manager.
      * @param attributes the attributes of the record that is being added.
      * @param pageNum this page's number.
      * @return the number of the newly created page.
@@ -198,13 +199,48 @@ public class Page {
         }
 
         //write new page to buffer
-        bufferManager.writePage(schema.getFileName() , newPageNum, newPage.getBytes());      //TODO what is file name??
+        bufferManager.writePage(schema.getFileName() , newPageNum, newPage.getBytes());
 
         //add page to schema
         schema.addPage(this.pageNum, newPageNum);
 
         //add new record
         addRecord(attributes);
+
+        //return number of page
+        return newPageNum;
+    }
+
+    /**
+     * Splits the page, sending back the number of the page that was created.
+     *
+     * @param bufferManager the buffer manager.
+     * @param record the record object being added.
+     * @return the number of the newly created page.
+     */
+    public int split(BufferManager bufferManager, Record record) {
+        //add page to buffer
+        int newPageNum = bufferManager.addPage(schema.getName(), schema.getOpenPages());
+
+        //create new page
+        Page newPage = new Page(newPageNum, schema, pageSize);
+
+        //add half the records to new page and then remove them
+        int cutoffPoint = recordList.size()/2;
+        while (cutoffPoint < recordList.size()) {
+            Record currentRecord = recordList.get(cutoffPoint);
+            newPage.addRecord(currentRecord.getAttributes());
+            recordList.remove(currentRecord);
+        }
+
+        //write new page to buffer
+        bufferManager.writePage(schema.getFileName() , newPageNum, newPage.getBytes());
+
+        //add page to schema
+        schema.addPage(this.pageNum, newPageNum);
+
+        //add new record
+        addRecord(record);
 
         //return number of page
         return newPageNum;
