@@ -40,15 +40,17 @@ public class StorageManager {
         for(ArrayList<String> tuple : tuples){  // for tuple in tuples, for loop will create tuples into records.
             attributes = StorageManagerHelper.checkAttributes(table, tuple, bm);
             if(attributes != null){ // we're good, the tuple is valid and we can make the record.
-                ArrayList<Integer> pgOrder = table.getPageOrder();
-                for(Integer i : pgOrder){
-                    Page pg = new Page(i, table, bm.getPageSize(), bm.getPage(fileName, i));
-                    Record rec = new Record(table, attributes);
-                    if(!pg.addRecord(rec)){
-                        pg.split(bm, attributes); // Do I need to update values here like pgOrder? etc.
-                    }
-                    else{
-                        return "SUCCESS";
+                if(table.getPages() == 0){
+                    bm.addPage(fileName, table.getOpenPages());
+                }
+                else {
+                    ArrayList<Integer> pgOrder = table.getPageOrder();
+                    for (Integer i : pgOrder) {
+                        Page pg = new Page(i, table, bm.getPageSize(), bm.getPage(fileName, i));
+                        Record rec = new Record(table, attributes);
+                        if (!pg.addRecord(rec)) {
+                            pg.split(bm, attributes); // Do I need to update values here like pgOrder? etc.
+                        }
                     }
                 }
             }
@@ -56,7 +58,7 @@ public class StorageManager {
                 return "\nERROR";
             }
         }
-        return null;
+        return "SUCCESS";
     }
 
 
