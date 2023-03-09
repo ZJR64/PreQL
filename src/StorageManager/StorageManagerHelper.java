@@ -27,8 +27,8 @@ public class StorageManagerHelper {
         Map<String, Object> attributes = new HashMap<>();
         ArrayList<Attribute> tableAttributes = table.getAttributes();
         if(tuple.size() != tableAttributes.size()){
-            System.out.println("Expected " + tableAttributes.size() + "attributes, got "
-                    + tuple.size() + "attributes.");
+            System.out.println("Expected " + tableAttributes.size() + " attributes, got "
+                    + tuple.size() + " attributes.");
             return null;
         }
 
