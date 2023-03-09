@@ -16,7 +16,7 @@ import java.util.Map;
 public class CreateTable extends Command{
 
     // Map of the name of the attribute eot the type stored as a String
-    //private Map<String, String> attributesNameToType;
+    //private Map<Strin, String> attributesNameToType;
     // name of the primary key
     private String primarykeyName;
     // name of the table to create

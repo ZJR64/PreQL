@@ -18,7 +18,7 @@ import java.util.ArrayList;
 public class Catalog {
 
     private String catPath;
-    public ArrayList<Schema> schemas;
+    private ArrayList<Schema> schemas;
 
 
     /**
@@ -131,6 +131,24 @@ public class Catalog {
             }
         }
         return null;
+    }
+
+    /**
+     * Adds a Schema to the catalog
+     *
+     * @param schema the Schema object to add to catalog
+     */
+    public void addSchema(Schema schema) {
+        schemas.add(schema);
+    }
+
+    /**
+     * Removes Schema from catalog
+     *
+     * @param schema the Schema object to remove from catalog
+     */
+    public void removeSchema(Schema schema) {
+        schemas.remove(schema);
     }
 
     /**

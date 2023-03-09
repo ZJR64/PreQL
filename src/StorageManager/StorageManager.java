@@ -150,7 +150,7 @@ public class StorageManager {
         }
 
         Schema new_table = new Schema(name, attributes);
-        c.schemas.add(new_table);
+        c.addSchema(new_table);
         return "Success";
     }
 }
