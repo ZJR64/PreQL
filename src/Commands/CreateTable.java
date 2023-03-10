@@ -59,7 +59,7 @@ public class CreateTable extends Command{
                     a = a.replace(";", "").strip();
                     boolean currentIsPrimary = false;
                     boolean notnull = false;
-                    boolean unique = true;
+                    boolean unique = false;
 
                     String[] splitAtts = a.split(" ");
                     // if primary key, store that it's the primary key
