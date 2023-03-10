@@ -155,15 +155,12 @@ public class Page {
         int cutoffPoint = recordList.size() / 2;
         for (int i = cutoffPoint; i < recordList.size(); i++) {
             Record currentRecord = recordList.get(i);
-            newPage.addRecord(record);
+            newPage.addRecord(currentRecord);
         }
         recordList.subList(cutoffPoint, recordList.size()).clear();
 
         //write new page to buffer
         bufferManager.writePage(schema.getFileName() , newPageNum, newPage.getBytes());
-
-        //add new record
-        addRecord(record);
 
         //return number of page
         return newPageNum;

@@ -59,7 +59,7 @@ public class CreateTable extends Command{
                     a = a.replace(";", "").strip();
                     boolean currentIsPrimary = false;
                     boolean notnull = false;
-                    boolean unique = true;
+                    boolean unique = false;
 
                     String[] splitAtts = a.split(" ");
                     // if primary key, store that it's the primary key
@@ -75,10 +75,10 @@ public class CreateTable extends Command{
                     }
                     // check for notnull and unique constraint
                     else if (splitAtts.length > 2){
-                        if (splitAtts[2].equalsIgnoreCase("notnull")){
+                        if (splitAtts[2].strip().replace(")","").replace(";", "").equalsIgnoreCase("notnull")){
                             notnull = true;
                         }
-                        else if (splitAtts[2].equalsIgnoreCase("unique")){
+                        else if (splitAtts[2].strip().replace(")","").replace(";", "").equalsIgnoreCase("unique")){
                             unique = true;
                         }
                     }
