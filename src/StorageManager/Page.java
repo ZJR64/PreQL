@@ -155,7 +155,7 @@ public class Page {
         int cutoffPoint = recordList.size() / 2;
         for (int i = cutoffPoint; i < recordList.size(); i++) {
             Record currentRecord = recordList.get(i);
-            newPage.addRecord(record);
+            newPage.addRecord(currentRecord);
         }
         recordList.subList(cutoffPoint, recordList.size()).clear();
 
