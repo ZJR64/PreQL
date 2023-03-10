@@ -159,9 +159,12 @@ public class Database {
         else if(input.toLowerCase().startsWith("display info")){
             action = new DisplayInfo(input, this.catalog);
         }
+        else if(input.toLowerCase().startsWith("drop")){
+            action = new DropTable(input, storageManager);
+        }
 
         else{
-            System.out.println(input + " is not a recognised command");
+            System.out.println(input + " is not a recognised command \nERROR");
             return null;
         }
         // if the input was able to be parsed, return comand

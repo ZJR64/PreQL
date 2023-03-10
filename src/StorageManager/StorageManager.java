@@ -153,4 +153,14 @@ public class StorageManager {
         c.addSchema(new_table);
         return "Success";
     }
+
+    public String dropTable(String tableName){
+        Schema schema = c.getSchema(tableName);
+        if (schema == null){
+            return "Table "+ tableName +" could not be found" + "\n ERROR";
+        }
+        bm.purge(schema.getFileName());
+        c.removeSchema(schema);
+        return "Success";
+    }
 }
