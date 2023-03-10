@@ -90,7 +90,7 @@ public class StorageManagerHelper {
                 }
             }
             if(unique){
-                if(!checkUniqueness(table, tupleAttribute, bm, atrName)){
+                if(!checkUniqueness(table, attributes.get(atrName), bm, atrName)){
                     System.out.println("Non-unique attribute: " +
                             tupleAttribute);
                     return null;
