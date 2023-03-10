@@ -162,6 +162,9 @@ public class Database {
         else if(input.toLowerCase().startsWith("drop")){
             action = new DropTable(input, storageManager);
         }
+        else if(input.toLowerCase().startsWith("alter table")){
+            action = new AlterTable(input);
+        }
 
         else{
             System.out.println(input + " is not a recognised command \nERROR");
