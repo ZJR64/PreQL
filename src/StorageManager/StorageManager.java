@@ -108,7 +108,6 @@ public class StorageManager {
         System.out.println(StorageManagerHelper.makeAttributesString(table));                //print out the attributes
 
         ArrayList<Integer> pageList = table.getPageOrder();
-        System.out.println("PageOrder: " + pageList);
         for (Integer pgNum : pageList){
             Page pg = new Page(pgNum, table, bm.getPageSize(), bm.getPage(table.getFileName(), pgNum));
             for (Record rec : pg.getRecords()) {

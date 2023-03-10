@@ -61,7 +61,6 @@ public class BufferManager {
      */
     public byte[] getPage(String fileName, int pageNumber) {
         String pageKey = getPageKey(fileName, pageNumber);
-        System.out.println(pageKey);
         byte[] pageData = buffer.get(pageKey);
 
         if (pageData == null) {
