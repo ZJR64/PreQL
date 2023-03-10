@@ -3,7 +3,7 @@ package src.StorageManager;
 
 import src.Catalog.Attribute;
 import src.Catalog.Schema;
-import java.nio.ByteBuffer;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -438,7 +438,7 @@ public class StorageManagerHelper {
         else{
             return attributeType + " is not a valid data type. \nERROR";
         }
-        alterCreateReplacementTable(schema, newAttribute, defaultValue, bm);
+        alterCreateReplacement(schema, newAttribute, defaultValue, bm, true);
         return "SUCCESS";
     }
 
@@ -466,22 +466,87 @@ public class StorageManagerHelper {
         if(toRemove.getDescriptors().contains("primarykey")){  // check if attribute is a primarykey.
             return "Cannot remove a primary key attribute \nERROR";
         }
-        alterCreateReplacementTable(schema, null, null, bm);
+        alterCreateReplacement(schema, toRemove, null, bm, false);
         return "SUCCESS";
     }
 
+
     /**
-     * Copies over data from a old table to a new table that either has a
-     * removed or new attribute.
+     * Makes a new copy of a table except it either has an added or removed
+     * attribute, copies over data into the table, and deletes the old table.
      *
      * @param schema The table being copied.
-     * @param newAttribute An attribute being added to the table, null if drop occurring.
+     * @param attribute An attribute being added or removed from the table.
      * @param defaultValue The value to be filled in when an attribute is being added.
      * @param bm The buffer manager for the database.
+     * @param addOrDrop if true, adding, if false, dropping.
      */
-    private static void alterCreateReplacementTable(Schema schema, Attribute newAttribute,
-                                                      String defaultValue, BufferManager bm){
-        if(newAttribute == null){ // means we're doing drop
+    private static void alterCreateReplacement(Schema schema, Attribute attribute, String defaultValue,
+                                               BufferManager bm, boolean addOrDrop){
+
+        ArrayList<Integer> pgOrder = schema.getPageOrder();
+        ArrayList<Attribute> newAttributes = schema.getAttributes();
+
+        if(addOrDrop){ // doing add
+            newAttributes.add(attribute); // add the new attribute
+        }
+        else{ // doing drop
+            newAttributes.remove(attribute); //delete the old attribute
+        }
+        Schema newSchema = new Schema(schema.getName(), newAttributes);
+        ArrayList<Record> newRecs = new ArrayList<>();
+        
+        for(int pgNum : pgOrder){  // for each page in the old schema
+
+
+            Page pg = new Page (pgNum, schema, bm.getPageSize(), bm.getPage(schema.getFileName(), pgNum)); // make a pg struct
+            ArrayList<Record> records = pg.getRecords(); // get the records in that page.
+
+            for(Record rec : records){ // for each record in that page
+
+                Map<String, Object> atrributeMap = rec.getAttributes(); // get the attributes of that record
+
+                if(addOrDrop) { // doing add
+                    atrributeMap.put(attribute.getName(), defaultValue); // add the attribute and its defaultValue(null if not specified).
+                }
+                else{ // doing drop
+
+                    for (Map.Entry<String, Object> entry : atrributeMap.entrySet()) { // for each attribute
+
+                        if(entry.getKey().equals(attribute.getName())){ // if the attribute name is equal to the one getting removed
+                            atrributeMap.remove(entry.getKey()); // remove that entry.
+                        }
+                    }
+                }
+
+                Record newRec = new Record(schema, atrributeMap);  // the new record to be added to the new schema
+
+                if(newSchema.getPages() == 0){ // if the new schema needs its first page, create it.
+
+                    bm.addPage(newSchema.getFileName(), newSchema.getOpenPages());
+                    Page newPg = new Page(0, newSchema, bm.getPageSize(), 0);
+                    bm.writePage(newSchema.getFileName(), 0, newPg.getBytes());
+
+                }
+                for (Integer i : pgOrder) { // for each existing page
+
+                    //get page from buffer
+                    Page newPg = new Page(i, newSchema, bm.getPageSize(), bm.getPage(newSchema.getFileName(), i));
+                    //check if belongs
+                    if (newPg.belongs(rec.getPrimaryKey())) {
+                        //add to page if belongs
+                        if (!newPg.addRecord(rec)) {
+                            //split page if false
+                            newPg.split(bm, rec);
+                        }
+                        //write to buffer
+                        bm.writePage(newSchema.getFileName(), i, newPg.getBytes());
+
+                        //break because record has been added
+                        break;
+                    }
+                }
+            }
 
         }
 

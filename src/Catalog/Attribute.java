@@ -84,6 +84,15 @@ public class Attribute {
         return output;
     }
 
+    @Override
+    public boolean equals(Object attr){
+        if(getClass() != attr.getClass()){
+            return false;
+        }
+        Attribute newAttribute = (Attribute) attr;
+        return newAttribute.name.equals(this.name);
+    }
+
     /**
      * method for the attribute that is used when the attribute needs to be
      * written to a file in binary.
