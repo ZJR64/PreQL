@@ -393,11 +393,36 @@ public class StorageManagerHelper {
     }
 
 
+    /**
+     * Attempts to add an attribute to a table.
+     *
+     * @param schema The table being added to.
+     * @param attributeName The name of the attribute being added.
+     * @param attributeType The type of the attribute being added.
+     * @param defaultValue The default value of the attribute, null if not specified.
+     * @return A string reporting success or failure.
+     */
     public static String alterAdd(Schema schema, String attributeName,
                                 String attributeType, String defaultValue) {
+        ArrayList<Attribute> tableAttributes = schema.getAttributes();
+        for(Attribute attr : tableAttributes){
+            if(attr.getName().equals(attributeName)){
+                return "Table " + schema.getName() + "already has an attribute with name " +
+                        attributeName + "\nERROR";
+
+            }
+        }
         return null;
     }
 
+
+    /**
+     * Attempts to drop an attribute from a table.
+     *
+     * @param schema The table being removed from.
+     * @param attributeName The name of the attribute being dropped.
+     * @return A string reporting success or failure.
+     */
     public static String alterDrop(Schema schema, String attributeName){
         ArrayList<Attribute> tableAttributes = schema.getAttributes();
         Attribute toRemove = null;
@@ -406,13 +431,14 @@ public class StorageManagerHelper {
                 toRemove = attr;
             }
         }
-        if(toRemove == null){
+        if(toRemove == null){ // check if attribute exists.
             return "Table " + schema.getName() + "does not have attribute " +
                     attributeName + "\n ERROR";
         }
-        if(toRemove.getDescriptors().contains("primarykey")){
-
+        if(toRemove.getDescriptors().contains("primarykey")){  // check if attribute is a primarykey.
+            return "Cannot remove a primary key attribute \nERROR";
         }
+
         return null;
     }
 
