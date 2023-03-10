@@ -111,8 +111,11 @@ public class StorageManager {
         for (Integer pgNum : pageList){
             Page pg = new Page(pgNum, table, bm.getPageSize(), bm.getPage(table.getFileName(), pgNum));
             for (Record rec : pg.getRecords()) {
-                for (String att: rec.getAttributes().keySet())
-                System.out.println("\n");
+                String str = "";
+                for (Attribute att: table.getAttributes()) {
+                    str += rec.getAttributes().get(att.getName()) + " ";
+                }
+                System.out.println(str + "\n");
             }
         }
 
