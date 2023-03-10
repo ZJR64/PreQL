@@ -191,14 +191,13 @@ public class StorageManager {
         if(schema == null){
             return "Table " + tableName + " could not be found" + "\n ERROR";
         }
-        if(alterType.equals("add")){   // add
 
+        if(alterType.equals("add")){   // add
+            return StorageManagerHelper.alterAdd(schema, attributeName, attributeType, defaultValue);
         }
         else{ // drop
+            return StorageManagerHelper.alterDrop(schema, attributeName);
 
         }
-
-
-        return "SUCCESS";
     }
 }

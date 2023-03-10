@@ -391,4 +391,30 @@ public class StorageManagerHelper {
         str.append(botStr);
         return str.toString();
     }
+
+
+    public static String alterAdd(Schema schema, String attributeName,
+                                String attributeType, String defaultValue) {
+        return null;
+    }
+
+    public static String alterDrop(Schema schema, String attributeName){
+        ArrayList<Attribute> tableAttributes = schema.getAttributes();
+        Attribute toRemove = null;
+        for(Attribute attr : tableAttributes){
+            if(attr.getName().equals(attributeName)){
+                toRemove = attr;
+            }
+        }
+        if(toRemove == null){
+            return "Table " + schema.getName() + "does not have attribute " +
+                    attributeName + "\n ERROR";
+        }
+        if(toRemove.getDescriptors().contains("primarykey")){
+
+        }
+        return null;
+    }
+
+
 }
