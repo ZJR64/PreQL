@@ -182,17 +182,16 @@ public class Page {
         //find where record belongs
         for (int recordIndex = 0; recordIndex < recordList.size(); recordIndex++) {
             Record record = recordList.get(recordIndex);
-            Object currentKey = record.getPrimaryKey();
 
             //check if greater than
-            if(currentKey instanceof Comparable && ((Comparable) currentKey).compareTo(newRecord.getPrimaryKey()) > 0) {
+            if(record.greaterThan(newRecord.getPrimaryKey())) {
                 //add new record to arraylist
-                recordList.add(recordList.indexOf(currentKey), newRecord);
+                recordList.add(recordIndex, newRecord);
                 break;
             }
 
             //check if last record
-            if (recordList.indexOf(currentKey) == recordList.size() - 1) {
+            if (recordIndex == recordList.size() - 1) {
                 recordList.add(newRecord);
             }
         }

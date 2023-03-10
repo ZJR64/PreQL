@@ -75,6 +75,11 @@ public class BufferManager {
         }
         //modify recently used for LRU
         else {
+            System.out.println("Read:");
+            for (byte b : pageData) {
+                System.out.print(b + ",");
+            }
+            System.out.println();
             recentlyUsed.add(recentlyUsed.remove(recentlyUsed.indexOf(pageKey)));
         }
 
@@ -91,6 +96,11 @@ public class BufferManager {
      */
     public void writePage(String fileName, int pageNumber, byte[] pageData) {
         String pageKey = getPageKey(fileName, pageNumber);
+        System.out.println("Write:");
+        for (byte b : pageData) {
+            System.out.print(b + ",");
+        }
+        System.out.println();
 
         if (buffer.containsKey(pageKey)) {
             // Page is in the buffer, so overwrite the data
