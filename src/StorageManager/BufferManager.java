@@ -61,6 +61,7 @@ public class BufferManager {
      */
     public byte[] getPage(String fileName, int pageNumber) {
         String pageKey = getPageKey(fileName, pageNumber);
+        System.out.println(pageKey);
         byte[] pageData = buffer.get(pageKey);
 
         if (pageData == null) {
@@ -140,11 +141,6 @@ public class BufferManager {
 
         try {
             RandomAccessFile file = new RandomAccessFile(storagePath + fileName, "rw");
-            //find end of file
-            long fileLength = file.length();
-
-            file.seek(fileLength);
-            //get page number
             if (openPages.isEmpty()) {
                 //get pageCount
                 byte[] numPagesArray = new byte[Integer.SIZE/Byte.SIZE];
@@ -165,6 +161,8 @@ public class BufferManager {
             }
 
             //write some nonsense bytes to add to the file
+            file.seek(4 + pageSize*pageNumber);
+            //get page number
             byte[] padding = new byte[pageSize];
             file.write(padding);
 

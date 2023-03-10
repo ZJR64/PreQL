@@ -59,7 +59,7 @@ public class StorageManager {
                         //add to page if belongs
                         if (!pg.addRecord(rec)) {
                             //split page if false
-                            pg.split(bm, attributes);
+                            pg.split(bm, rec);
                         }
                         //write to buffer
                         bm.writePage(fileName, i, pg.getBytes());
@@ -108,6 +108,7 @@ public class StorageManager {
         System.out.println(StorageManagerHelper.makeAttributesString(table));                //print out the attributes
 
         ArrayList<Integer> pageList = table.getPageOrder();
+        System.out.println("PageOrder: " + pageList);
         for (Integer pgNum : pageList){
             Page pg = new Page(pgNum, table, bm.getPageSize(), bm.getPage(table.getFileName(), pgNum));
             for (Record rec : pg.getRecords()) {

@@ -107,59 +107,6 @@ public class Page {
     }
 
     /**
-     * Attempts to add the record to the page via an attribute map.
-     *
-     * @param attributes the attributes of the record that is being added.
-     * @return true if operation completed, false if page needs to be split.
-     */
-    public boolean addRecord(Map<String, Object> attributes) {
-        //get size already used
-        int usedSize = 0;
-        for (Record record : recordList) {
-            //add an Integer for the size indicator
-            usedSize += Integer.SIZE/Byte.SIZE;
-            usedSize += record.getSize();
-        }
-
-        //create Record
-        Record newRecord = new Record(this.schema, attributes);
-
-        //now check to see if length of new record would exceed free space
-        if (usedSize + newRecord.getSize() > pageSize) {
-            //need to split page
-            return false;
-        }
-
-        //find where record belongs
-        for (int recordIndex = 0; recordIndex < recordList.size(); recordIndex++) {
-            Record record = recordList.get(recordIndex);
-
-            //check if greater than
-            if(record.greaterThan(newRecord.getPrimaryKey())) {
-                //add new record to arraylist
-                recordList.add(recordList.indexOf(record), newRecord);
-                break;
-            }
-
-            //check if last record
-            if (recordList.indexOf(record) == recordList.size() - 1) {
-                recordList.add(newRecord);
-            }
-        }
-
-        //insert if first record
-        if (recordList.isEmpty()) {
-            recordList.add(newRecord);
-        }
-
-        //increment schema
-        schema.addRecord();
-
-        //record added successfully
-        return true;
-    }
-
-    /**
      * Attempts to add the record to the page via a Record object.
      *
      * @param newRecord the record being added.
@@ -180,67 +127,11 @@ public class Page {
             return false;
         }
 
-        //find where record belongs
-        boolean inserted = false;
-        for (int recordIndex = 0; recordIndex < recordList.size(); recordIndex++) {
-            Record record = recordList.get(recordIndex);
-
-            //check if greater than
-            if(record.greaterThan(newRecord.getPrimaryKey())) {
-                //add new record to arraylist
-                recordList.add(recordIndex, newRecord);
-                inserted = true;
-                break;
-            }
-        }
-
-        //insert at end if greatest value
-        if (!inserted) {
-            recordList.add(newRecord);
-        }
-
-        //insert if first record
-        if (recordList.isEmpty()) {
-            recordList.add(newRecord);
-        }
-
-        //increment schema
-        schema.addRecord();
+        //add to list
+        addToList(newRecord);
 
         //record added successfully
         return true;
-    }
-
-    /**
-     * Splits the page, sending back the number of the page that was created.
-     *
-     * @param bufferManager the buffer manager.
-     * @param attributes the attributes of the record that is being added.
-     * @return the number of the newly created page.
-     */
-    public int split(BufferManager bufferManager, Map<String, Object> attributes) {
-        //add page to buffer
-        int newPageNum = bufferManager.addPage(schema.getName(), schema.getOpenPages());
-
-        //create new page
-        Page newPage = new Page(newPageNum, schema, pageSize, this.pageNum);
-
-        //add half the records to new page and then remove them
-        int cutoffPoint = recordList.size()/2;
-        while (cutoffPoint < recordList.size()) {
-            Record currentRecord = recordList.get(cutoffPoint);
-            newPage.addRecord(currentRecord.getAttributes());
-            recordList.remove(currentRecord);
-        }
-
-        //write new page to buffer
-        bufferManager.writePage(schema.getFileName() , newPageNum, newPage.getBytes());
-
-        //add new record
-        addRecord(attributes);
-
-        //return number of page
-        return newPageNum;
     }
 
     /**
@@ -252,24 +143,24 @@ public class Page {
      */
     public int split(BufferManager bufferManager, Record record) {
         //add page to buffer
-        int newPageNum = bufferManager.addPage(schema.getName(), schema.getOpenPages());
+        int newPageNum = bufferManager.addPage(schema.getFileName(), schema.getOpenPages());
 
         //create new page
         Page newPage = new Page(newPageNum, schema, pageSize, this.pageNum);
 
+        //add new record so it can be split with others
+        addToList(record);
+
         //add half the records to new page and then remove them
-        int cutoffPoint = recordList.size()/2;
-        while (cutoffPoint < recordList.size()) {
-            Record currentRecord = recordList.get(cutoffPoint);
-            newPage.addRecord(currentRecord.getAttributes());
-            recordList.remove(currentRecord);
+        int cutoffPoint = recordList.size() / 2;
+        for (int i = cutoffPoint; i < recordList.size(); i++) {
+            Record currentRecord = recordList.get(i);
+            newPage.addRecord(record);
         }
+        recordList.subList(cutoffPoint, recordList.size()).clear();
 
         //write new page to buffer
         bufferManager.writePage(schema.getFileName() , newPageNum, newPage.getBytes());
-
-        //add page to schema
-        schema.addPage(this.pageNum, newPageNum);
 
         //add new record
         addRecord(record);
@@ -373,5 +264,34 @@ public class Page {
         //return records
         buffer.clear();
         return records;
+    }
+
+    private void addToList(Record newRecord) {
+        //find where record belongs
+        boolean inserted = false;
+        for (int recordIndex = 0; recordIndex < recordList.size(); recordIndex++) {
+            Record record = recordList.get(recordIndex);
+
+            //check if greater than
+            if(record.greaterThan(newRecord.getPrimaryKey())) {
+                //add new record to arraylist
+                recordList.add(recordIndex, newRecord);
+                inserted = true;
+                break;
+            }
+        }
+
+        //insert at end if greatest value
+        if (!inserted) {
+            recordList.add(newRecord);
+        }
+
+        //insert if first record
+        if (recordList.isEmpty()) {
+            recordList.add(newRecord);
+        }
+
+        //increment schema
+        schema.addRecord();
     }
 }
