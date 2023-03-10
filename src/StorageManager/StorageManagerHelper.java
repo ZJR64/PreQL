@@ -52,15 +52,15 @@ public class StorageManagerHelper {
             String tupleAttribute = tuple.get(i);
 
             String checkRes;
-            if(tblType.contains("char")){
-                int length = Integer.parseInt(tblType.substring(
-                        tblType.indexOf("(") + 1, tblType.indexOf(")")).strip());
-                checkRes = checkChar(length, tupleAttribute, notNull, atrName, attributes);
-            }
-            else if(tblType.contains("varchar")){
+            if(tblType.contains("varchar")){
                 int length = Integer.parseInt(tblType.substring(
                         tblType.indexOf("(") + 1, tblType.indexOf(")")).strip());
                 checkRes = checkVarChar(length, tupleAttribute, notNull, atrName, attributes);
+            }
+            else if(tblType.contains("char")){
+                int length = Integer.parseInt(tblType.substring(
+                        tblType.indexOf("(") + 1, tblType.indexOf(")")).strip());
+                checkRes = checkChar(length, tupleAttribute, notNull, atrName, attributes);
             }
             else if(tblType.contains("boolean")) {
                 checkRes = checkBoolean(tupleAttribute, notNull, atrName, attributes);
