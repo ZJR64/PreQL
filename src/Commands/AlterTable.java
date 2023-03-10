@@ -92,6 +92,6 @@ public class AlterTable extends Command{
 
     @Override
     public String execute() {
-        return sm.alterTable(name);
+        return sm.alterTable(name, alterType, attributeName, attributeType, defaultValue);
     }
 }

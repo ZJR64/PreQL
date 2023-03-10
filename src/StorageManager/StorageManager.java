@@ -177,14 +177,27 @@ public class StorageManager {
     /**
      * Attempts to alter a table.
      *
-     * @param tableName name of the table.
+     * @param tableName The name of the table being altered.
+     * @param alterType Specifies whether a drop or add alteration is occurring.
+     * @param attributeName The name of the attribute being added or dropped.
+     * @param attributeType Type of the attribute being added, null if attribute is being dropped.
+     * @param defaultValue What the table will fill in all new entries with, null if drop occurring.
      * @return A string reporting success or failure.
      */
-    public String alterTable(String tableName) {
+    public String alterTable(String tableName, String alterType,
+                             String attributeName, String attributeType,
+                             String defaultValue) {
         Schema schema = c.getSchema(tableName);
         if(schema == null){
             return "Table " + tableName + " could not be found" + "\n ERROR";
         }
+        if(alterType.equals("add")){   // add
+
+        }
+        else{ // drop
+
+        }
+
 
         return "SUCCESS";
     }
