@@ -32,7 +32,7 @@ public class AlterTable extends Command{
      *
      * @param input the entire input from the user.
      */
-    public AlterTable(String input) {
+    public AlterTable(String input, StorageManager sm) {
         super(input);
         this.sm = sm;
     }

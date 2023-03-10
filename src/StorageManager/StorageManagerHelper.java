@@ -400,10 +400,11 @@ public class StorageManagerHelper {
      * @param attributeName The name of the attribute being added.
      * @param attributeType The type of the attribute being added.
      * @param defaultValue The default value of the attribute, null if not specified.
+     * @param bm the buffer manager for the table.
      * @return A string reporting success or failure.
      */
     public static String alterAdd(Schema schema, String attributeName,
-                                String attributeType, String defaultValue) {
+                                  String attributeType, String defaultValue, BufferManager bm) {
         ArrayList<Attribute> tableAttributes = schema.getAttributes();
         for(Attribute attr : tableAttributes){
             if(attr.getName().equals(attributeName)){
@@ -437,9 +438,8 @@ public class StorageManagerHelper {
         else{
             return attributeType + " is not a valid data type. \nERROR";
         }
-
-
-        return null;
+        alterCreateReplacementTable(schema, newAttribute, defaultValue, bm);
+        return "SUCCESS";
     }
 
 
@@ -448,9 +448,10 @@ public class StorageManagerHelper {
      *
      * @param schema The table being removed from.
      * @param attributeName The name of the attribute being dropped.
+     * @param bm the buffer manager for the table.
      * @return A string reporting success or failure.
      */
-    public static String alterDrop(Schema schema, String attributeName){
+    public static String alterDrop(Schema schema, String attributeName, BufferManager bm){
         ArrayList<Attribute> tableAttributes = schema.getAttributes();
         Attribute toRemove = null;
         for(Attribute attr : tableAttributes){
@@ -465,8 +466,25 @@ public class StorageManagerHelper {
         if(toRemove.getDescriptors().contains("primarykey")){  // check if attribute is a primarykey.
             return "Cannot remove a primary key attribute \nERROR";
         }
+        alterCreateReplacementTable(schema, null, null, bm);
+        return "SUCCESS";
+    }
 
-        return null;
+    /**
+     * Copies over data from a old table to a new table that either has a
+     * removed or new attribute.
+     *
+     * @param schema The table being copied.
+     * @param newAttribute An attribute being added to the table, null if drop occurring.
+     * @param defaultValue The value to be filled in when an attribute is being added.
+     * @param bm The buffer manager for the database.
+     */
+    private static void alterCreateReplacementTable(Schema schema, Attribute newAttribute,
+                                                      String defaultValue, BufferManager bm){
+        if(newAttribute == null){ // means we're doing drop
+
+        }
+
     }
 
 

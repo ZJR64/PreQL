@@ -193,10 +193,11 @@ public class StorageManager {
         }
 
         if(alterType.equals("add")){   // add
-            return StorageManagerHelper.alterAdd(schema, attributeName, attributeType, defaultValue);
+            return StorageManagerHelper.alterAdd(schema, attributeName,
+                    attributeType, defaultValue, bm);
         }
         else{ // drop
-            return StorageManagerHelper.alterDrop(schema, attributeName);
+            return StorageManagerHelper.alterDrop(schema, attributeName, bm);
 
         }
     }

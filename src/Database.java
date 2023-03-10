@@ -163,7 +163,7 @@ public class Database {
             action = new DropTable(input, storageManager);
         }
         else if(input.toLowerCase().startsWith("alter table")){
-            action = new AlterTable(input);
+            action = new AlterTable(input, storageManager);
         }
 
         else{
