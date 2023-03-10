@@ -83,7 +83,7 @@ public class StorageManagerHelper {
                 return null;
             }
             if(primaryKey){
-                if(!checkPrimaryKey(table, tupleAttribute, bm)){
+                if(!checkPrimaryKey(table, attributes.get(atrName) , bm)){
                     System.out.println("Non-unique or null primarykey: " +
                             tupleAttribute);
                     return null;

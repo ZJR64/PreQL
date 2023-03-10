@@ -187,12 +187,12 @@ public class Page {
             //check if greater than
             if(currentKey instanceof Comparable && ((Comparable) currentKey).compareTo(newRecord.getPrimaryKey()) > 0) {
                 //add new record to arraylist
-                recordList.add(recordList.indexOf(record), newRecord);
+                recordList.add(recordList.indexOf(currentKey), newRecord);
                 break;
             }
 
             //check if last record
-            if (recordList.indexOf(record) == recordList.size() - 1) {
+            if (recordList.indexOf(currentKey) == recordList.size() - 1) {
                 recordList.add(newRecord);
             }
         }
