@@ -4,6 +4,7 @@ import src.Catalog.*;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.sql.SQLOutput;
 import java.util.*;
 import java.util.function.Predicate;
 
@@ -180,6 +181,7 @@ public class Page {
         }
 
         //find where record belongs
+        boolean inserted = false;
         for (int recordIndex = 0; recordIndex < recordList.size(); recordIndex++) {
             Record record = recordList.get(recordIndex);
 
@@ -187,13 +189,14 @@ public class Page {
             if(record.greaterThan(newRecord.getPrimaryKey())) {
                 //add new record to arraylist
                 recordList.add(recordIndex, newRecord);
+                inserted = true;
                 break;
             }
+        }
 
-            //check if last record
-            if (recordIndex == recordList.size() - 1) {
-                recordList.add(newRecord);
-            }
+        //insert at end if greatest value
+        if (!inserted) {
+            recordList.add(newRecord);
         }
 
         //insert if first record
