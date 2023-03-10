@@ -154,6 +154,11 @@ public class StorageManager {
         return "Success";
     }
 
+    /**
+     * Attemps to drop the table from the database
+     * @param tableName name of the table
+     * @return A string reporting success or failure
+     */
     public String dropTable(String tableName){
         Schema schema = c.getSchema(tableName);
         if (schema == null){
