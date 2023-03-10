@@ -412,6 +412,33 @@ public class StorageManagerHelper {
 
             }
         }
+        Attribute newAttribute;
+        ArrayList<String> descriptors = new ArrayList<String>(); // Will never have descriptors.
+        if(attributeType.equals("integer")){
+            newAttribute = new Attribute(attributeType, Integer.SIZE/8, attributeName, descriptors);
+        }
+        else if(attributeType.equals("double")){
+            newAttribute = new Attribute(attributeType, Double.SIZE/8, attributeName, descriptors);
+        }
+        else if(attributeType.equals("boolean")){
+            newAttribute = new Attribute(attributeType, 1, attributeName, descriptors);
+        }
+        else if(attributeType.contains("char")){ //handles char and varchar
+            try {
+                int length = Integer.parseInt(attributeType.substring(
+                        attributeType.indexOf("(") + 1, attributeType.indexOf(")")).strip());
+                newAttribute = new Attribute(attributeType, (Character.SIZE*length)/8, attributeName, descriptors);
+            }
+            catch(NumberFormatException e){
+                return attributeType + " given invalid size. \nERROR";
+            }
+
+        }
+        else{
+            return attributeType + " is not a valid data type. \nERROR";
+        }
+
+
         return null;
     }
 
