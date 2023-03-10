@@ -330,7 +330,7 @@ public class Record {
             //look to see what type of attribute it is
             if (attribute.getType().contains("char")) {
                 //varchar or char
-                recordSize += ((String) attributes.get(attribute)).getBytes().length;
+                recordSize += ((String) attributes.get(attribute.getName())).getBytes().length;
             } else if (attribute.getType().equalsIgnoreCase("integer")) {
                 //integer
                 recordSize += Integer.SIZE/Byte.SIZE;
