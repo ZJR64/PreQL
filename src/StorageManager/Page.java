@@ -162,9 +162,6 @@ public class Page {
         //write new page to buffer
         bufferManager.writePage(schema.getFileName() , newPageNum, newPage.getBytes());
 
-        //add new record
-        addRecord(record);
-
         //return number of page
         return newPageNum;
     }
