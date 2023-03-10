@@ -212,7 +212,7 @@ public class StorageManagerHelper {
      */
     private static String checkInteger(String tupAttr, boolean notNull,
                                        String atrName, Map<String, Object> attributes){
-        if(tupAttr == null && notNull){
+        if(tupAttr.equals("null") && notNull){
             return "Attribute " + atrName + " Cannot have null values";
         }
         else{
