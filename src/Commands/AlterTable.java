@@ -1,5 +1,7 @@
 package src.Commands;
 
+import src.StorageManager.StorageManager;
+
 /**
  * The class for the AlterTable Command.
  * It takes the input as the argument and parses it and executes the command.
@@ -22,6 +24,8 @@ public class AlterTable extends Command{
     // will be null if there's no default or if alterType is drop
     private String defaultValue;
 
+    private StorageManager sm;
+
     /**
      * Constructor for the Command object. Used to store  and manipulate the input from
      * the classes that extend this one.
@@ -30,6 +34,7 @@ public class AlterTable extends Command{
      */
     public AlterTable(String input) {
         super(input);
+        this.sm = sm;
     }
 
     @Override
@@ -87,6 +92,6 @@ public class AlterTable extends Command{
 
     @Override
     public String execute() {
-        return null;
+        return sm.alterTable(name);
     }
 }

@@ -155,13 +155,14 @@ public class StorageManager {
 
         Schema new_table = new Schema(name, attributes);
         c.addSchema(new_table);
-        return "Success";
+        return "SUCCESS";
     }
 
     /**
-     * Attemps to drop the table from the database
-     * @param tableName name of the table
-     * @return A string reporting success or failure
+     * Attempts to drop the table from the database.
+     *
+     * @param tableName name of the table.
+     * @return A string reporting success or failure.
      */
     public String dropTable(String tableName){
         Schema schema = c.getSchema(tableName);
@@ -171,5 +172,21 @@ public class StorageManager {
         bm.purge(schema.getFileName());
         c.removeSchema(schema);
         return "Success";
+    }
+
+
+    /**
+     * Attempts to alter a table.
+     *
+     * @param tableName name of the table.
+     * @return A string reporting success or failure.
+     */
+    public String alterTable(String tableName) {
+        Schema schema = c.getSchema(tableName);
+        if(schema == null){
+            return "Table " + tableName + " could not be found" + "\n ERROR";
+        }
+
+        return "SUCCESS";
     }
 }
