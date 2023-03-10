@@ -58,6 +58,8 @@ public class CreateTable extends Command{
                     a = a.replace(");", "").strip();
                     a = a.replace(";", "").strip();
                     boolean currentIsPrimary = false;
+                    boolean notnull = false;
+                    boolean unique = true;
 
                     String[] splitAtts = a.split(" ");
                     // if primary key, store that it's the primary key
@@ -71,6 +73,15 @@ public class CreateTable extends Command{
                         hasPrimary = true;
                         currentIsPrimary = true;
                     }
+                    // check for notnull and unique constraint
+                    else if (splitAtts.length > 2){
+                        if (splitAtts[2].equalsIgnoreCase("notnull")){
+                            notnull = true;
+                        }
+                        else if (splitAtts[2].equalsIgnoreCase("unique")){
+                            unique = true;
+                        }
+                    }
                     String attributeType = splitAtts[1];
                     // if the string contains only closing parenthesis, remove it
                     // keeps both parenthesis if both opening and closing are there
@@ -81,7 +92,7 @@ public class CreateTable extends Command{
                     attributeType = attributeType.replaceAll("\\)\\)*", ")");
 
                     // create attribute and add to list
-                    Attribute at = createAttribute(splitAtts[0], attributeType, currentIsPrimary);
+                    Attribute at = createAttribute(splitAtts[0], attributeType, currentIsPrimary, notnull, unique);
                     if(at == null){
                         this.success = false;
                         break; 
@@ -111,11 +122,17 @@ public class CreateTable extends Command{
      * @param isPrimary whether tis attribute is the primary
      * @return the newly created attribute or null if attibute type is incorrect
      */
-    private Attribute createAttribute(String a, String type, boolean isPrimary){
+    private Attribute createAttribute(String a, String type, boolean isPrimary, boolean notnull, boolean unique){
         ArrayList<String> descriptors = new ArrayList<>();
         type = type.toLowerCase();
         if (isPrimary){
             descriptors.add("primarykey");
+        }
+        if (notnull){
+            descriptors.add("notnull");
+        }
+        if (unique){
+            descriptors.add("unique");
         }
         Attribute att;
         if (type.equals("integer")) {
