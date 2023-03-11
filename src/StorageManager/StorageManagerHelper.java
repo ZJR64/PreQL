@@ -513,71 +513,63 @@ public class StorageManagerHelper {
                                                BufferManager bm, boolean addOrDrop){
 
         ArrayList<Integer> pgOrder = schema.getPageOrder();
-        ArrayList<Attribute> newAttributes = new ArrayList<>(schema.getAttributes());
 
         if(addOrDrop){ // doing add
-            newAttributes.add(attribute); // add the new attribute
+            schema.addAttribute(attribute);
         }
         else{ // doing drop
-            newAttributes.remove(attribute); //delete the old attribute
+            schema.deleteAttribute(attribute);
         }
-        Schema newSchema = new Schema(schema.getName(), newAttributes);
         ArrayList<Record> newRecs = new ArrayList<>();
 
-        for(int pgNum : pgOrder){  // for each page in the old schema
-
+        for(int pgNum : pgOrder){  // for each page in the old table
 
             Page pg = new Page (pgNum, schema, bm.getPageSize(), bm.getPage(schema.getFileName(), pgNum)); // make a pg struct
             ArrayList<Record> records = pg.getRecords(); // get the records in that page.
 
             for(Record rec : records){ // for each record in that page
 
-                Map<String, Object> atrributeMap = rec.getAttributes(); // get the attributes of that record
-
                 if(addOrDrop) { // doing add
-                    atrributeMap.put(attribute.getName(), defaultValue); // add the attribute and its defaultValue(null if not specified).
+                    rec.addAttribute(attribute.getName(), defaultValue); // add the attribute and its defaultValue(null if not specified).
                 }
                 else{ // doing drop
-                    for (Iterator<Map.Entry<String, Object>> iter = atrributeMap.entrySet().iterator(); iter.hasNext();) { // for each attribute
-                        Map.Entry<String,Object> entry = iter.next();
-                        if(entry.getKey().equals(attribute.getName())){ // if the attribute name is equal to the one getting removed
-
-                            iter.remove(); // remove that entry.
-                        }
-                    }
+                    rec.removeAttribute(attribute.getName());
                 }
 
-                Record newRec = new Record(schema, atrributeMap);  // the new record to be added to the new schema
-
-                if(newSchema.getPages() == 0){ // if the new schema needs its first page, create it.
-
-                    bm.addPage(newSchema.getFileName(), newSchema.getOpenPages());
-                    Page newPg = new Page(0, newSchema, bm.getPageSize(), 0);
-                    bm.writePage(newSchema.getFileName(), 0, newPg.getBytes());
-
-                }
-                for (Integer i : pgOrder) { // for each existing page
-
-                    //get page from buffer
-                    Page newPg = new Page(i, newSchema, bm.getPageSize(), bm.getPage(newSchema.getFileName(), i));
-                    //check if belongs
-                    if (newPg.belongs(newRec.getPrimaryKey())) {
-                        //add to page if belongs
-                        if (!newPg.addRecord(newRec)) {
-                            //split page if false
-                            newPg.split(bm, newRec);
-                        }
-                        //write to buffer
-                        bm.writePage(newSchema.getFileName(), i, newPg.getBytes());
-
-                        //break because record has been added
-                        break;
-                    }
-                }
+                //add to newRecs
+                newRecs.add(rec);
             }
-
         }
 
-    }
+        String fileName = schema.getFileName();
+        //delete pages
+        bm.purge(fileName);
+        schema.clearPages();
 
+        //create first page
+        bm.addPage(fileName, schema.getOpenPages());
+        Page newpg = new Page(0, schema, bm.getPageSize(), 0);
+        bm.writePage(fileName, 0, newpg.getBytes());
+
+        //add to records
+        for (Record rec : newRecs) {
+            for (Integer i : pgOrder) {
+                //get page from buffer
+                Page pg = new Page(i, schema, bm.getPageSize(), bm.getPage(fileName, i));
+                //check if belongs
+                if (pg.belongs(rec.getPrimaryKey())) {
+                    //add to page if belongs
+                    if (!pg.addRecord(rec)) {
+                        //split page if false
+                        pg.split(bm, rec);
+                    }
+                    //write to buffer
+                    bm.writePage(fileName, i, pg.getBytes());
+
+                    //break because record has been added
+                    break;
+                }
+            }
+        }
+    }
 }

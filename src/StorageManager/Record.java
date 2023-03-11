@@ -53,6 +53,14 @@ public class Record {
         return attributes;
     }
 
+    public void addAttribute(String name, Object value) {
+        attributes.put(name, value);
+    }
+
+    public void removeAttribute(String name) {
+        attributes.remove(name);
+    }
+
     /**
      * Sets the attributes in the record.
      *
