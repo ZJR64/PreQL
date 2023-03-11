@@ -136,10 +136,10 @@ public class CreateTable extends Command{
         }
         Attribute att;
         if (type.equals("integer")) {
-            att = new Attribute(type, Integer.SIZE, a, descriptors);
+            att = new Attribute(type, Integer.SIZE/Byte.SIZE, a, descriptors);
         }
         else if (type.equals("double")) {
-            att = new Attribute(type, Double.SIZE, a, descriptors);
+            att = new Attribute(type, Double.SIZE/Byte.SIZE, a, descriptors);
 
         }
         else if (type.equals("boolean")) {
