@@ -92,5 +92,5 @@ public class Insert extends Command{
     public String execute() {
         return sm.insert(name, tuples);
     }
-
+//test
 }
