@@ -171,7 +171,7 @@ public class Record {
      */
     private byte[] makeNonsense() {
         //setup
-        ByteBuffer buffer = ByteBuffer.wrap(new byte[this.size]).order(ByteOrder.BIG_ENDIAN);
+        ByteBuffer buffer = ByteBuffer.wrap(new byte[calcSize()]);
 
         //go through each attribute
         for (Attribute attribute : schema.getAttributes()) {

@@ -514,12 +514,6 @@ public class StorageManagerHelper {
 
         ArrayList<Integer> pgOrder = schema.getPageOrder();
 
-        if(addOrDrop){ // doing add
-            schema.addAttribute(attribute);
-        }
-        else{ // doing drop
-            schema.deleteAttribute(attribute);
-        }
         ArrayList<Record> newRecs = new ArrayList<>();
 
         for(int pgNum : pgOrder){  // for each page in the old table
@@ -539,6 +533,13 @@ public class StorageManagerHelper {
                 //add to newRecs
                 newRecs.add(rec);
             }
+        }
+
+        if(addOrDrop){ // doing add
+            schema.addAttribute(attribute);
+        }
+        else{ // doing drop
+            schema.deleteAttribute(attribute);
         }
 
         String fileName = schema.getFileName();
