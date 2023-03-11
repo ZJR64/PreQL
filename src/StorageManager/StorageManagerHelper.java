@@ -415,20 +415,47 @@ public class StorageManagerHelper {
         }
         Attribute newAttribute;
         ArrayList<String> descriptors = new ArrayList<String>(); // Will never have descriptors.
+        Object newDef = null;
         if(attributeType.equals("integer")){
             newAttribute = new Attribute(attributeType, Integer.SIZE/8, attributeName, descriptors);
+            try {
+                newDef = Integer.parseInt(defaultValue);
+            }
+            catch(NumberFormatException e){
+                return attributeType + " given invalid default value. \nERROR";
+            }
+
         }
         else if(attributeType.equals("double")){
             newAttribute = new Attribute(attributeType, Double.SIZE/8, attributeName, descriptors);
+            try {
+                newDef = Double.parseDouble(defaultValue);
+            }
+            catch(NumberFormatException e){
+                return attributeType + " given invalid default value. \nERROR";
+            }
         }
         else if(attributeType.equals("boolean")){
             newAttribute = new Attribute(attributeType, 1, attributeName, descriptors);
+            if(defaultValue != null){
+                if(defaultValue.equals("true")){
+                    newDef = true;
+                }
+                else if(defaultValue.equals("false")){
+                    newDef = false;
+                }
+                else{
+                    return attributeType + " given invalid default value. \nERROR";
+                }
+            }
+
         }
         else if(attributeType.contains("char")){ //handles char and varchar
             try {
                 int length = Integer.parseInt(attributeType.substring(
                         attributeType.indexOf("(") + 1, attributeType.indexOf(")")).strip());
                 newAttribute = new Attribute(attributeType, (Character.SIZE*length)/8, attributeName, descriptors);
+                newDef = defaultValue;
             }
             catch(NumberFormatException e){
                 return attributeType + " given invalid size. \nERROR";
@@ -438,7 +465,7 @@ public class StorageManagerHelper {
         else{
             return attributeType + " is not a valid data type. \nERROR";
         }
-        alterCreateReplacement(schema, newAttribute, defaultValue, bm, true);
+        alterCreateReplacement(schema, newAttribute, newDef, bm, true);
         return "SUCCESS";
     }
 
@@ -481,7 +508,7 @@ public class StorageManagerHelper {
      * @param bm The buffer manager for the database.
      * @param addOrDrop if true, adding, if false, dropping.
      */
-    private static void alterCreateReplacement(Schema schema, Attribute attribute, String defaultValue,
+    private static void alterCreateReplacement(Schema schema, Attribute attribute, Object defaultValue,
                                                BufferManager bm, boolean addOrDrop){
 
         ArrayList<Integer> pgOrder = schema.getPageOrder();
@@ -495,7 +522,7 @@ public class StorageManagerHelper {
         }
         Schema newSchema = new Schema(schema.getName(), newAttributes);
         ArrayList<Record> newRecs = new ArrayList<>();
-        
+
         for(int pgNum : pgOrder){  // for each page in the old schema
 
 
@@ -533,11 +560,11 @@ public class StorageManagerHelper {
                     //get page from buffer
                     Page newPg = new Page(i, newSchema, bm.getPageSize(), bm.getPage(newSchema.getFileName(), i));
                     //check if belongs
-                    if (newPg.belongs(rec.getPrimaryKey())) {
+                    if (newPg.belongs(newRec.getPrimaryKey())) {
                         //add to page if belongs
-                        if (!newPg.addRecord(rec)) {
+                        if (!newPg.addRecord(newRec)) {
                             //split page if false
-                            newPg.split(bm, rec);
+                            newPg.split(bm, newRec);
                         }
                         //write to buffer
                         bm.writePage(newSchema.getFileName(), i, newPg.getBytes());
@@ -551,6 +578,5 @@ public class StorageManagerHelper {
         }
 
     }
-
 
 }
