@@ -173,6 +173,7 @@ public class Record {
             byte nullValue = 0;
             if (attributes.get(attribute.getName()) == null) {
                 nullValue = 1;
+                buffer.put(nullValue);
                 continue;
             }
             buffer.put(nullValue);
