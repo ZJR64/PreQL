@@ -50,7 +50,9 @@ public class CreateTable extends Command{
 
             // empty attributes
             if (tokens[1].equals(");")) {
-                this.success = true;
+                System.out.println("Table with no attributes\nERROR");
+                this.success = false;
+                return;
             } else {
                 // parse attributes
                 String[] attributes = tokens[1].strip().split(",");
@@ -67,7 +69,7 @@ public class CreateTable extends Command{
                         if (hasPrimary){
                             System.out.println(input + " has multiple primary keys. Cannot create table.");
                             this.success = false;
-                            break;
+                            return;
                         }
                         this.primarykeyName = splitAtts[0];
                         hasPrimary = true;
@@ -93,20 +95,33 @@ public class CreateTable extends Command{
 
                     // create attribute and add to list
                     Attribute at = createAttribute(splitAtts[0], attributeType, currentIsPrimary, notnull, unique);
+                    for (Attribute attrib : this.ats) {
+                        if (at.getName().equals(attrib.getName())){
+                            System.out.println("duplicate attribute name \"" + at.getName() + "\"");
+                            this.success = false;
+                            System.out.println("ERROR");
+                            return;
+                        }
+                    }
+
                     if(at == null){
                         this.success = false;
-                        break; 
+                        System.out.println("testing");
+                        return;
                     }
                     ats.add(at);
+
                 }
                 // if there's no primary key after going through all attributes, error
                 if(!hasPrimary){
                     System.out.println(input + " does not have a primary key. Cannot create table.");
                     this.success = false;
+                    return;
                 }
                 else{
                     this.success = true;
                 }
+
             }
         }
         catch(Exception e){

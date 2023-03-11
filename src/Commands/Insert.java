@@ -68,7 +68,12 @@ public class Insert extends Command{
                             wholeString = wholeString.concat(" " + next);
                         }
                         currentTuple.add(wholeString);
-                    } else {
+                    }
+                    else if(s.startsWith("\"") && s.endsWith("\"")){
+                        s = s.replaceAll("\"", "");
+                        currentTuple.add(s);
+                    }
+                    else {
                         currentTuple.add(s);
                     }
                     i++;

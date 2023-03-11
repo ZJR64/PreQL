@@ -87,8 +87,8 @@ public class Database {
             System.out.println("New db created successfully");
         }
 
-        System.out.println("Page Size: " + pageSize);
-        System.out.println("Buffer Size: " + bufferSize);
+        System.out.println("Page Size: " + this.pageSize);
+        System.out.println("Buffer Size: " + this.bufferSize);
 
 
         //create catalog
