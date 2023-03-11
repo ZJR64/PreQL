@@ -6,6 +6,7 @@ import src.Catalog.Schema;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -417,7 +418,7 @@ public class StorageManagerHelper {
         ArrayList<String> descriptors = new ArrayList<String>(); // Will never have descriptors.
         Object newDef = null;
         if(attributeType.equals("integer")){
-            newAttribute = new Attribute(attributeType, Integer.SIZE/8, attributeName, descriptors);
+            newAttribute = new Attribute(attributeType, Integer.SIZE/Byte.SIZE, attributeName, descriptors);
             try {
                 newDef = Integer.parseInt(defaultValue);
             }
@@ -512,7 +513,7 @@ public class StorageManagerHelper {
                                                BufferManager bm, boolean addOrDrop){
 
         ArrayList<Integer> pgOrder = schema.getPageOrder();
-        ArrayList<Attribute> newAttributes = schema.getAttributes();
+        ArrayList<Attribute> newAttributes = new ArrayList<>(schema.getAttributes());
 
         if(addOrDrop){ // doing add
             newAttributes.add(attribute); // add the new attribute
@@ -537,11 +538,11 @@ public class StorageManagerHelper {
                     atrributeMap.put(attribute.getName(), defaultValue); // add the attribute and its defaultValue(null if not specified).
                 }
                 else{ // doing drop
-
-                    for (Map.Entry<String, Object> entry : atrributeMap.entrySet()) { // for each attribute
-
+                    for (Iterator<Map.Entry<String, Object>> iter = atrributeMap.entrySet().iterator(); iter.hasNext();) { // for each attribute
+                        Map.Entry<String,Object> entry = iter.next();
                         if(entry.getKey().equals(attribute.getName())){ // if the attribute name is equal to the one getting removed
-                            atrributeMap.remove(entry.getKey()); // remove that entry.
+
+                            iter.remove(); // remove that entry.
                         }
                     }
                 }
