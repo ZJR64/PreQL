@@ -109,11 +109,21 @@ public class StorageManager {
 
         ArrayList<Integer> pageList = table.getPageOrder();
         for (Integer pgNum : pageList){
-            Page pg = new Page(pgNum, table, bm.getPageSize(), bm.getPage(table.getFileName(), pgNum));
+            int i = 4;
+            byte[] bytes =  bm.getPage(table.getFileName(), pgNum);
+            Page pg = new Page(pgNum, table, bm.getPageSize(), bytes);
             for (Record rec : pg.getRecords()) {
                 String str = "";
                 for (Attribute att: table.getAttributes()) {
-                    str += rec.getAttributes().get(att.getName()) + " ";
+                    if (bytes[i] != 0){
+                        str += "null ";
+                        i += 1;
+                    }
+                    else{
+                        str += rec.getAttributes().get(att.getName()) + " ";
+                        i += 1 + att.getSize() + 4;     //1 is for the null byte and 4 is the size of the attribute
+                    }
+
                 }
                 System.out.println(str + "\n");
             }
