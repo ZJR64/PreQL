@@ -53,6 +53,14 @@ public class Record {
         return attributes;
     }
 
+    public void addAttribute(String name, Object value) {
+        attributes.put(name, value);
+    }
+
+    public void removeAttribute(String name) {
+        attributes.remove(name);
+    }
+
     /**
      * Sets the attributes in the record.
      *
@@ -163,7 +171,7 @@ public class Record {
      */
     private byte[] makeNonsense() {
         //setup
-        ByteBuffer buffer = ByteBuffer.wrap(new byte[this.size]).order(ByteOrder.BIG_ENDIAN);
+        ByteBuffer buffer = ByteBuffer.wrap(new byte[calcSize()]);
 
         //go through each attribute
         for (Attribute attribute : schema.getAttributes()) {

@@ -307,4 +307,17 @@ public class Schema {
         return arraySize;
     }
 
+    public void addAttribute(Attribute attribute) {
+        attributes.add(attribute);
+    }
+
+    public void deleteAttribute(Attribute attribute) {
+        attributes.remove(attribute);
+    }
+
+    public void clearPages() {
+        openPages.clear();
+        pageOrder.clear();
+    }
+
 }
