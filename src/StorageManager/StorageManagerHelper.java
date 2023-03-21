@@ -425,6 +425,9 @@ public class StorageManagerHelper {
             catch(NumberFormatException e){
                 return attributeType + " given invalid default value. \nERROR";
             }
+            catch(NullPointerException e){
+                newDef = null;
+            }
 
         }
         else if(attributeType.equals("double")){
@@ -434,6 +437,9 @@ public class StorageManagerHelper {
             }
             catch(NumberFormatException e){
                 return attributeType + " given invalid default value. \nERROR";
+            }
+            catch(NullPointerException e){
+                newDef = null;
             }
         }
         else if(attributeType.equals("boolean")){
@@ -461,7 +467,6 @@ public class StorageManagerHelper {
             catch(NumberFormatException e){
                 return attributeType + " given invalid size. \nERROR";
             }
-
         }
         else{
             return attributeType + " is not a valid data type. \nERROR";
