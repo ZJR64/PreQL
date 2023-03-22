@@ -195,7 +195,7 @@ public class Record {
                 buffer.put(stringBytes);
             } else if (attribute.getType().equalsIgnoreCase("integer")) {
                 //integer
-                buffer.putInt(Integer.SIZE/Byte.SIZE);
+                buffer.putInt(Integer.BYTES);
                 buffer.putInt((Integer)value);
             }
             else if (attribute.getType().equalsIgnoreCase("boolean")) {
@@ -210,7 +210,7 @@ public class Record {
             }
             else {
                 //must be double
-                buffer.putInt(Double.SIZE/Byte.SIZE);
+                buffer.putInt(Double.BYTES);
                 buffer.putDouble((Double)value);
             }
         }
@@ -334,7 +334,7 @@ public class Record {
             }
 
             //add integer for attribute length
-            recordSize += Integer.SIZE/Byte.SIZE;
+            recordSize += Integer.BYTES;
 
             //look to see what type of attribute it is
             if (attribute.getType().contains("char")) {
@@ -342,7 +342,7 @@ public class Record {
                 recordSize += ((String) attributes.get(attribute.getName())).getBytes().length;
             } else if (attribute.getType().equalsIgnoreCase("integer")) {
                 //integer
-                recordSize += Integer.SIZE/Byte.SIZE;
+                recordSize += Integer.BYTES;
             }
             else if (attribute.getType().equalsIgnoreCase("boolean")) {
                 //boolean is always 1 byte
@@ -350,7 +350,7 @@ public class Record {
             }
             else {
                 //must be double
-                recordSize += Double.SIZE/Byte.SIZE;
+                recordSize += Double.BYTES;
             }
         }
 
