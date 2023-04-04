@@ -25,7 +25,7 @@ public class Delete extends Command{
             // only need second half of it
             String splitInput = input.split("(?i)from")[1];
             // if there's no where clause
-            if (!splitInput.contains("(?i)where")) {
+            if (!splitInput.toLowerCase().contains("where")) {
                 this.name = splitInput.replace(";", "").strip();
                 this.where = null;
                 this.success = true;

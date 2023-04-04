@@ -26,7 +26,7 @@ public class Update extends Command{
             String[] splitInput = input.split("(?i)set");
             this.name = splitInput[0].replace("update", "").strip();
             // if there's no where clause
-            if(!splitInput[1].contains("(?i)where")){
+            if(!splitInput[1].toLowerCase().contains("where")){
                 String[] splitSet = splitInput[1].split("=");
                 this.columnToSet = splitSet[0].strip();
                 this.valueToSet = splitSet[1].replace(";", "").strip();
