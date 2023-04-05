@@ -134,7 +134,11 @@ public class StorageManager {
 
 
     /**
-     * Deletes a record from a given table using the given primary key.
+     * Deletes all records given to it from the desired table.
+     *
+     * @param records the arrayList of records to delete.
+     * @param tableName The table the records are being gotten from.
+     * @return A string reporting the success/failure of the command.
      */
     public String deleteRecords(ArrayList<Record> records, String tableName){
         Schema table = c.getSchema(tableName);
@@ -165,10 +169,60 @@ public class StorageManager {
     }
 
     /**
-     * Updates a record in a given table using the given primary key.
+     * Updates all records to match the target value. Does several integrity checks for the database.
+     *
+     * @param records the arrayList of records to delete.
+     * @param tableName The table the records are being gotten from.
+     * @param target the name of the attribute to be changed.
+     * @param value the value to set the target to.
+     * @return A string reporting the success/failure of the command.
      */
-    public String updateRecords(ArrayList<Record> records, Schema schema){
+    public String updateRecords(ArrayList<Record> records, String tableName, String target, Object value){
+        //get attribute and schema
         Schema table = c.getSchema(tableName);
+        Attribute targetAttribute = table.getAttribute(target);
+
+        //check if value is right type
+        if (targetAttribute.getType().contains("char")) {
+            //varchar or char
+            try {
+                String valueString = (String) value;
+            } catch(Exception e) {
+                return value.toString() + " is not a string, but should be.\nERROR";  //returns an error
+            }
+        }
+        else if (targetAttribute.getType().equalsIgnoreCase("integer")) {
+            //integer
+            try {
+                int valueInteger = (int) value;
+            } catch(Exception e) {
+                return value.toString() + " is not an integer, but should be.\nERROR";  //returns an error
+            }
+        }
+        else if (targetAttribute.getType().equalsIgnoreCase("boolean")) {
+            //boolean
+            try {
+                boolean valueBoolean = (boolean) value;
+            } catch(Exception e) {
+                return value.toString() + " is not a boolean, but should be.\nERROR";  //returns an error
+            }
+        }
+        else {
+            //double
+            try {
+                double valueDouble = (double) value;
+            } catch(Exception e) {
+                return value.toString() + " is not a double, but should be.\nERROR";  //returns an error
+            }
+        }
+
+        //check if value is unique
+        for (String descriptor : targetAttribute.getDescriptors()) {
+            if (descriptor.equals("unique")) {
+                //TODO need to do some stuff
+            }
+        }
+
         ArrayList<Integer> pageList = table.getPageOrder();
         for (Integer pageNum : pageList){
             byte[] bytes =  bm.getPage(table.getFileName(), pageNum);
