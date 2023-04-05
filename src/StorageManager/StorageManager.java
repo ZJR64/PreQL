@@ -144,7 +144,9 @@ public class StorageManager {
             Page page = new Page(pageNum, table, bm.getPageSize(), bytes);
             //go through record list
             for (Record record : records) {
+                if page.belongs(record.getKey()) {
 
+                }
             }
         }
 

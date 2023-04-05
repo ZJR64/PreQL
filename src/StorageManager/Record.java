@@ -70,6 +70,11 @@ public class Record {
         this.attributes = attributes;
     }
 
+    public Object getKey() {
+        Attribtue keyAttribute = schema.getKey();
+        return attributes.get(keyAttribute.getName());
+    }
+
     /**
      * Gets the value of an attribute.
      *
