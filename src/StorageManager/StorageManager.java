@@ -144,10 +144,16 @@ public class StorageManager {
             Page page = new Page(pageNum, table, bm.getPageSize(), bytes);
             //go through record list
             for (Record record : records) {
-                if page.belongs(record.getKey()) {
-
+                if (page.belongs(record.getKey())) {
+                    //remove from table
+                    page.removeRecord(record.getKey());
+                    //remove from array
+                    records.remove(record);
                 }
             }
+
+            //write to buffer
+            bm.writePage(table.getFileName(), pageNum, page.getBytes());
         }
 
         //check if any records left
@@ -169,7 +175,12 @@ public class StorageManager {
             Page page = new Page(pageNum, table, bm.getPageSize(), bytes);
             //go through record list
             for (Record record : records) {
-
+                if (page.belongs(record.getKey())) {
+                    //remove from table
+                    page.updateRecord(record.getKey());
+                    //remove from array
+                    records.remove(record);
+                }
             }
         }
 
