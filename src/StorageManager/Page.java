@@ -192,11 +192,10 @@ public class Page {
      *
      * @param attributes the attributes to overwrite with.
      */
-    public void updateRecord(Map<String, Object> attributes) {
-        Object primaryKey = attributes.get(schema.getKey().getName());
+    public void updateRecord(Record newRecord) {
         for (Record record : recordList) {
-            if (record.equals(primaryKey)) {
-                record.setAttributes(attributes);
+            if (record.equals(newRecord.getPrimaryKey())) {
+                record.setAttributes(newRecord.getAttributes());
             }
         }
     }

@@ -274,7 +274,7 @@ public class StorageManagerHelper {
      * @param atrName
      * @return True if the obj  is unique in the column, false otherwise.
      */
-    private static boolean checkUniqueness(Schema table, Object obj,
+    public static boolean checkUniqueness(Schema table, Object obj,
                                            BufferManager bm, String atrName){
         if(obj == null){
             return true;

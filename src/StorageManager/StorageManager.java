@@ -217,9 +217,15 @@ public class StorageManager {
         }
 
         //check if value is unique
+        //TODO how to handle unique and primaryKey
         for (String descriptor : targetAttribute.getDescriptors()) {
             if (descriptor.equals("unique")) {
-                //TODO need to do some stuff
+                if (records.size() > 1) {
+                    return records.size() + " is too many updates for a unique value.\nERROR";  //returns an error
+                }
+                if (!StorageManagerHelper.checkUniqueness(table, value, bm, target)) {
+                    return target + " already exists in the table and is supposed to be unique.\nERROR";  //returns an error
+                }
             }
         }
 
@@ -231,7 +237,7 @@ public class StorageManager {
             for (Record record : records) {
                 if (page.belongs(record.getKey())) {
                     //remove from table
-                    page.updateRecord(record.getKey());
+                    page.updateRecord(record);
                     //remove from array
                     records.remove(record);
                 }

@@ -22,7 +22,7 @@ public class Select extends Command {
         this.sm = sm;
     }
 
-    /**
+      /**
      * parses the command and stores the table name,
      * and if the parse was successful
      */
