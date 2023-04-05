@@ -136,15 +136,47 @@ public class StorageManager {
     /**
      * Deletes a record from a given table using the given primary key.
      */
-    public void deleteRecord(){
+    public String deleteRecords(ArrayList<Record> records, String tableName){
+        Schema table = c.getSchema(tableName);
+        ArrayList<Integer> pageList = table.getPageOrder();
+        for (Integer pageNum : pageList){
+            byte[] bytes =  bm.getPage(table.getFileName(), pageNum);
+            Page page = new Page(pageNum, table, bm.getPageSize(), bytes);
+            //go through record list
+            for (Record record : records) {
 
+            }
+        }
+
+        //check if any records left
+        if (records.size() > 0) {
+            return records.size() + " records not deleted.\nERROR";  //returns an error if not all records deleted
+        }
+
+        return "SUCCESS";
     }
 
     /**
      * Updates a record in a given table using the given primary key.
      */
-    public void updateRecord(){
+    public String updateRecords(ArrayList<Record> records, Schema schema){
+        Schema table = c.getSchema(tableName);
+        ArrayList<Integer> pageList = table.getPageOrder();
+        for (Integer pageNum : pageList){
+            byte[] bytes =  bm.getPage(table.getFileName(), pageNum);
+            Page page = new Page(pageNum, table, bm.getPageSize(), bytes);
+            //go through record list
+            for (Record record : records) {
 
+            }
+        }
+
+        //check if any records left
+        if (records.size() > 0) {
+            return records.size() + " records not updated.\nERROR";  //returns an error if not all records updated
+        }
+
+        return "SUCCESS";
     }
 
     /**
