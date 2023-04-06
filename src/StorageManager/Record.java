@@ -71,7 +71,7 @@ public class Record {
     }
 
     public Object getKey() {
-        Attribtue keyAttribute = schema.getKey();
+        Attribute keyAttribute = schema.getKey();
         return attributes.get(keyAttribute.getName());
     }
 
