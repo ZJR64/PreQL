@@ -21,6 +21,10 @@ public class Update extends Command{
      */
     public Update(String input) {
         super(input);
+    }
+
+    @Override
+    public void parse() {
         try{
             // split on keyword set
             String[] splitInput = input.split("(?i)set");
@@ -48,11 +52,6 @@ public class Update extends Command{
             System.out.println(input + " could not be parsed");
             this.success = false;
         }
-    }
-
-    @Override
-    public void parse() {
-
     }
 
     @Override
