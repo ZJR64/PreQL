@@ -4,7 +4,9 @@ import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import src.Catalog.*;
 import src.Commands.WhereClause;
@@ -131,6 +133,12 @@ public class StorageManager {
         if(orderBy != null){
 
         }
+
+
+
+
+
+        // Make sure to unchange names of attributes!!!
         return "SUCCESS";
     }
 
@@ -160,8 +168,10 @@ public class StorageManager {
     private ArrayList<Record> cartesianProduct(ArrayList<Record> recs1, ArrayList<Record> recs2){
         ArrayList<Record> newRecs = new ArrayList<>();
         for (Record r1 : recs1) {
+            Map<String, Object> tempMap = r1.getAttributes().entrySet().stream()
+                    .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
             for (Record r2 : recs2) {
-                Map<String, Object> tempMap = r1.getAttributes();
+
                 for (String s : r2.getAttributes().keySet()){
                     tempMap.put(s, r2.getAttributes().get(s));
                 }
