@@ -160,11 +160,22 @@ public class StorageManager {
             orderBy(orderBy, tempRecs, allAttr);
         }
 
-        String str = "";
-        for (String s : columns) {
-            str = str + String.format("| %40.40s |", s);
+        /**for (Record r : tempRecs) {
+            String str = "";
+            for (String s : columns) {
+                if (s.contains(".")) {
+                    str += String.format("| %40.40s |", r.getAttributes().get(s));
+                } else if (a.getName().split("\\.")[1].equals(valueLeft)) {
+                    if (left == null) {
+                        left = a;
+                        leftType = a.getType();
+                    } else {
+                        return null;
+                    }
+                }            str = str + String.format("| %40.40s |", s);
+            }
         }
-        str = String.format("* %.25s *", str);
+         */
         // Make sure to unchange names of attributes!!!
         for(String tblNm : tableNames) {
             Schema table = c.getSchema(tblNm);
