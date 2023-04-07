@@ -266,7 +266,7 @@ public class StorageManagerHelper {
 
 
     /**
-     * Checks whether a non primary key is unique in its column.
+     * Checks whether a non-primary key is unique in its column.
      *
      * @param table The table whose column is being checked.
      * @param obj The value whose being checked for uniqueness.

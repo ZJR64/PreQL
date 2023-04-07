@@ -75,6 +75,6 @@ public class Select extends Command {
 
     @Override
     public String execute() {
-        return null;//sm.getAllRecords(name);
+        return sm.select(name, where, orderBy, columns);
     }
 }

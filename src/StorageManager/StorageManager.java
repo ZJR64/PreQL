@@ -4,8 +4,11 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import static java.util.Arrays.sort;
 
 import src.Catalog.*;
+import src.Commands.WhereClause;
+
 
 
 /**
@@ -77,6 +80,8 @@ public class StorageManager {
     }
 
 
+
+
     /**
      * Gets a record by using its primary key.
      */
@@ -94,44 +99,69 @@ public class StorageManager {
     /**
      * Gets all records from the given table.
      *
-     * @param tableName The table the records are being gotten from.
+     * @param tableNames The list of tables being selected from.
+     * @param where The root node of the where tree.
+     * @param orderBy Null if no orderBy, the column names to display otherwise.
+     * @param columns
      * @return A string reporting the success/failure of the command.
      */
-    public String getAllRecords(String tableName){
-        Schema table = c.getSchema(tableName);
-        if(table == null){
-            return "No such table " + tableName.concat("\nERROR");  //returns an error if there is no table
-        }
-        if(table.getPages() == 0){
-            return StorageManagerHelper.makeAttributesString(table).concat("\nSUCCESS"); //returns the attributes of the table
-        }
-        System.out.println(StorageManagerHelper.makeAttributesString(table));                //print out the attributes
-
-        ArrayList<Integer> pageList = table.getPageOrder();
-        for (Integer pgNum : pageList){
-            int i = 4;
-            byte[] bytes =  bm.getPage(table.getFileName(), pgNum);
-            Page pg = new Page(pgNum, table, bm.getPageSize(), bytes);
-            for (Record rec : pg.getRecords()) {
-                String str = "";
-                for (Attribute att: table.getAttributes()) {
-                    if (bytes[i] != 0){
-                        str += "null ";
-                        i += 1;
-                    }
-                    else{
-                        str += rec.getAttributes().get(att.getName()) + " ";
-                        i += 1 + att.getSize() + 4;     //1 is for the null byte and 4 is the size of the attribute
-                    }
-
-                }
-                System.out.println(str + "\n");
+    public String select(String[] tableNames, WhereClause where, String orderBy, String [] columns){
+        for(String tableName : tableNames){
+            Schema table = c.getSchema(tableName);
+            if(table == null){
+                return "No such table " + tableName.concat("\nERROR");  //returns an error if there is no table
             }
         }
+        cartesianProduct(tableNames);
 
+        if(orderBy != null){
+            ArrayList<Record> temp = new ArrayList<>();
+            orderBy(orderBy, temp, tableNames);
+        }
         return "SUCCESS";
     }
 
+    private void cartesianProduct(String [] tableNames){
+
+    }
+
+
+    /**
+     * Goes through the whereClause tree.
+     */
+    public void where(){
+
+    }
+
+
+    /**
+     * Takes in an arrayList of records to be reprinted, and copies them into a
+     * new Record arrayList that has them inserted in the proper order so that
+     * iterating through it will print out the records in correct order.
+     *
+     * @param columns The columns that are determining the order of the table.
+     * @param records The arrayList of records to reorder.
+     * @param tableNames only needed due to a record needing a schema specified
+     *                  when created. What schema used doesn't matter.
+     * @return an ArrayList of records that were inserted in the proper order.
+     */
+    private ArrayList<Record> orderBy(String columns, ArrayList<Record> records, String[] tableNames) {
+        Schema table = c.getSchema(tableNames[0]);
+        String[] cols = columns.split(",");
+
+        for(int i = 1; i < records.size(); i++){
+            Record temp = records.get(i);
+            int j = i;
+            while((j > 0) && (compareAttVal(records.get(j-1), temp) == 1)){
+
+            }
+        }
+        return records;
+    }
+
+    private int compareAttVal(Record rec1, Record rec2){
+
+    }
 
     /**
      * Deletes all records given to it from the desired table.
