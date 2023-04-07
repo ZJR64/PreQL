@@ -6,6 +6,7 @@ import src.Catalog.Schema;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.sql.SQLOutput;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -209,10 +210,10 @@ public class Record {
                 //boolean
                 buffer.putInt(1);
                 if ((boolean) value) {
-                    buffer.putInt(1);
+                    buffer.put((byte) 1);
                 }
                 else {
-                    buffer.putInt(0);
+                    buffer.put((byte) 0);
                 }
             }
             else {
