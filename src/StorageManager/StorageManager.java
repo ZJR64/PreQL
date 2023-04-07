@@ -110,48 +110,52 @@ public class StorageManager {
      */
     public String select(String[] tableNames, WhereClause where, String orderBy, String [] columns){
         ArrayList<Record> records = new ArrayList<>();
-        if (tableNames.length > 1) {
         for(String tableName : tableNames){
             Schema table = c.getSchema(tableName);
             if(table == null){
                 return "No such table " + tableName.concat("\nERROR");  //returns an error if there is no table
             }
         }
-        if(tableNames.length > 1){
-            Schema tab1 = c.getSchema(tableNames[0]);
-            String tab1Name = tab1.getName();
-
-            Schema tab2 = c.getSchema(tableNames[1]);
-            String tab2Name = tab2.getName();
-
-            for(Attribute attr : tab1.getAttributes()){
-                attr.changeName(tab1Name+"."+attr.getName());
-            }
-            for(Attribute attr : tab2.getAttributes()){
-                attr.changeName(tab2Name+"."+attr.getName());
-            }
-            ArrayList<Record> combinedRecs = cartesianProduct(getAllRecords(tableNames[0]), getAllRecords(tableNames[1]));
-
+        ArrayList<Record> recs;
+        if(tableNames.length > 1) {
+            recs = fromClause(tableNames);
 
         }
+        else{
+            recs = getAllRecords(tableNames[0]);
+        }
 
+        if(where != null){
+
+        }
+        if(orderBy != null){
 
         }
         return "SUCCESS";
     }
 
-    /**private ArrayList<Record> fromClause(String[] tablenames){
-        Map<String, ArrayList<Record>> records = new HashMap<>();
-        for (String s : tablenames) {
-            ArrayList<Record> recs = getAllRecords(s);
-            for (Record r : recs) {
-                for (Attribute a : r.getAttributes()) {
 
-                }
+    /**
+     * Combines all tables into one mega table with renamed attributes.
+     *
+     * @param tableNames The tables to be cartesian Product'd.
+     * @return the combined records ArrayList.
+     */
+    private ArrayList<Record> fromClause(String[] tableNames){
+        int iter = 0;
+        for(String tblNm : tableNames){
+            Schema table = c.getSchema(tableNames[iter]);
+            iter++;
+            for (Attribute attr : table.getAttributes()) {
+                attr.changeName(tblNm + "." + attr.getName());
             }
-            records.put(s, );
         }
-    }**/
+        ArrayList<Record> combinedRecs = cartesianProduct(getAllRecords(tableNames[0]), getAllRecords(tableNames[1]));
+        for(int i = 2; i < tableNames.length; i++){
+            combinedRecs = cartesianProduct(combinedRecs, getAllRecords(tableNames[i]));
+        }
+        return combinedRecs;
+    }
 
     private ArrayList<Record> cartesianProduct(ArrayList<Record> recs1, ArrayList<Record> recs2){
         ArrayList<Record> newRecs = new ArrayList<>();
