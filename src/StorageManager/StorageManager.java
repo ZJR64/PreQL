@@ -110,10 +110,14 @@ public class StorageManager {
      * @return A string reporting the success/failure of the command.
      */
     public String select(String[] tableNames, WhereClause where, String orderBy, String [] columns){
+        ArrayList<Attribute> allAttr = new ArrayList<>();
         for(String tableName : tableNames){
             Schema table = c.getSchema(tableName);
             if(table == null){
                 return "No such table " + tableName.concat("\nERROR");  //returns an error if there is no table
+            }
+            for(Attribute attr : table.getAttributes()){
+                allAttr.add(attr);
             }
         }
         ArrayList<Record> recs;
@@ -226,14 +230,41 @@ public class StorageManager {
         for(int i = 1; i < records.size(); i++){
             Record temp = records.get(i);
             int j = i;
-            while((j > 0) && (compareAttVal(records.get(j-1), temp) == 1)){
+            while((j > 0) && (compareAttVal(records.get(j-1), temp, cols) == 1)){
 
             }
         }
         return records;
     }
 
-    private int compareAttVal(Record rec1, Record rec2){
+
+    /**
+     * Basically a comparator that checks the object type being compared, and
+     * returns whether its greater than, equal to, or less than another object.
+     * Additonally will compare by any number of attributes passed in.
+     *
+     * @param rec1 The first record who's being compared.
+     * @param rec2 The second record who's being compared
+     * @param cols The attributes that will be used to be compared.
+     * @return 1 if rec1 > rec2, 0 if equal, -1 if rec1 < rec2.
+     */
+    private int compareAttVal(Record rec1, Record rec2, String [] cols){
+        for(String col: cols){
+            for(Map.Entry<String, Object> entry : rec1.getAttributes().entrySet()){
+                String key = entry.getKey();
+                if(key.equals(col)){
+                    Object obj1 = rec1.getValue(key);
+                    Object obj2 = rec2.getValue(key);
+                    if(true){
+                        return 1;
+                    }
+                    else{
+                        return -1;
+                    }
+
+                }
+            }
+        }
         return 0;
     }
 
@@ -320,19 +351,6 @@ public class StorageManager {
             }
         }
 
-        //check if value is unique
-        //TODO how to handle unique and primaryKey
-        for (String descriptor : targetAttribute.getDescriptors()) {
-            if (descriptor.equals("unique")) {
-                if (records.size() > 1) {
-                    return records.size() + " is too many updates for a unique value.\nERROR";  //returns an error
-                }
-                if (!StorageManagerHelper.checkUniqueness(table, value, bm, target)) {
-                    return target + " already exists in the table and is supposed to be unique.\nERROR";  //returns an error
-                }
-            }
-        }
-
         ArrayList<Integer> pageList = table.getPageOrder();
         for (Integer pageNum : pageList){
             byte[] bytes =  bm.getPage(table.getFileName(), pageNum);
@@ -341,7 +359,21 @@ public class StorageManager {
             for (Record record : records) {
                 if (page.belongs(record.getKey())) {
                     //remove from table
-                    page.updateRecord(record);
+                    page.removeRecord(record);
+                    // into table
+                    ArrayList<String> tuple = new ArrayList<String>();
+                    Map<String, Object> recordValues = record.getAttributes();
+                    for (Attribute attribute : table.getAttributes()) {
+                        if (attribute.getName().equalsIgnoreCase(target)) {
+                            tuple.add(value.toString());
+                        }
+                        else {
+                            tuple.add(recordValues.get(attribute.getName()).toString());
+                        }
+                    }
+                    ArrayList<ArrayList<String>> tuples = new ArrayList<ArrayList<String>>();
+                    tuples.add(tuple);
+                    insert(tableName, tuples);
                     //remove from array
                     records.remove(record);
                 }
