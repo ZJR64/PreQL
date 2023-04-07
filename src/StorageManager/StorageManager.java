@@ -152,9 +152,12 @@ public class StorageManager {
                 }
             }
         }
+        else{
+            tempRecs = recs;
+        }
 
         if(orderBy != null){
-
+            orderBy(orderBy, tempRecs, allAttr);
         }
 
         String str = "";
@@ -245,12 +248,9 @@ public class StorageManager {
      *
      * @param columns The columns that are determining the order of the table.
      * @param records The arrayList of records to reorder.
-     * @param tableNames only needed due to a record needing a schema specified
-     *                  when created. What schema used doesn't matter.
      * @param attrs ArrayList of all attributes. Used to get types.
      */
-    private void orderBy(String columns, ArrayList<Record> records, String[] tableNames, ArrayList<Attribute> attrs) {
-        Schema table = c.getSchema(tableNames[0]);
+    private void orderBy(String columns, ArrayList<Record> records,  ArrayList<Attribute> attrs) {
         String[] cols = columns.split(",");
         int j;
         for(int i = 1; i < records.size(); i++){
