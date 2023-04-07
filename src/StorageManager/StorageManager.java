@@ -112,6 +112,7 @@ public class StorageManager {
      * @return A string reporting the success/failure of the command.
      */
     public String select(String[] tableNames, WhereClause where, String orderBy, String [] columns){
+
         ArrayList<Attribute> allAttr = new ArrayList<>();
         for(String tableName : tableNames){
             Schema table = c.getSchema(tableName);
@@ -134,7 +135,11 @@ public class StorageManager {
 
         if(where != null){
             for (Record r : recs) {
-                if (!whereClause(where.getRoot(), r)){
+                Boolean temp = whereClause(where.getRoot(), r, allAttr);
+                if (temp == null){
+                    return "ERROR: Where clause failed";
+                }
+                if (!temp){
                     recs.remove(r);
                 }
             }
@@ -143,10 +148,11 @@ public class StorageManager {
 
         }
 
-
-
-
-
+        String str = "";
+        for (String s : columns) {
+            str = str + String.format("| %40.40s |", s);
+        }
+        str = String.format("* %.25s *", str);
         // Make sure to unchange names of attributes!!!
         return "SUCCESS";
     }
@@ -200,18 +206,27 @@ public class StorageManager {
     /**
      * Goes through the whereClause tree.
      */
-    public Boolean whereClause(Node root, Record rec){
-        if (root.getLeft().getType() != NodeType.VALUE){
-            whereClause(root.getLeft(), rec);
+    public Boolean whereClause(Node root, Record rec, ArrayList<Attribute> atts){
+        if (root.getType() == NodeType.COMPARATOR){
+            return StorageManagerHelper.compare(rec, root.getLeft().getValue(), root.getRight().getValue(), root.getValue(), atts);
         }
-        else {
-
+        else{
+            Boolean left = whereClause(root.getLeft(), rec, atts);
+            Boolean right = whereClause(root.getRight(), rec, atts);
+            if (left == null || right == null){
+                return null;
+            }
+            if (root.getValue().equals("and")){
+                return left && right;
+            }
+            else if (root.getValue().equals("or")){
+                return left || right;
+            }
+            else {
+                System.out.println("ERROR: Tree parse error");
+                return null;
+            }
         }
-        if (root.getRight().getType() != NodeType.VALUE){
-            whereClause(root.getRight(), rec);
-        }
-
-        return true;
     }
 
 

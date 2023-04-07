@@ -578,7 +578,7 @@ public class StorageManagerHelper {
             }
         }
     }
-    public Boolean compare(Record record, String valueLeft, String valueRight, String comparator, ArrayList<Attribute> allAttr){
+    public static Boolean compare(Record record, String valueLeft, String valueRight, String comparator, ArrayList<Attribute> allAttr){
         try {
             Map<String, Object> attrObjs = record.getAttributes();
             Attribute left = null;
@@ -591,7 +591,7 @@ public class StorageManagerHelper {
                         left = a;
                         leftType = a.getType();
                     }
-                } else if (a.equals(valueLeft.split(".")[1])) {
+                } else if (a.getName().split("\\.")[1].equals(valueLeft)) {
                     if (left == null) {
                         left = a;
                         leftType = a.getType();
@@ -604,7 +604,7 @@ public class StorageManagerHelper {
                         right = a;
                         rightType = a.getType();
                     }
-                } else if (a.equals(valueRight.split(".")[1])) {
+                } else if (a.getName().split("\\.")[1].equals(valueRight)) {
                     if (left == null) {
                         right = a;
                         rightType = a.getType();
@@ -845,6 +845,7 @@ public class StorageManagerHelper {
             return null;
         }
         catch (Exception e){
+            System.out.println(e);
             System.out.println("ERROR: where could not be processed");
             return null;
         }
