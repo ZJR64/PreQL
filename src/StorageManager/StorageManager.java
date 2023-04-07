@@ -138,6 +138,13 @@ public class StorageManager {
             for (Record r : recs) {
                 Boolean temp = whereClause(where.getRoot(), r, allAttr);
                 if (temp == null){
+                    for(String tblNm : tableNames) {
+                        Schema table = c.getSchema(tblNm);
+                        for (Attribute attr : table.getAttributes()) {
+                            String[] tempString = attr.getName().split("\\.");
+                            attr.changeName(tempString[1]);
+                        }
+                    }
                     return "ERROR: Where clause failed";
                 }
                 if (temp){
