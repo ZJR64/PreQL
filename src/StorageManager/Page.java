@@ -172,11 +172,13 @@ public class Page {
      * @param primaryKeyValue the value of the primary key.
      */
     public void removeRecord(Object primaryKeyValue) {
-        for (Record record : recordList) {
-            if(record.equals(primaryKeyValue)) {
-                recordList.remove(record);
+        int indexToDelete = -1;
+        for (int index = 0; index < recordList.size(); index++) {
+            if(recordList.get(index).equals(primaryKeyValue)) {
+                indexToDelete = index;
             }
         }
+        recordList.remove(indexToDelete);
         //increment schema
         schema.subRecord();
 
