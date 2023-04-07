@@ -346,19 +346,6 @@ public class StorageManager {
             }
         }
 
-        //check if value is unique
-        //TODO how to handle unique and primaryKey
-        for (String descriptor : targetAttribute.getDescriptors()) {
-            if (descriptor.equals("unique")) {
-                if (records.size() > 1) {
-                    return records.size() + " is too many updates for a unique value.\nERROR";  //returns an error
-                }
-                if (!StorageManagerHelper.checkUniqueness(table, value, bm, target)) {
-                    return target + " already exists in the table and is supposed to be unique.\nERROR";  //returns an error
-                }
-            }
-        }
-
         ArrayList<Integer> pageList = table.getPageOrder();
         for (Integer pageNum : pageList){
             byte[] bytes =  bm.getPage(table.getFileName(), pageNum);
@@ -367,7 +354,21 @@ public class StorageManager {
             for (Record record : records) {
                 if (page.belongs(record.getKey())) {
                     //remove from table
-                    page.updateRecord(record);
+                    page.removeRecord(record);
+                    // into table
+                    ArrayList<String> tuple = new ArrayList<String>();
+                    Map<String, Object> recordValues = record.getAttributes();
+                    for (Attribute attribute : table.getAttributes()) {
+                        if (attribute.getName().equalsIgnoreCase(target)) {
+                            tuple.add(value.toString());
+                        }
+                        else {
+                            tuple.add(recordValues.get(attribute.getName()).toString());
+                        }
+                    }
+                    ArrayList<ArrayList<String>> tuples = new ArrayList<ArrayList<String>>();
+                    tuples.add(tuple);
+                    insert(tableName, tuples);
                     //remove from array
                     records.remove(record);
                 }
