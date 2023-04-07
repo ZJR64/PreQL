@@ -624,8 +624,8 @@ public class StorageManagerHelper {
                     System.out.println("ERROR: not matching types in where");
                     return null;
                 }
-                Object leftVal = attrObjs.get(left);
-                Object rightVal = attrObjs.get(right);
+                Object leftVal = attrObjs.get(left.getName());
+                Object rightVal = attrObjs.get(right.getName());
 
                 //look to see what type of attribute it is
                 if (leftType.contains("char")) {
@@ -736,7 +736,7 @@ public class StorageManagerHelper {
             }
             // otherwise right side is a constant
             else {
-                Object leftVal = attrObjs.get(left);
+                Object leftVal = attrObjs.get(left.getName());
                 //look to see what type of attribute it is
                 if (leftType.contains("char")) {
                     //varchar or char

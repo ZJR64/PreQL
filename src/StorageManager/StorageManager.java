@@ -2,10 +2,12 @@ package src.StorageManager;
 
 import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
+import java.sql.SQLOutput;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import src.Catalog.*;
+import src.Commands.Delete;
 import src.Commands.Node;
 import src.Commands.NodeType;
 import src.Commands.WhereClause;
@@ -110,6 +112,7 @@ public class StorageManager {
      * @return A string reporting the success/failure of the command.
      */
     public String select(String[] tableNames, WhereClause where, String orderBy, String [] columns){
+
         ArrayList<Attribute> allAttr = new ArrayList<>();
         for(String tableName : tableNames){
             Schema table = c.getSchema(tableName);
@@ -131,20 +134,26 @@ public class StorageManager {
         }
 
         if(where != null){
+            ArrayList<Record> tempRecs = new ArrayList<>();
             for (Record r : recs) {
-                if (!whereClause(where.getRoot(), r)){
-                    recs.remove(r);
+                Boolean temp = whereClause(where.getRoot(), r, allAttr);
+                if (temp == null){
+                    return "ERROR: Where clause failed";
+                }
+                if (temp){
+                    tempRecs.add(r);
                 }
             }
         }
         if(orderBy != null){
-            orderBy(orderBy, recs, tableNames, allAttr);
+
         }
 
-
-
-
-
+        String str = "";
+        for (String s : columns) {
+            str = str + String.format("| %40.40s |", s);
+        }
+        str = String.format("* %.25s *", str);
         // Make sure to unchange names of attributes!!!
         return "SUCCESS";
     }
@@ -190,26 +199,37 @@ public class StorageManager {
     }
 
     /**
-     * Can a tree be uneven?
-     * What about x = y = z
-     * What about x and/or y
+     * Can a tree be uneven? yes but leaves are always values
+     * What about x = y = z no
+     * What about x and/or y no
+     * <, >, <=, >= is possible but not +, -, x, etc.
      */
     /**
      * Goes through the whereClause tree.
      */
-    public Boolean whereClause(Node root, Record rec){
-        if (root.getLeft().getType() != NodeType.VALUE){
-            whereClause(root.getLeft(), rec);
+    public Boolean whereClause(Node root, Record rec, ArrayList<Attribute> atts){
+        if (root.getType() == NodeType.COMPARATOR){
+            return StorageManagerHelper.compare(rec, root.getLeft().getValue(), root.getRight().getValue(), root.getValue(), atts);
         }
-        else {
-
+        else{
+            Boolean left = whereClause(root.getLeft(), rec, atts);
+            Boolean right = whereClause(root.getRight(), rec, atts);
+            if (left == null || right == null){
+                return null;
+            }
+            if (root.getValue().equals("and")){
+                return left && right;
+            }
+            else if (root.getValue().equals("or")){
+                return left || right;
+            }
+            else {
+                System.out.println("ERROR: Tree parse error");
+                return null;
+            }
         }
-        if (root.getRight().getType() != NodeType.VALUE){
-            whereClause(root.getRight(), rec);
-        }
-
-        return true;
     }
+
 
     /**
      * Takes in an arrayList of records to be reprinted, and copies them into a
@@ -220,27 +240,26 @@ public class StorageManager {
      * @param records The arrayList of records to reorder.
      * @param tableNames only needed due to a record needing a schema specified
      *                  when created. What schema used doesn't matter.
-     * @param attrs ArrayList of all attributes. Used to get types.
+     * @return an ArrayList of records that were inserted in the proper order.
      */
-    private void orderBy(String columns, ArrayList<Record> records, String[] tableNames, ArrayList<Attribute> attrs) {
+    private ArrayList<Record> orderBy(String columns, ArrayList<Record> records, String[] tableNames) {
         Schema table = c.getSchema(tableNames[0]);
         String[] cols = columns.split(",");
-        int j;
+
         for(int i = 1; i < records.size(); i++){
             Record temp = records.get(i);
-            j = i;
-            while((j > 0) && compareAttVal(records.get(j - 1), temp, cols, attrs) == 1){
-                records.set(j, records.get(j-1));
-                j--;
+            int j = i;
+            while((j > 0) && (compareAttVal(records.get(j-1), temp, cols) == 1)){
+
             }
-            records.set(j, temp);
         }
+        return records;
     }
 
 
     /**
      * Basically a comparator that checks the object type being compared, and
-     * returns whether it's greater than, equal to, or less than another object.
+     * returns whether its greater than, equal to, or less than another object.
      * Additonally will compare by any number of attributes passed in.
      *
      * @param rec1 The first record who's being compared.
@@ -248,68 +267,24 @@ public class StorageManager {
      * @param cols The attributes that will be used to be compared.
      * @return 1 if rec1 > rec2, 0 if equal, -1 if rec1 < rec2.
      */
-    private int compareAttVal(Record rec1, Record rec2, String [] cols, ArrayList<Attribute> attrs){
+    private int compareAttVal(Record rec1, Record rec2, String [] cols){
         for(String col: cols){
             for(Map.Entry<String, Object> entry : rec1.getAttributes().entrySet()){
                 String key = entry.getKey();
                 if(key.equals(col)){
                     Object obj1 = rec1.getValue(key);
                     Object obj2 = rec2.getValue(key);
-                    for(Attribute attr : attrs){
-                        if(key.equals(attr.getName())){
-                            String objsType = attr.getType();
-                            if(objsType.contains("char")){  //varchar or char
-                                String val1 = (String) obj1;
-                                String val2 = (String) obj2;
-                                int res = val1.compareTo(val2);
-                                if(res == 0){
-                                    continue;
-                                }
-                                else{
-                                    return res;
-                                }
-                            }
-                            else if(objsType.equalsIgnoreCase("integer")){
-                                int val1 = (int) obj1;
-                                int val2 = (int) obj2;
-                                int res = Integer.compare(val1, val2);
-                                if(res == 0){
-                                    continue;
-                                }
-                                else{
-                                    return res;
-                                }
-                            }
-                            else if(objsType.equalsIgnoreCase("boolean")){
-                                boolean val1 = (boolean) obj1;
-                                boolean val2 = (boolean) obj2;
-                                int res = Boolean.compare(val1, val2);
-                                if(res == 0){
-                                    continue;
-                                }
-                                else{
-                                    return res;
-                                }
-                            }
-                            else{ // double
-                                double val1 = (double) obj1;
-                                double val2 = (double) obj2;
-                                int res = Double.compare(val1, val2);
-                                if(res == 0){
-                                    continue;
-                                }
-                                else{
-                                    return res;
-                                }
-
-                            }
-                        }
+                    if(true){
+                        return 1;
+                    }
+                    else{
+                        return -1;
                     }
 
                 }
             }
         }
-        return 1; // in the case of an exact tie.
+        return 0;
     }
 
     /**
@@ -321,27 +296,25 @@ public class StorageManager {
      */
     public String deleteRecords(ArrayList<Record> records, String tableName){
         Schema table = c.getSchema(tableName);
-        ArrayList<Integer> pageList = table.getPageOrder();
+        ArrayList<Integer> pageList = new ArrayList<Integer>();
+        //create copy array in case of modification
+        for (Integer pageNum : table.getPageOrder()) {
+            pageList.add(pageNum);
+        }
         for (Integer pageNum : pageList){
+            System.out.println(pageNum);
             byte[] bytes =  bm.getPage(table.getFileName(), pageNum);
             Page page = new Page(pageNum, table, bm.getPageSize(), bytes);
-            //go through record list
+            //go through record
             for (Record record : records) {
                 if (page.belongs(record.getKey())) {
                     //remove from table
                     page.removeRecord(record.getKey());
-                    //remove from array
-                    records.remove(record);
                 }
             }
 
             //write to buffer
             bm.writePage(table.getFileName(), pageNum, page.getBytes());
-        }
-
-        //check if any records left
-        if (records.size() > 0) {
-            return records.size() + " records not deleted.\nERROR";  //returns an error if not all records deleted
         }
 
         return "SUCCESS";
