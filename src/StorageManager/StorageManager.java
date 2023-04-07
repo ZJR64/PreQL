@@ -118,6 +118,7 @@ public class StorageManager {
             }
             for(Attribute attr : table.getAttributes()){
                 allAttr.add(attr);
+                attr.changeName(tableName + "." + attr.getName());
             }
         }
         ArrayList<Record> recs;
@@ -373,7 +374,19 @@ public class StorageManager {
                     }
                     ArrayList<ArrayList<String>> tuples = new ArrayList<ArrayList<String>>();
                     tuples.add(tuple);
-                    insert(tableName, tuples);
+                    //insert into table
+                    if (insert(tableName, tuples).contains("ERROR")) {
+                        tuples.clear();
+                        tuple.clear();
+                        //rollback change
+                        for (Attribute attribute : table.getAttributes()) {
+                            tuple.add(recordValues.get(attribute.getName()).toString());
+                        }
+                        tuples.add(tuple);
+                        insert(tableName, tuples);
+                        //return error
+                        return "conflict in update. \nERROR";
+                    }
                     //remove from array
                     records.remove(record);
                 }

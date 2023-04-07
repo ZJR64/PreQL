@@ -578,4 +578,275 @@ public class StorageManagerHelper {
             }
         }
     }
+    public Boolean compare(Record record, String valueLeft, String valueRight, String comparator, ArrayList<Attribute> allAttr){
+        try {
+            Map<String, Object> attrObjs = record.getAttributes();
+            Attribute left = null;
+            String leftType = null;
+            Attribute right = null;
+            String rightType = null;
+            for (Attribute a : allAttr) {
+                if (valueLeft.contains(".")) {
+                    if (a.equals(valueLeft)) {
+                        left = a;
+                        leftType = a.getType();
+                    }
+                } else if (a.equals(valueLeft.split(".")[1])) {
+                    if (left == null) {
+                        left = a;
+                        leftType = a.getType();
+                    } else {
+                        return null;
+                    }
+                }
+                if (valueRight.contains(".")) {
+                    if (a.equals(valueRight)) {
+                        right = a;
+                        rightType = a.getType();
+                    }
+                } else if (a.equals(valueRight.split(".")[1])) {
+                    if (left == null) {
+                        right = a;
+                        rightType = a.getType();
+                    } else {
+                        return null;
+                    }
+                }
+            }
+            if (left == null) {
+                return null;
+            }
+
+            // comparing two attributes
+            if (left != null && right != null) {
+                // if not the same type, can't compare
+                if (leftType != rightType) {
+                    System.out.println("ERROR: not matching types in where");
+                    return null;
+                }
+                Object leftVal = attrObjs.get(left);
+                Object rightVal = attrObjs.get(right);
+
+                //look to see what type of attribute it is
+                if (leftType.contains("char")) {
+                    //varchar or char
+                    String leftChar = ((String) leftVal);
+                    String rightChar = ((String) rightVal);
+                    if (comparator.equals("=")) {
+                        return leftChar.equals(rightChar);
+                    }
+                    if (comparator.equals("<")) {
+                        return leftChar.compareTo(rightChar) < 0;
+                    }
+                    if (comparator.equals(">")) {
+                        return leftChar.compareTo(rightChar) > 0;
+                    }
+                    if (comparator.equals(">=")) {
+                        return leftChar.compareTo(rightChar) >= 0;
+                    }
+                    if (comparator.equals("<=")) {
+                        return leftChar.compareTo(rightChar) <= 0;
+                    }
+                    if (comparator.equals("!=")) {
+                        return !leftChar.equals(rightChar);
+                    } else {
+                        System.out.println("ERROR: unrecognized compartor: " + comparator);
+                    }
+
+                } else if (leftType.equalsIgnoreCase("integer")) {
+                    //integer
+                    int leftInt = (int) leftVal;
+                    int rightInt = (int) rightVal;
+                    if (comparator.equals("=")) {
+                        return leftInt == rightInt;
+                    }
+                    if (comparator.equals("<")) {
+                        return leftInt < rightInt;
+
+                    }
+                    if (comparator.equals(">")) {
+                        return leftInt > rightInt;
+
+                    }
+                    if (comparator.equals(">=")) {
+                        return leftInt >= rightInt;
+
+                    }
+                    if (comparator.equals("<=")) {
+                        return leftInt <= rightInt;
+                    }
+                    if (comparator.equals("!=")) {
+                        return leftInt != rightInt;
+                    } else {
+                        System.out.println("ERROR: unrecognized compartor: " + comparator);
+                    }
+                } else if (leftType.equalsIgnoreCase("boolean")) {
+                    //boolean
+                    Boolean leftBool = (Boolean) leftVal;
+                    Boolean rightBool = (Boolean) rightVal;
+                    if (comparator.equals("=")) {
+                        return leftBool == rightBool;
+                    }
+                    if (comparator.equals("<")) {
+                        System.out.println("ERROR: Cannot compare booleans");
+                        return null;
+                    }
+                    if (comparator.equals(">")) {
+                        System.out.println("ERROR: Cannot compare booleans");
+                        return null;
+                    }
+                    if (comparator.equals(">=")) {
+                        System.out.println("ERROR: Cannot compare booleans");
+                        return null;
+                    }
+                    if (comparator.equals("<=")) {
+                        System.out.println("ERROR: Cannot compare booleans");
+                        return null;
+                    }
+                    if (comparator.equals("!=")) {
+                        return leftBool != rightBool;
+                    } else {
+                        System.out.println("ERROR: unrecognized compartor: " + comparator);
+                    }
+                } else {
+                    //must be double
+                    double leftDoub = (double) leftVal;
+                    double rightDoub = (double) rightVal;
+                    if (comparator.equals("=")) {
+                        return leftDoub == rightDoub;
+                    }
+                    if (comparator.equals("<")) {
+                        return leftDoub < rightDoub;
+                    }
+                    if (comparator.equals(">")) {
+                        return leftDoub > rightDoub;
+                    }
+                    if (comparator.equals(">=")) {
+                        return leftDoub >= rightDoub;
+                    }
+                    if (comparator.equals("<=")) {
+                        return leftDoub <= rightDoub;
+                    }
+                    if (comparator.equals("!=")) {
+                        return leftDoub != rightDoub;
+                    } else {
+                        System.out.println("ERROR: unrecognized compartor: " + comparator);
+                    }
+                }
+            }
+            // otherwise right side is a constant
+            else {
+                Object leftVal = attrObjs.get(left);
+                //look to see what type of attribute it is
+                if (leftType.contains("char")) {
+                    //varchar or char
+                    String leftChar = ((String) leftVal);
+                    String rightChar = ((String) valueRight);
+                    if (comparator.equals("=")) {
+                        return leftChar.equals(rightChar);
+                    }
+                    if (comparator.equals("<")) {
+                        return leftChar.compareTo(rightChar) < 0;
+                    }
+                    if (comparator.equals(">")) {
+                        return leftChar.compareTo(rightChar) > 0;
+                    }
+                    if (comparator.equals(">=")) {
+                        return leftChar.compareTo(rightChar) >= 0;
+                    }
+                    if (comparator.equals("<=")) {
+                        return leftChar.compareTo(rightChar) <= 0;
+                    }
+                    if (comparator.equals("!=")) {
+                        return !leftChar.equals(rightChar);
+                    } else {
+                        System.out.println("ERROR: unrecognized compartor: " + comparator);
+                    }
+
+                } else if (leftType.equalsIgnoreCase("integer")) {
+                    //integer
+                    int leftInt = (int) leftVal;
+                    int rightInt = Integer.parseInt(valueRight);
+                    if (comparator.equals("=")) {
+                        return leftInt == rightInt;
+                    }
+                    if (comparator.equals("<")) {
+                        return leftInt < rightInt;
+                    }
+                    if (comparator.equals(">")) {
+                        return leftInt > rightInt;
+                    }
+                    if (comparator.equals(">=")) {
+                        return leftInt >= rightInt;
+                    }
+                    if (comparator.equals("<=")) {
+                        return leftInt <= rightInt;
+                    }
+                    if (comparator.equals("!=")) {
+                        return leftInt != rightInt;
+                    } else {
+                        System.out.println("ERROR: unrecognized compartor: " + comparator);
+                    }
+                } else if (leftType.equalsIgnoreCase("boolean")) {
+                    //boolean
+                    Boolean leftBool = (Boolean) leftVal;
+                    Boolean rightBool = Boolean.parseBoolean(valueRight);
+                    if (comparator.equals("=")) {
+                        return leftBool == rightBool;
+                    }
+                    if (comparator.equals("<")) {
+                        System.out.println("ERROR: Cannot compare booleans");
+                        return null;
+                    }
+                    if (comparator.equals(">")) {
+                        System.out.println("ERROR: Cannot compare booleans");
+                        return null;
+                    }
+                    if (comparator.equals(">=")) {
+                        System.out.println("ERROR: Cannot compare booleans");
+                        return null;
+                    }
+                    if (comparator.equals("<=")) {
+                        System.out.println("ERROR: Cannot compare booleans");
+                        return null;
+                    }
+                    if (comparator.equals("!=")) {
+                        return leftBool != rightBool;
+                    } else {
+                        System.out.println("ERROR: unrecognized compartor: " + comparator);
+                    }
+                } else {
+                    //must be double
+                    double leftDoub = (double) leftVal;
+                    double rightDoub = Double.parseDouble(valueRight);
+                    if (comparator.equals("=")) {
+                        return leftDoub == rightDoub;
+                    }
+                    if (comparator.equals("<")) {
+                        return leftDoub < rightDoub;
+                    }
+                    if (comparator.equals(">")) {
+                        return leftDoub > rightDoub;
+                    }
+                    if (comparator.equals(">=")) {
+                        return leftDoub >= rightDoub;
+                    }
+                    if (comparator.equals("<=")) {
+                        return leftDoub <= rightDoub;
+                    }
+                    if (comparator.equals("!=")) {
+                        return leftDoub != rightDoub;
+                    } else {
+                        System.out.println("ERROR: unrecognized compartor: " + comparator);
+                    }
+
+                }
+            }
+            return null;
+        }
+        catch (Exception e){
+            System.out.println("ERROR: where could not be processed");
+            return null;
+        }
+    }
 }

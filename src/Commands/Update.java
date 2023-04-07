@@ -1,5 +1,9 @@
 package src.Commands;
 
+import src.StorageManager.StorageManager;
+import src.StorageManager.Record;
+import java.util.ArrayList;
+
 public class Update extends Command{
 
     // table name
@@ -12,6 +16,8 @@ public class Update extends Command{
     // where clause
     // will be null if no where
     WhereClause where;
+    //storage manager
+    StorageManager storageManager;
 
     /**
      * Constructor for the Command object. Used to store  and manipulate the input from
@@ -19,8 +25,9 @@ public class Update extends Command{
      *
      * @param input the entire input from the user.
      */
-    public Update(String input) {
+    public Update(String input, StorageManager storageManager) {
         super(input);
+        this.storageManager = storageManager;
     }
 
     @Override
@@ -56,6 +63,8 @@ public class Update extends Command{
 
     @Override
     public String execute() {
-        return null;
+        //TODO hook up to where
+        ArrayList<Record> records = storageManager.getAllRecords(name);
+        return storageManager.updateRecords(records, name, columnToSet, valueToSet);
     }
 }
