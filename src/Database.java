@@ -165,6 +165,12 @@ public class Database {
         else if(input.toLowerCase().startsWith("alter table")){
             action = new AlterTable(input, storageManager);
         }
+        else if(input.toLowerCase().startsWith("update")){
+            action = new Update(input, storageManager);
+        }
+        else if(input.toLowerCase().startsWith("delete")){
+            action = new Delete(input, storageManager);
+        }
 
         else{
             System.out.println(input + " is not a recognised command \nERROR");
