@@ -2,10 +2,12 @@ package src.StorageManager;
 
 import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
+import java.sql.SQLOutput;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import src.Catalog.*;
+import src.Commands.Delete;
 import src.Commands.Node;
 import src.Commands.NodeType;
 import src.Commands.WhereClause;
@@ -278,27 +280,25 @@ public class StorageManager {
      */
     public String deleteRecords(ArrayList<Record> records, String tableName){
         Schema table = c.getSchema(tableName);
-        ArrayList<Integer> pageList = table.getPageOrder();
+        ArrayList<Integer> pageList = new ArrayList<Integer>();
+        //create copy array in case of modification
+        for (Integer pageNum : table.getPageOrder()) {
+            pageList.add(pageNum);
+        }
         for (Integer pageNum : pageList){
+            System.out.println(pageNum);
             byte[] bytes =  bm.getPage(table.getFileName(), pageNum);
             Page page = new Page(pageNum, table, bm.getPageSize(), bytes);
-            //go through record list
+            //go through record
             for (Record record : records) {
                 if (page.belongs(record.getKey())) {
                     //remove from table
                     page.removeRecord(record.getKey());
-                    //remove from array
-                    records.remove(record);
                 }
             }
 
             //write to buffer
             bm.writePage(table.getFileName(), pageNum, page.getBytes());
-        }
-
-        //check if any records left
-        if (records.size() > 0) {
-            return records.size() + " records not deleted.\nERROR";  //returns an error if not all records deleted
         }
 
         return "SUCCESS";
