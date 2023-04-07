@@ -134,13 +134,14 @@ public class StorageManager {
         }
 
         if(where != null){
+            ArrayList<Record> tempRecs = new ArrayList<>();
             for (Record r : recs) {
                 Boolean temp = whereClause(where.getRoot(), r, allAttr);
                 if (temp == null){
                     return "ERROR: Where clause failed";
                 }
-                if (!temp){
-                    recs.remove(r);
+                if (temp){
+                    tempRecs.add(r);
                 }
             }
         }
