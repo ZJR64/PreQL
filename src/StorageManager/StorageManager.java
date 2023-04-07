@@ -110,7 +110,6 @@ public class StorageManager {
      */
     public String select(String[] tableNames, WhereClause where, String orderBy, String [] columns){
         ArrayList<Record> records = new ArrayList<>();
-        Schema table;
         if (tableNames.length > 1) {
         for(String tableName : tableNames){
             Schema table = c.getSchema(tableName);

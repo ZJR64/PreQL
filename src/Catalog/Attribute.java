@@ -194,7 +194,4 @@ public class Attribute {
         return arraySize;
     }
 
-    public void changeName(String newName){
-        this.name = newName;
-    }
 }
