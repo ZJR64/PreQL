@@ -2,13 +2,12 @@ package src.StorageManager;
 
 import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import src.Catalog.*;
+import src.Commands.Node;
+import src.Commands.NodeType;
 import src.Commands.WhereClause;
 
 
@@ -127,7 +126,11 @@ public class StorageManager {
         }
 
         if(where != null){
-
+            for (Record r : recs) {
+                if (!whereClause(where.getRoot(), r)){
+                    recs.remove(r);
+                }
+            }
         }
         if(orderBy != null){
 
@@ -167,10 +170,11 @@ public class StorageManager {
     private ArrayList<Record> cartesianProduct(ArrayList<Record> recs1, ArrayList<Record> recs2){
         ArrayList<Record> newRecs = new ArrayList<>();
         for (Record r1 : recs1) {
-            Map<String, Object> tempMap = r1.getAttributes().entrySet().stream()
-                    .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
             for (Record r2 : recs2) {
-
+                Map<String, Object> tempMap = new HashMap<>();
+                for (String s : r1.getAttributes().keySet()){
+                    tempMap.put(s, r1.getAttributes().get(s));
+                }
                 for (String s : r2.getAttributes().keySet()){
                     tempMap.put(s, r2.getAttributes().get(s));
                 }
@@ -180,12 +184,26 @@ public class StorageManager {
         return newRecs;
     }
 
-
+    /**
+     * Can a tree be uneven?
+     * What about x = y = z
+     * What about x and/or y
+     */
     /**
      * Goes through the whereClause tree.
      */
-    public void where(){
+    public Boolean whereClause(Node root, Record rec){
+        if (root.getLeft().getType() != NodeType.VALUE){
+            whereClause(root.getLeft(), rec);
+        }
+        else {
 
+        }
+        if (root.getRight().getType() != NodeType.VALUE){
+            whereClause(root.getRight(), rec);
+        }
+
+        return true;
     }
 
 
