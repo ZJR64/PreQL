@@ -578,7 +578,7 @@ public class StorageManagerHelper {
             }
         }
     }
-    public Boolean compare(Record record, String valueLeft, String valueRight, String comparator, ArrayList<Attribute> allAttr){
+    public static Boolean compare(Record record, String valueLeft, String valueRight, String comparator, ArrayList<Attribute> allAttr){
         try {
             Map<String, Object> attrObjs = record.getAttributes();
             Attribute left = null;
