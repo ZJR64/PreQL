@@ -155,6 +155,13 @@ public class StorageManager {
         }
         str = String.format("* %.25s *", str);
         // Make sure to unchange names of attributes!!!
+        for(String tblNm : tableNames) {
+            Schema table = c.getSchema(tblNm);
+            for (Attribute attr : table.getAttributes()) {
+                String[] temp = attr.getName().split("\\.");
+                attr.changeName(temp[1]);
+            }
+        }
         return "SUCCESS";
     }
 
@@ -166,10 +173,8 @@ public class StorageManager {
      * @return the combined records ArrayList.
      */
     private ArrayList<Record> fromClause(String[] tableNames){
-        int iter = 0;
         for(String tblNm : tableNames){
-            Schema table = c.getSchema(tableNames[iter]);
-            iter++;
+            Schema table = c.getSchema(tblNm);
             for (Attribute attr : table.getAttributes()) {
                 attr.changeName(tblNm + "." + attr.getName());
             }
