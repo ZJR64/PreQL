@@ -185,9 +185,10 @@ public class StorageManager {
     }
 
     /**
-     * Can a tree be uneven?
-     * What about x = y = z
-     * What about x and/or y
+     * Can a tree be uneven? yes but leaves are always values
+     * What about x = y = z no
+     * What about x and/or y no
+     * <, >, <=, >= is possible but not +, -, x, etc.
      */
     /**
      * Goes through the whereClause tree.
