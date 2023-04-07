@@ -211,7 +211,6 @@ public class StorageManager {
         return true;
     }
 
-
     /**
      * Takes in an arrayList of records to be reprinted, and copies them into a
      * new Record arrayList that has them inserted in the proper order so that
