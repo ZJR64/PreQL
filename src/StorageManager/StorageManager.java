@@ -118,6 +118,7 @@ public class StorageManager {
             }
             for(Attribute attr : table.getAttributes()){
                 allAttr.add(attr);
+                attr.changeName(tableName + "." + attr.getName());
             }
         }
         ArrayList<Record> recs;
