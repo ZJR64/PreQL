@@ -139,6 +139,15 @@ public class Attribute {
      */
     public String getName() {return name;}
 
+
+    /**
+     * changes the attribute name.
+     * @param newAttrName the new name of the attribute.
+     */
+    public void changeName(String newAttrName){
+        this.name = newAttrName;
+    }
+
     /**
      * getter method for type of the attribute
      *
