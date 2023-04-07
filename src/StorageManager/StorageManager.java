@@ -116,10 +116,8 @@ public class StorageManager {
         }
         if(tableNames.length > 1){
             Schema tab1 = c.getSchema(tableNames[0]);
-            tab1.getPageOrder();
-            byte[] bytes =  bm.getPage(tab1.getFileName(), pgNum);
-            Page p1 = new Page(pgNum, table, bm.getPageSize(), bytes);
             String tab1Name = tab1.getName();
+
             Schema tab2 = c.getSchema(tableNames[1]);
             String tab2Name = tab2.getName();
 
@@ -129,7 +127,7 @@ public class StorageManager {
             for(Attribute attr : tab2.getAttributes()){
                 attr.changeName(tab2Name+"."+attr.getName());
             }
-            cartesianProduct();
+            ArrayList<Record> combinedRecs = cartesianProduct(getAllRecords(tableNames[0]), getAllRecords(tableNames[1]));
 
 
         }
