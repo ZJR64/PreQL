@@ -110,10 +110,14 @@ public class StorageManager {
      * @return A string reporting the success/failure of the command.
      */
     public String select(String[] tableNames, WhereClause where, String orderBy, String [] columns){
+        ArrayList<Attribute> allAttr = new ArrayList<>();
         for(String tableName : tableNames){
             Schema table = c.getSchema(tableName);
             if(table == null){
                 return "No such table " + tableName.concat("\nERROR");  //returns an error if there is no table
+            }
+            for(Attribute attr : table.getAttributes()){
+                allAttr.add(attr);
             }
         }
         ArrayList<Record> recs;
