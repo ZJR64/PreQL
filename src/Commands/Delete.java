@@ -1,5 +1,10 @@
 package src.Commands;
 
+import src.StorageManager.Record;
+import src.StorageManager.StorageManager;
+
+import java.util.ArrayList;
+
 public class Delete extends Command{
 
     // table name
@@ -7,14 +12,18 @@ public class Delete extends Command{
     // where clause
     // null if no where clause
     WhereClause where;
+    // storage manager
+    StorageManager storageManager;
+
     /**
      * Constructor for the Command object. Used to store  and manipulate the input from
      * the classes that extend this one.
      *
      * @param input the entire input from the user.
      */
-    public Delete(String input) {
+    public Delete(String input, StorageManager storageManager) {
         super(input);
+        this.storageManager = storageManager;
     }
 
     @Override
@@ -49,6 +58,8 @@ public class Delete extends Command{
 
     @Override
     public String execute() {
-        return null;
+        //TODO hook up to where
+        ArrayList<Record> records = storageManager.getAllRecords(name);
+        return storageManager.deleteRecords(records, name);
     }
 }
