@@ -5,7 +5,6 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import static java.util.Arrays.sort;
 
 import src.Catalog.*;
 import src.Commands.WhereClause;
@@ -81,20 +80,23 @@ public class StorageManager {
     }
 
 
-
-
     /**
-     * Gets a record by using its primary key.
+     * Iterates through all the pages associated with a table, getting all the
+     * records for that table and returns it.
+     *
+     * @param tableName the table whose records are being gotten.
+     * @return An ArrayList of all the records associated with the tableName.
      */
-    public void getRecord(){
-
-    }
-
-    /**
-     * Gets a page by it's table and page number.
-     */
-    public void getPage(){
-
+    public ArrayList<Record> getAllRecords(String tableName){
+        Schema table = c.getSchema(tableName);
+        ArrayList<Integer> pageList = table.getPageOrder();
+        ArrayList<Record> finalRecords = new ArrayList<>();
+        for(int pgNum : pageList){
+            byte[] bytes =  bm.getPage(table.getFileName(), pgNum);
+            Page pg = new Page(pgNum, table, bm.getPageSize(), bytes);
+            finalRecords.addAll(pg.getRecords());
+        }
+        return finalRecords;
     }
 
     /**
@@ -110,6 +112,30 @@ public class StorageManager {
         ArrayList<Record> records = new ArrayList<>();
         Schema table;
         if (tableNames.length > 1) {
+        for(String tableName : tableNames){
+            Schema table = c.getSchema(tableName);
+            if(table == null){
+                return "No such table " + tableName.concat("\nERROR");  //returns an error if there is no table
+            }
+        }
+        if(tableNames.length > 1){
+            Schema tab1 = c.getSchema(tableNames[0]);
+            String tab1Name = tab1.getName();
+
+            Schema tab2 = c.getSchema(tableNames[1]);
+            String tab2Name = tab2.getName();
+
+            for(Attribute attr : tab1.getAttributes()){
+                attr.changeName(tab1Name+"."+attr.getName());
+            }
+            for(Attribute attr : tab2.getAttributes()){
+                attr.changeName(tab2Name+"."+attr.getName());
+            }
+            ArrayList<Record> combinedRecs = cartesianProduct(getAllRecords(tableNames[0]), getAllRecords(tableNames[1]));
+
+
+        }
+
 
         }
         return "SUCCESS";
