@@ -52,8 +52,16 @@ public class WhereClause {
             String[] splitExp = input.split(" ", 3);
             // middle element will be the operator and the root
             Node op = new Node(splitExp[1], NodeType.COMPARATOR);
-            op.addLeftNode(new Node(splitExp[0], NodeType.VALUE));
-            op.addRightNode(new Node(splitExp[2], NodeType.VALUE));
+            String leftString = splitExp[0];
+            if(leftString.startsWith("\"") && leftString.endsWith("\"")){
+                leftString = leftString.substring(1, leftString.length()-2);
+            }
+            op.addLeftNode(new Node(leftString, NodeType.VALUE));
+            String rightString = splitExp[2];
+            if(rightString.startsWith("\"") && rightString.endsWith("\"")){
+                rightString = rightString.substring(1, rightString.length()-2);
+            }
+            op.addRightNode(new Node(rightString, NodeType.VALUE));
             return op;
         }
     }
