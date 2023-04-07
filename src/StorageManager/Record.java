@@ -104,6 +104,8 @@ public class Record {
         return size;
     }
 
+    public Schema getSchema() { return  schema;}
+
     /**
      * Gets the byte representation of the record.
      *

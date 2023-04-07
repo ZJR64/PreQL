@@ -1,5 +1,6 @@
 package src.StorageManager;
 
+import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -106,23 +107,39 @@ public class StorageManager {
      * @return A string reporting the success/failure of the command.
      */
     public String select(String[] tableNames, WhereClause where, String orderBy, String [] columns){
-        for(String tableName : tableNames){
-            Schema table = c.getSchema(tableName);
-            if(table == null){
-                return "No such table " + tableName.concat("\nERROR");  //returns an error if there is no table
-            }
-        }
-        cartesianProduct(tableNames);
+        ArrayList<Record> records = new ArrayList<>();
+        Schema table;
+        if (tableNames.length > 1) {
 
-        if(orderBy != null){
-            ArrayList<Record> temp = new ArrayList<>();
-            orderBy(orderBy, temp, tableNames);
         }
         return "SUCCESS";
     }
 
-    private void cartesianProduct(String [] tableNames){
+    /**private ArrayList<Record> fromClause(String[] tablenames){
+        Map<String, ArrayList<Record>> records = new HashMap<>();
+        for (String s : tablenames) {
+            ArrayList<Record> recs = getAllRecords(s);
+            for (Record r : recs) {
+                for (Attribute a : r.getAttributes()) {
 
+                }
+            }
+            records.put(s, );
+        }
+    }**/
+
+    private ArrayList<Record> cartesianProduct(ArrayList<Record> recs1, ArrayList<Record> recs2){
+        ArrayList<Record> newRecs = new ArrayList<>();
+        for (Record r1 : recs1) {
+            for (Record r2 : recs2) {
+                Map<String, Object> tempMap = r1.getAttributes();
+                for (String s : r2.getAttributes().keySet()){
+                    tempMap.put(s, r2.getAttributes().get(s));
+                }
+                newRecs.add(new Record( r1.getSchema(), tempMap));
+            }
+        }
+        return newRecs;
     }
 
 
@@ -160,7 +177,7 @@ public class StorageManager {
     }
 
     private int compareAttVal(Record rec1, Record rec2){
-
+        return 0;
     }
 
     /**
