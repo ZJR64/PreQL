@@ -138,7 +138,7 @@ public class StorageManager {
             }
         }
         if(orderBy != null){
-
+            orderBy(orderBy, recs, tableNames, allAttr);
         }
 
 
@@ -221,26 +221,27 @@ public class StorageManager {
      * @param records The arrayList of records to reorder.
      * @param tableNames only needed due to a record needing a schema specified
      *                  when created. What schema used doesn't matter.
-     * @return an ArrayList of records that were inserted in the proper order.
+     * @param attrs ArrayList of all attributes. Used to get types.
      */
-    private ArrayList<Record> orderBy(String columns, ArrayList<Record> records, String[] tableNames) {
+    private void orderBy(String columns, ArrayList<Record> records, String[] tableNames, ArrayList<Attribute> attrs) {
         Schema table = c.getSchema(tableNames[0]);
         String[] cols = columns.split(",");
-
+        int j;
         for(int i = 1; i < records.size(); i++){
             Record temp = records.get(i);
-            int j = i;
-            while((j > 0) && (compareAttVal(records.get(j-1), temp, cols) == 1)){
-
+            j = i;
+            while((j > 0) && compareAttVal(records.get(j - 1), temp, cols, attrs) == 1){
+                records.set(j, records.get(j-1));
+                j--;
             }
+            records.set(j, temp);
         }
-        return records;
     }
 
 
     /**
      * Basically a comparator that checks the object type being compared, and
-     * returns whether its greater than, equal to, or less than another object.
+     * returns whether it's greater than, equal to, or less than another object.
      * Additonally will compare by any number of attributes passed in.
      *
      * @param rec1 The first record who's being compared.
@@ -248,24 +249,68 @@ public class StorageManager {
      * @param cols The attributes that will be used to be compared.
      * @return 1 if rec1 > rec2, 0 if equal, -1 if rec1 < rec2.
      */
-    private int compareAttVal(Record rec1, Record rec2, String [] cols){
+    private int compareAttVal(Record rec1, Record rec2, String [] cols, ArrayList<Attribute> attrs){
         for(String col: cols){
             for(Map.Entry<String, Object> entry : rec1.getAttributes().entrySet()){
                 String key = entry.getKey();
                 if(key.equals(col)){
                     Object obj1 = rec1.getValue(key);
                     Object obj2 = rec2.getValue(key);
-                    if(true){
-                        return 1;
-                    }
-                    else{
-                        return -1;
+                    for(Attribute attr : attrs){
+                        if(key.equals(attr.getName())){
+                            String objsType = attr.getType();
+                            if(objsType.contains("char")){  //varchar or char
+                                String val1 = (String) obj1;
+                                String val2 = (String) obj2;
+                                int res = val1.compareTo(val2);
+                                if(res == 0){
+                                    continue;
+                                }
+                                else{
+                                    return res;
+                                }
+                            }
+                            else if(objsType.equalsIgnoreCase("integer")){
+                                int val1 = (int) obj1;
+                                int val2 = (int) obj2;
+                                int res = Integer.compare(val1, val2);
+                                if(res == 0){
+                                    continue;
+                                }
+                                else{
+                                    return res;
+                                }
+                            }
+                            else if(objsType.equalsIgnoreCase("boolean")){
+                                boolean val1 = (boolean) obj1;
+                                boolean val2 = (boolean) obj2;
+                                int res = Boolean.compare(val1, val2);
+                                if(res == 0){
+                                    continue;
+                                }
+                                else{
+                                    return res;
+                                }
+                            }
+                            else{ // double
+                                double val1 = (double) obj1;
+                                double val2 = (double) obj2;
+                                int res = Double.compare(val1, val2);
+                                if(res == 0){
+                                    continue;
+                                }
+                                else{
+                                    return res;
+                                }
+
+                            }
+                        }
                     }
 
                 }
             }
         }
-        return 0;
+        return 1; // in the case of an exact tie.
     }
 
     /**

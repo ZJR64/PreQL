@@ -591,7 +591,7 @@ public class StorageManagerHelper {
                         left = a;
                         leftType = a.getType();
                     }
-                } else if (a.equals(valueLeft.split(".")[1])) {
+                } else if (a.equals(valueLeft.split("\\.")[1])) {
                     if (left == null) {
                         left = a;
                         leftType = a.getType();
@@ -604,7 +604,7 @@ public class StorageManagerHelper {
                         right = a;
                         rightType = a.getType();
                     }
-                } else if (a.equals(valueRight.split(".")[1])) {
+                } else if (a.equals(valueRight.split("\\.")[1])) {
                     if (left == null) {
                         right = a;
                         rightType = a.getType();
@@ -849,4 +849,7 @@ public class StorageManagerHelper {
             return null;
         }
     }
+
+
+
 }
