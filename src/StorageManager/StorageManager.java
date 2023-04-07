@@ -346,25 +346,37 @@ public class StorageManager {
      */
     public String deleteRecords(ArrayList<Record> records, String tableName){
         Schema table = c.getSchema(tableName);
-        ArrayList<Integer> pageList = new ArrayList<Integer>();
         //create copy array in case of modification
-        for (Integer pageNum : table.getPageOrder()) {
-            pageList.add(pageNum);
-        }
+        ArrayList<Integer> pageList = new ArrayList<Integer>(table.getPageOrder());
+        //iterate over
         for (Integer pageNum : pageList){
-            System.out.println(pageNum);
             byte[] bytes =  bm.getPage(table.getFileName(), pageNum);
             Page page = new Page(pageNum, table, bm.getPageSize(), bytes);
+            ArrayList<Integer> deletedIndex = new ArrayList<Integer>();
+
             //go through record
-            for (Record record : records) {
-                if (page.belongs(record.getKey())) {
+            for (int index = 0; index < records.size(); index++) {
+                if (page.belongs(records.get(index).getKey())) {
                     //remove from table
-                    page.removeRecord(record.getKey());
+                    page.removeRecord(records.get(index).getKey());
+                    //add to deleted
+                    deletedIndex.add(index);
                 }
+            }
+
+            //delete from record
+            Collections.sort(deletedIndex, Collections.reverseOrder());
+            for (int index : deletedIndex) {
+                records.remove(index);
             }
 
             //write to buffer
             bm.writePage(table.getFileName(), pageNum, page.getBytes());
+        }
+
+        //check if any records left
+        if (records.size() > 0) {
+            return records.size() + " records not deleted.\nERROR";  //returns an error if not all records updated
         }
 
         return "SUCCESS";
@@ -380,8 +392,21 @@ public class StorageManager {
      * @return A string reporting the success/failure of the command.
      */
     public String updateRecords(ArrayList<Record> records, String tableName, String target, Object value){
-        //get attribute and schema
+        //get schema
         Schema table = c.getSchema(tableName);
+
+        //check if target is correct
+        boolean found = false;
+        for (Attribute attribute : table.getAttributes()) {
+            if (target.equals(attribute.getName())) {
+                found = true;
+            }
+        }
+        if (!found) {
+            return target + " is not an element in " + tableName + ".\nERROR";  //returns an error
+        }
+
+        //get attribute
         Attribute targetAttribute = table.getAttribute(target);
 
         //check if value is right type
@@ -418,18 +443,25 @@ public class StorageManager {
             }
         }
 
-        ArrayList<Integer> pageList = table.getPageOrder();
+        ArrayList<Integer> pageList = new ArrayList<Integer>();
+        //create copy array in case of modification
+        for (Integer pageNum : table.getPageOrder()) {
+            pageList.add(pageNum);
+        }
         for (Integer pageNum : pageList){
             byte[] bytes =  bm.getPage(table.getFileName(), pageNum);
             Page page = new Page(pageNum, table, bm.getPageSize(), bytes);
+            ArrayList<Integer> deletedIndex = new ArrayList<Integer>();
+
             //go through record list
-            for (Record record : records) {
-                if (page.belongs(record.getKey())) {
+            for (int index = 0; index < records.size(); index++) {
+                if (page.belongs(records.get(index).getKey())) {
                     //remove from table
-                    page.removeRecord(record);
+                    page.removeRecord(records.get(index).getPrimaryKey());
+                    deletedIndex.add(index);
                     // into table
                     ArrayList<String> tuple = new ArrayList<String>();
-                    Map<String, Object> recordValues = record.getAttributes();
+                    Map<String, Object> recordValues = records.get(index).getAttributes();
                     for (Attribute attribute : table.getAttributes()) {
                         if (attribute.getName().equalsIgnoreCase(target)) {
                             tuple.add(value.toString());
@@ -440,10 +472,11 @@ public class StorageManager {
                     }
                     ArrayList<ArrayList<String>> tuples = new ArrayList<ArrayList<String>>();
                     tuples.add(tuple);
-                    //insert into table
+                    //attempt to insert into table
                     if (insert(tableName, tuples).contains("ERROR")) {
                         tuples.clear();
                         tuple.clear();
+
                         //rollback change
                         for (Attribute attribute : table.getAttributes()) {
                             tuple.add(recordValues.get(attribute.getName()).toString());
@@ -453,9 +486,13 @@ public class StorageManager {
                         //return error
                         return "conflict in update. \nERROR";
                     }
-                    //remove from array
-                    records.remove(record);
                 }
+            }
+
+            //delete from record
+            Collections.sort(deletedIndex, Collections.reverseOrder());
+            for (int index : deletedIndex) {
+                records.remove(index);
             }
         }
 
