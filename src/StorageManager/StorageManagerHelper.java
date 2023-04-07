@@ -587,11 +587,11 @@ public class StorageManagerHelper {
             String rightType = null;
             for (Attribute a : allAttr) {
                 if (valueLeft.contains(".")) {
-                    if (a.equals(valueLeft)) {
+                    if (a.getName().equals(valueLeft)) {
                         left = a;
                         leftType = a.getType();
                     }
-                } else if (a.equals(valueLeft.split("\\.")[1])) {
+                } else if (a.getName().split("\\.")[1].equals(valueLeft)) {
                     if (left == null) {
                         left = a;
                         leftType = a.getType();
@@ -604,7 +604,7 @@ public class StorageManagerHelper {
                         right = a;
                         rightType = a.getType();
                     }
-                } else if (a.equals(valueRight.split("\\.")[1])) {
+                } else if (a.getName().split("\\.")[1].equals(valueRight)) {
                     if (left == null) {
                         right = a;
                         rightType = a.getType();

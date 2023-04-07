@@ -132,9 +132,9 @@ public class StorageManager {
         else{
             recs = getAllRecords(tableNames[0]);
         }
+        ArrayList<Record> tempRecs = new ArrayList<>();
 
         if(where != null){
-            ArrayList<Record> tempRecs = new ArrayList<>();
             for (Record r : recs) {
                 Boolean temp = whereClause(where.getRoot(), r, allAttr);
                 if (temp == null){
@@ -152,6 +152,7 @@ public class StorageManager {
                 }
             }
         }
+
         if(orderBy != null){
 
         }
@@ -180,12 +181,6 @@ public class StorageManager {
      * @return the combined records ArrayList.
      */
     private ArrayList<Record> fromClause(String[] tableNames){
-        for(String tblNm : tableNames){
-            Schema table = c.getSchema(tblNm);
-            for (Attribute attr : table.getAttributes()) {
-                attr.changeName(tblNm + "." + attr.getName());
-            }
-        }
         ArrayList<Record> combinedRecs = cartesianProduct(getAllRecords(tableNames[0]), getAllRecords(tableNames[1]));
         for(int i = 2; i < tableNames.length; i++){
             combinedRecs = cartesianProduct(combinedRecs, getAllRecords(tableNames[i]));
