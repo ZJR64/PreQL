@@ -151,7 +151,6 @@ public class StorageManager {
             record.setAttributes(newElements);
         }
 
-        System.out.println("SIZE: " + chosenRecords.size());
         return chosenRecords;
     }
 
