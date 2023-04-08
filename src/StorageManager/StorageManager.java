@@ -575,12 +575,15 @@ public class StorageManager {
         if (!found) {
             return target + " is not an element in " + tableName + ".\nERROR";  //returns an error
         }
-
         //get attribute
         Attribute targetAttribute = table.getAttribute(target);
 
+        //check if null
+        if (value.toString().equals("null")) {
+            value = null;
+        }
         //check if value is right type
-        if (targetAttribute.getType().contains("char")) {
+        else if (targetAttribute.getType().contains("char")) {
             //varchar or char
             try {
                 value = value.toString();
@@ -643,7 +646,12 @@ public class StorageManager {
                     Map<String, Object> recordValues = record.getAttributes();
                     for (Attribute attribute : table.getAttributes()) {
                         if (attribute.getName().equalsIgnoreCase(target)) {
-                            tuple.add(value.toString());
+                            if (value == null) {
+                                tuple.add("null");
+                            }
+                            else {
+                                tuple.add(value.toString());
+                            }
                         }
                         else {
                             tuple.add(recordValues.get(attribute.getName()).toString());
