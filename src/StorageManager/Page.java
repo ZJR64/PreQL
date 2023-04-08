@@ -156,6 +156,8 @@ public class Page {
         for (int i = cutoffPoint; i < recordList.size(); i++) {
             Record currentRecord = recordList.get(i);
             newPage.addRecord(currentRecord);
+            //update schema
+            schema.subRecord();
         }
         recordList.subList(cutoffPoint, recordList.size()).clear();
 

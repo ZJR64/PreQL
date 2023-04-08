@@ -737,12 +737,18 @@ public class StorageManagerHelper {
             // otherwise right side is a constant
             else {
                 Object leftVal = attrObjs.get(left.getName());
+                if (leftVal == null && valueRight.equals("null") && comparator.equals("=")){
+                    return true;
+                }
                 //look to see what type of attribute it is
                 if (leftType.contains("char")) {
                     //varchar or char
                     String leftChar = ((String) leftVal);
                     String rightChar = ((String) valueRight);
                     if (comparator.equals("=")) {
+                        if (leftChar == null && rightChar.equals("null")){
+                            return true;
+                        }
                         return leftChar.equals(rightChar);
                     }
                     if (comparator.equals("<")) {
