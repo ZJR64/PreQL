@@ -356,6 +356,12 @@ public class StorageManager {
                             if(objsType.contains("char")){  //varchar or char
                                 String val1 = (String) obj1;
                                 String val2 = (String) obj2;
+                                if(val1 == null ){
+                                    return -1;
+                                }
+                                if(val2 == null){
+                                    return 1;
+                                }
                                 int res = val1.compareTo(val2);
                                 if(res == 0){
                                     continue;
@@ -365,8 +371,14 @@ public class StorageManager {
                                 }
                             }
                             else if(objsType.equalsIgnoreCase("integer")){
-                                int val1 = (int) obj1;
-                                int val2 = (int) obj2;
+                                Integer val1 = (Integer) obj1;
+                                Integer val2 = (Integer) obj2;
+                                if(val1 == null ){
+                                    return -1;
+                                }
+                                if(val2 == null){
+                                    return 1;
+                                }
                                 int res = Integer.compare(val1, val2);
                                 if(res == 0){
                                     continue;
@@ -376,8 +388,14 @@ public class StorageManager {
                                 }
                             }
                             else if(objsType.equalsIgnoreCase("boolean")){
-                                boolean val1 = (boolean) obj1;
-                                boolean val2 = (boolean) obj2;
+                                Boolean val1 = (Boolean) obj1;
+                                Boolean val2 = (Boolean) obj2;
+                                if(val1 == null ){
+                                    return -1;
+                                }
+                                if(val2 == null){
+                                    return 1;
+                                }
                                 int res = Boolean.compare(val1, val2);
                                 if(res == 0){
                                     continue;
@@ -387,8 +405,15 @@ public class StorageManager {
                                 }
                             }
                             else{ // double
-                                double val1 = (double) obj1;
-                                double val2 = (double) obj2;
+
+                                Double val1 = (Double) obj1;
+                                Double val2 = (Double) obj2;
+                                if(val1 == null ){
+                                    return -1;
+                                }
+                                if(val2 == null){
+                                    return 1;
+                                }
                                 int res = Double.compare(val1, val2);
                                 if(res == 0){
                                     continue;
