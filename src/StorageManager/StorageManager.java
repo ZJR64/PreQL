@@ -187,7 +187,10 @@ public class StorageManager {
         }
 
         if(orderBy != null){
-            orderBy(orderBy, tempRecs, allAttr);
+            Integer res = orderBy(orderBy, tempRecs, allAttr);
+            if(res == null){
+                return "\nERROR";
+            }
         }
 
         /**for (Record r : tempRecs) {
@@ -206,7 +209,6 @@ public class StorageManager {
             }
         }
          */
-        // Make sure to unchange names of attributes!!!
         for(String tblNm : tableNames) {
             Schema table = c.getSchema(tblNm);
             for (Attribute attr : table.getAttributes()) {
@@ -291,18 +293,26 @@ public class StorageManager {
      * @param records The arrayList of records to reorder.
      * @param attrs ArrayList of all attributes. Used to get types.
      */
-    private void orderBy(String columns, ArrayList<Record> records,  ArrayList<Attribute> attrs) {
+    private Integer orderBy(String columns, ArrayList<Record> records,  ArrayList<Attribute> attrs) {
         String[] cols = columns.split(",");
+        for(int i = 0; i < cols.length; i++){
+            cols[i] = cols[i].strip();
+        }
         int j;
         for(int i = 1; i < records.size(); i++){
             Record temp = records.get(i);
             j = i;
-            while((j > 0) && compareAttVal(records.get(j - 1), temp, cols, attrs) == 1){
+            Integer result = 0;
+            while((j > 0) && (result = compareAttVal(records.get(j - 1), temp, cols, attrs)) != null && compareAttVal(records.get(j - 1), temp, cols, attrs) == 1){
                 records.set(j, records.get(j-1));
                 j--;
             }
+            if(result == null){
+                return null;
+            }
             records.set(j, temp);
         }
+        return 0;
     }
 
 
@@ -316,11 +326,28 @@ public class StorageManager {
      * @param cols The attributes that will be used to be compared.
      * @return 1 if rec1 > rec2, 0 if equal, -1 if rec1 < rec2.
      */
-    private int compareAttVal(Record rec1, Record rec2, String [] cols, ArrayList<Attribute> attrs){
+    private Integer compareAttVal(Record rec1, Record rec2, String [] cols, ArrayList<Attribute> attrs){
         for(String col: cols){
             for(Map.Entry<String, Object> entry : rec1.getAttributes().entrySet()){
                 String key = entry.getKey();
-                if(key.equals(col)){
+                String[] splitKey = key.split("\\.");
+                if(!(col.contains("."))) {  // if col doesn't contain a ., we need to ensure that the name of it is unique.
+                    int howMany = 0;
+                    for (Map.Entry<String, Object> entry2 : rec1.getAttributes().entrySet()) {
+                        String key2 = entry2.getKey();
+                        String[] splitKey2 = key2.split("\\.");
+                        if(splitKey2[1].equals(col)){
+                            howMany++;
+                            if(howMany == 2){
+                                System.out.println("DUPLICATE ATTRIBUTE NAMES! MUST SPECIFY tableName.Attribute");
+                                return null;
+                            }
+                        }
+
+                    }
+                }
+
+                if(key.equals(col) || splitKey[1].equals(col)){
                     Object obj1 = rec1.getValue(key);
                     Object obj2 = rec2.getValue(key);
                     for(Attribute attr : attrs){
