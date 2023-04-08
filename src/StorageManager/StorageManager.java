@@ -103,6 +103,36 @@ public class StorageManager {
     }
 
     /**
+     * Finds the records from the table that comply with the where clause.
+     *
+     * @param tableName the table whose records are being gotten.
+     * @param where the where statement to check the records against.
+     * @return An ArrayList of all the records that meet the requirements.
+     */
+    public ArrayList<Record> getRecords(String tableName, WhereClause where) {
+        Schema schema = c.getSchema(tableName);
+        ArrayList<Attribute> attributes = schema.getAttributes();
+        ArrayList<Record> records = getAllRecords(tableName);
+
+        ArrayList<Record> chosenRecords = new ArrayList<Record>();
+        if(where != null){
+            for (Record record : records) {
+                Boolean belongs = whereClause(where.getRoot(), record, attributes);
+                if (belongs == null) {
+                    return null;
+                }
+                if (belongs){
+                    chosenRecords.add(record);
+                }
+            }
+        }
+        else{
+            chosenRecords = records;
+        }
+        return chosenRecords;
+    }
+
+    /**
      * Gets all records from the given table.
      *
      * @param tableNames The list of tables being selected from.

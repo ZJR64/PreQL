@@ -63,8 +63,7 @@ public class Update extends Command{
 
     @Override
     public String execute() {
-        //TODO hook up to where
-        ArrayList<Record> records = storageManager.getAllRecords(name);
+        ArrayList<Record> records = storageManager.getRecords(name, where);
         return storageManager.updateRecords(records, name, columnToSet, valueToSet);
     }
 }
