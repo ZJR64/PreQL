@@ -583,7 +583,7 @@ public class StorageManager {
         if (targetAttribute.getType().contains("char")) {
             //varchar or char
             try {
-                String valueString = (String) value;
+                value = value.toString();
             } catch(Exception e) {
                 return value.toString() + " is not a string, but should be.\nERROR";  //returns an error
             }
@@ -591,7 +591,7 @@ public class StorageManager {
         else if (targetAttribute.getType().equalsIgnoreCase("integer")) {
             //integer
             try {
-                int valueInteger = (int) value;
+                value = Integer.parseInt(value.toString());
             } catch(Exception e) {
                 return value.toString() + " is not an integer, but should be.\nERROR";  //returns an error
             }
@@ -611,7 +611,7 @@ public class StorageManager {
         else {
             //double
             try {
-                double valueDouble = (double) value;
+                value = Double.parseDouble(value.toString());
             } catch(Exception e) {
                 return value.toString() + " is not a double, but should be.\nERROR";  //returns an error
             }
