@@ -114,6 +114,11 @@ public class StorageManager {
         ArrayList<Attribute> attributes = schema.getAttributes();
         ArrayList<Record> records = getAllRecords(tableName);
 
+        //change attribute names
+        for(Attribute attribute : attributes){
+            attribute.changeName(tableName + "." + attribute.getName());
+        }
+
         ArrayList<Record> chosenRecords = new ArrayList<Record>();
         if(where != null){
             for (Record record : records) {
@@ -129,6 +134,14 @@ public class StorageManager {
         else{
             chosenRecords = records;
         }
+
+        //change attribute names back
+        for (Attribute attribute : attributes) {
+            String[] temp = attribute.getName().split("\\.");
+            attribute.changeName(temp[1]);
+        }
+
+        System.out.println("SIZE: " + chosenRecords.size());
         return chosenRecords;
     }
 
