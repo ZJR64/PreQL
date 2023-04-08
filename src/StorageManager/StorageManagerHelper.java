@@ -737,115 +737,153 @@ public class StorageManagerHelper {
             // otherwise right side is a constant
             else {
                 Object leftVal = attrObjs.get(left.getName());
-                if (leftVal == null && valueRight.equals("null") && comparator.equals("=")){
-                    return true;
-                }
                 //look to see what type of attribute it is
                 if (leftType.contains("char")) {
                     //varchar or char
-                    String leftChar = ((String) leftVal);
-                    String rightChar = ((String) valueRight);
-                    if (comparator.equals("=")) {
-                        if (leftChar == null && rightChar.equals("null")){
+                    if (valueRight.equals("null")) {
+                        if ((leftVal == null && comparator.equals("=")) || (leftVal != null && comparator.equals("!="))) {
                             return true;
                         }
-                        return leftChar.equals(rightChar);
+                        else {
+                            return false;
+                        }
                     }
-                    if (comparator.equals("<")) {
-                        return leftChar.compareTo(rightChar) < 0;
+                    else{
+                        String leftChar = ((String) leftVal);
+                        String rightChar = ((String) valueRight);
+                        if (comparator.equals("=")) {
+                            return leftChar.equals(rightChar);
+                        }
+                        if (comparator.equals("<")) {
+                            return leftChar.compareTo(rightChar) < 0;
+                        }
+                        if (comparator.equals(">")) {
+                            return leftChar.compareTo(rightChar) > 0;
+                        }
+                        if (comparator.equals(">=")) {
+                            return leftChar.compareTo(rightChar) >= 0;
+                        }
+                        if (comparator.equals("<=")) {
+                            return leftChar.compareTo(rightChar) <= 0;
+                        }
+                        if (comparator.equals("!=")) {
+                            return !leftChar.equals(rightChar);
+                        } else {
+                            System.out.println("ERROR: unrecognized compartor: " + comparator);
+                        }
                     }
-                    if (comparator.equals(">")) {
-                        return leftChar.compareTo(rightChar) > 0;
-                    }
-                    if (comparator.equals(">=")) {
-                        return leftChar.compareTo(rightChar) >= 0;
-                    }
-                    if (comparator.equals("<=")) {
-                        return leftChar.compareTo(rightChar) <= 0;
-                    }
-                    if (comparator.equals("!=")) {
-                        return !leftChar.equals(rightChar);
-                    } else {
-                        System.out.println("ERROR: unrecognized compartor: " + comparator);
-                    }
+
 
                 } else if (leftType.equalsIgnoreCase("integer")) {
-                    //integer
-                    int leftInt = (int) leftVal;
-                    int rightInt = Integer.parseInt(valueRight);
-                    if (comparator.equals("=")) {
-                        return leftInt == rightInt;
+
+                    if (valueRight.equals("null")) {
+                        if ((leftVal == null && comparator.equals("=")) || (leftVal != null && comparator.equals("!="))) {
+                            return true;
+                        }
+                        else {
+                            return false;
+                        }
                     }
-                    if (comparator.equals("<")) {
-                        return leftInt < rightInt;
-                    }
-                    if (comparator.equals(">")) {
-                        return leftInt > rightInt;
-                    }
-                    if (comparator.equals(">=")) {
-                        return leftInt >= rightInt;
-                    }
-                    if (comparator.equals("<=")) {
-                        return leftInt <= rightInt;
-                    }
-                    if (comparator.equals("!=")) {
-                        return leftInt != rightInt;
-                    } else {
-                        System.out.println("ERROR: unrecognized compartor: " + comparator);
-                    }
-                } else if (leftType.equalsIgnoreCase("boolean")) {
-                    //boolean
-                    Boolean leftBool = (Boolean) leftVal;
-                    Boolean rightBool = Boolean.parseBoolean(valueRight);
-                    if (comparator.equals("=")) {
-                        return leftBool == rightBool;
-                    }
-                    if (comparator.equals("<")) {
-                        System.out.println("ERROR: Cannot compare booleans");
-                        return null;
-                    }
-                    if (comparator.equals(">")) {
-                        System.out.println("ERROR: Cannot compare booleans");
-                        return null;
-                    }
-                    if (comparator.equals(">=")) {
-                        System.out.println("ERROR: Cannot compare booleans");
-                        return null;
-                    }
-                    if (comparator.equals("<=")) {
-                        System.out.println("ERROR: Cannot compare booleans");
-                        return null;
-                    }
-                    if (comparator.equals("!=")) {
-                        return leftBool != rightBool;
-                    } else {
-                        System.out.println("ERROR: unrecognized compartor: " + comparator);
-                    }
-                } else {
-                    //must be double
-                    double leftDoub = (double) leftVal;
-                    double rightDoub = Double.parseDouble(valueRight);
-                    if (comparator.equals("=")) {
-                        return leftDoub == rightDoub;
-                    }
-                    if (comparator.equals("<")) {
-                        return leftDoub < rightDoub;
-                    }
-                    if (comparator.equals(">")) {
-                        return leftDoub > rightDoub;
-                    }
-                    if (comparator.equals(">=")) {
-                        return leftDoub >= rightDoub;
-                    }
-                    if (comparator.equals("<=")) {
-                        return leftDoub <= rightDoub;
-                    }
-                    if (comparator.equals("!=")) {
-                        return leftDoub != rightDoub;
-                    } else {
-                        System.out.println("ERROR: unrecognized compartor: " + comparator);
+                    else {
+                        int rightInt = Integer.parseInt(valueRight);
+                        //integer
+                        int leftInt = (int) leftVal;
+                        if (comparator.equals("=")) {
+
+                            return leftInt == rightInt;
+                        }
+                        if (comparator.equals("<")) {
+                            return leftInt < rightInt;
+                        }
+                        if (comparator.equals(">")) {
+                            return leftInt > rightInt;
+                        }
+                        if (comparator.equals(">=")) {
+                            return leftInt >= rightInt;
+                        }
+                        if (comparator.equals("<=")) {
+                            return leftInt <= rightInt;
+                        }
+                        if (comparator.equals("!=")) {
+                            return leftInt != rightInt;
+                        } else {
+                            System.out.println("ERROR: unrecognized compartor: " + comparator);
+                        }
                     }
 
+                } else if (leftType.equalsIgnoreCase("boolean")) {
+                    //boolean
+                    if (valueRight.equals("null")) {
+                        if ((leftVal == null && comparator.equals("=")) || (leftVal != null && comparator.equals("!="))) {
+                            return true;
+                        }
+                        else {
+                            return false;
+                        }
+                    }
+                    else {
+                        Boolean leftBool = (Boolean) leftVal;
+                        Boolean rightBool = Boolean.parseBoolean(valueRight);
+                        if (comparator.equals("=")) {
+                            return leftBool == rightBool;
+                        }
+                        if (comparator.equals("<")) {
+                            System.out.println("ERROR: Cannot compare booleans");
+                            return null;
+                        }
+                        if (comparator.equals(">")) {
+                            System.out.println("ERROR: Cannot compare booleans");
+                            return null;
+                        }
+                        if (comparator.equals(">=")) {
+                            System.out.println("ERROR: Cannot compare booleans");
+                            return null;
+                        }
+                        if (comparator.equals("<=")) {
+                            System.out.println("ERROR: Cannot compare booleans");
+                            return null;
+                        }
+                        if (comparator.equals("!=")) {
+                            return leftBool != rightBool;
+                        } else {
+                            System.out.println("ERROR: unrecognized compartor: " + comparator);
+                        }
+                    }
+
+                } else {
+                    //must be double
+                    if (valueRight.equals("null")) {
+                        if ((leftVal == null && comparator.equals("=")) || (leftVal != null && comparator.equals("!="))) {
+                            return true;
+                        }
+                        else {
+                            return false;
+                        }
+                    }
+                    else {
+                        double leftDoub = (double) leftVal;
+                        double rightDoub = Double.parseDouble(valueRight);
+                        if (comparator.equals("=")) {
+                            return leftDoub == rightDoub;
+                        }
+                        if (comparator.equals("<")) {
+                            return leftDoub < rightDoub;
+                        }
+                        if (comparator.equals(">")) {
+                            return leftDoub > rightDoub;
+                        }
+                        if (comparator.equals(">=")) {
+                            return leftDoub >= rightDoub;
+                        }
+                        if (comparator.equals("<=")) {
+                            return leftDoub <= rightDoub;
+                        }
+                        if (comparator.equals("!=")) {
+                            return leftDoub != rightDoub;
+                        } else {
+                            System.out.println("ERROR: unrecognized compartor: " + comparator);
+                        }
+                    }
                 }
             }
             return null;
