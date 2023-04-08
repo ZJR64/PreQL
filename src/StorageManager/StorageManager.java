@@ -112,12 +112,12 @@ public class StorageManager {
     public ArrayList<Record> getRecords(String tableName, WhereClause where) {
         Schema schema = c.getSchema(tableName);
         ArrayList<Attribute> attributes = schema.getAttributes();
-        ArrayList<Record> records = getAllRecords(tableName);
 
         //change attribute names
         for(Attribute attribute : attributes){
             attribute.changeName(tableName + "." + attribute.getName());
         }
+        ArrayList<Record> records = getAllRecords(tableName);
 
         ArrayList<Record> chosenRecords = new ArrayList<Record>();
         if(where != null){
