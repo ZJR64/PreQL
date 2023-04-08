@@ -270,6 +270,7 @@ public class StorageManager {
                     }
                 }
             }
+            str += "\n";
         }
         System.out.println(str);
 
