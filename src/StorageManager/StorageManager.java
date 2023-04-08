@@ -598,9 +598,13 @@ public class StorageManager {
         }
         else if (targetAttribute.getType().equalsIgnoreCase("boolean")) {
             //boolean
-            try {
-                boolean valueBoolean = (boolean) value;
-            } catch(Exception e) {
+            if (value.toString().toLowerCase().equals("true")) {
+                value = (boolean) true;
+            }
+            else if (value.toString().toLowerCase().equals("false")) {
+                value = (boolean) false;
+            }
+            else {
                 return value.toString() + " is not a boolean, but should be.\nERROR";  //returns an error
             }
         }
@@ -613,25 +617,30 @@ public class StorageManager {
             }
         }
 
-        ArrayList<Integer> pageList = new ArrayList<Integer>();
-        //create copy array in case of modification
-        for (Integer pageNum : table.getPageOrder()) {
-            pageList.add(pageNum);
-        }
-        for (Integer pageNum : pageList){
-            byte[] bytes =  bm.getPage(table.getFileName(), pageNum);
-            Page page = new Page(pageNum, table, bm.getPageSize(), bytes);
-            ArrayList<Integer> deletedIndex = new ArrayList<Integer>();
+        //iterate through records
+        for (Record record : records) {
+            ArrayList<Integer> pageList = new ArrayList<Integer>();
+            //create copy array in case of modification
+            for (Integer pageNum : table.getPageOrder()) {
+                pageList.add(pageNum);
+            }
 
-            //go through record list
-            for (int index = 0; index < records.size(); index++) {
-                if (page.belongs(records.get(index).getKey())) {
-                    //remove from table
-                    page.removeRecord(records.get(index).getPrimaryKey());
-                    deletedIndex.add(index);
-                    // into table
+            //iterate through each page
+            for (int pageNum : pageList) {
+                //get page
+                byte[] bytes =  bm.getPage(table.getFileName(), pageNum);
+                Page page = new Page(pageNum, table, bm.getPageSize(), bytes);
+                ArrayList<Integer> deletedIndex = new ArrayList<Integer>();
+
+                if (page.belongs(record.getKey())) {
+                    //delete record
+                    ArrayList<Record> delete = new ArrayList<Record>();
+                    delete.add(record);
+                    deleteRecords(delete, tableName);
+
+                    // into tuples
                     ArrayList<String> tuple = new ArrayList<String>();
-                    Map<String, Object> recordValues = records.get(index).getAttributes();
+                    Map<String, Object> recordValues = record.getAttributes();
                     for (Attribute attribute : table.getAttributes()) {
                         if (attribute.getName().equalsIgnoreCase(target)) {
                             tuple.add(value.toString());
@@ -642,6 +651,7 @@ public class StorageManager {
                     }
                     ArrayList<ArrayList<String>> tuples = new ArrayList<ArrayList<String>>();
                     tuples.add(tuple);
+
                     //attempt to insert into table
                     if (insert(tableName, tuples).contains("ERROR")) {
                         tuples.clear();
@@ -656,19 +666,9 @@ public class StorageManager {
                         //return error
                         return "conflict in update. \nERROR";
                     }
+                    break;
                 }
             }
-
-            //delete from record
-            Collections.sort(deletedIndex, Collections.reverseOrder());
-            for (int index : deletedIndex) {
-                records.remove(index);
-            }
-        }
-
-        //check if any records left
-        if (records.size() > 0) {
-            return records.size() + " records not updated.\nERROR";  //returns an error if not all records updated
         }
 
         return "SUCCESS";
