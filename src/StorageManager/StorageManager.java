@@ -117,6 +117,7 @@ public class StorageManager {
         for(Attribute attribute : attributes){
             attribute.changeName(tableName + "." + attribute.getName());
         }
+
         ArrayList<Record> records = getAllRecords(tableName);
 
         ArrayList<Record> chosenRecords = new ArrayList<Record>();
@@ -139,6 +140,15 @@ public class StorageManager {
         for (Attribute attribute : attributes) {
             String[] temp = attribute.getName().split("\\.");
             attribute.changeName(temp[1]);
+        }
+        for (Record record : chosenRecords) {
+            Map<String, Object> elements = record.getAttributes();
+            Map<String, Object> newElements = new HashMap<String, Object>();
+            for (String name : elements.keySet()) {
+                String[] temp = name.split("\\.");
+                newElements.put(temp[1], elements.get(name));
+            }
+            record.setAttributes(newElements);
         }
 
         System.out.println("SIZE: " + chosenRecords.size());
@@ -663,6 +673,7 @@ public class StorageManager {
 
         return "SUCCESS";
     }
+
 
     /**
      * Attempts to create a new table in the database.
