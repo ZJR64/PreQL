@@ -174,11 +174,17 @@ public class Page {
      * @param primaryKeyValue the value of the primary key.
      */
     public void removeRecord(Object primaryKeyValue) {
-        int removeIndex = -1;
+        int removeIndex = 0;
+        boolean found = false;
         for (int index = 0; index < recordList.size(); index++) {
             if(recordList.get(index).equals(primaryKeyValue)) {
                 removeIndex = index;
+                found = true;
             }
+        }
+
+        if (!found) {
+            return;
         }
 
         recordList.remove(removeIndex);

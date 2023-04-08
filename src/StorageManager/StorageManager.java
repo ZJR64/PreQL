@@ -117,6 +117,7 @@ public class StorageManager {
         for(Attribute attribute : attributes){
             attribute.changeName(tableName + "." + attribute.getName());
         }
+
         ArrayList<Record> records = getAllRecords(tableName);
 
         ArrayList<Record> chosenRecords = new ArrayList<Record>();
@@ -140,6 +141,15 @@ public class StorageManager {
             String[] temp = attribute.getName().split("\\.");
             attribute.changeName(temp[1]);
         }
+        for (Record record : chosenRecords) {
+            Map<String, Object> elements = record.getAttributes();
+            Map<String, Object> newElements = new HashMap<String, Object>();
+            for (String name : elements.keySet()) {
+                String[] temp = name.split("\\.");
+                newElements.put(temp[1], elements.get(name));
+            }
+            record.setAttributes(newElements);
+        }
 
         System.out.println("SIZE: " + chosenRecords.size());
         return chosenRecords;
@@ -155,19 +165,7 @@ public class StorageManager {
      * @return A string reporting the success/failure of the command.
      */
     public String select(String[] tableNames, WhereClause where, String orderBy, String [] columns){
-        ArrayList<String> prints = new ArrayList<>();
-        if (columns[0].equals("*")){
-            for (String s : tableNames) {
-                for (Attribute a : c.getSchema(s).getAttributes()) {
-                    prints.add(a.getName());
-                }
-            }
-        }
-        else {
-            for (String s : columns) {
-                prints.add(s);
-            }
-        }
+
         ArrayList<Attribute> allAttr = new ArrayList<>();
         for(String tableName : tableNames){
             Schema table = c.getSchema(tableName);
@@ -218,62 +216,22 @@ public class StorageManager {
             }
         }
 
-
-        String str = "";
-        if (columns[0].equals("*")){
-            for (Attribute a : allAttr) {
-                str += String.format("| %20.20s |", a.getName());
-            }
-        }
-        else {
+        /**for (Record r : tempRecs) {
+            String str = "";
             for (String s : columns) {
-                if (s.contains(".")){
-                    str += String.format("| %20.20s |", s);
-                }
-                else{
-                    int count = 0;
-                    for (Attribute a : allAttr) {
-                        if (a.getName().split("\\.")[1].equals(s)){
-                            count++;
-                            str += String.format("| %20.20s |", a.getName());
-                        }
-                        if (count > 1){
-                            return "ERROR: specify attribute names";
-                        }
+                if (s.contains(".")) {
+                    str += String.format("| %40.40s |", r.getAttributes().get(s));
+                } else if (a.getName().split("\\.")[1].equals(valueLeft)) {
+                    if (left == null) {
+                        left = a;
+                        leftType = a.getType();
+                    } else {
+                        return null;
                     }
-                }
+                }            str = str + String.format("| %40.40s |", s);
             }
         }
-        str += "\n";
-        for (Record r : tempRecs) {
-            if (columns[0].equals("*")){
-                for (Attribute a : allAttr) {
-                    str += String.format("| %20.20s |", r.getAttributes().get(a.getName()));
-                }
-            }
-            else {
-                for (String s : columns) {
-                    if (s.contains(".")){
-                        str += String.format("| %20.20s |", r.getAttributes().get(s));
-                    }
-                    else{
-                        int count = 0;
-                        for (Attribute a : allAttr) {
-                            if (a.getName().split("\\.")[1].equals(s)){
-                                count++;
-                                str += String.format("| %20.20s |", r.getAttributes().get(a.getName()));
-                            }
-                            if (count > 1){
-                                return "ERROR: specify attribute names";
-                            }
-                        }
-                    }
-                }
-            }
-            str += "\n";
-        }
-        System.out.println(str);
-
+         */
         for(String tblNm : tableNames) {
             Schema table = c.getSchema(tblNm);
             for (Attribute attr : table.getAttributes()) {
