@@ -697,7 +697,8 @@ public class StorageManager {
             }
         }
 
-        Schema new_table = new Schema(name, attributes);
+        Index index = new Index(bm.getPageSize());
+        Schema new_table = new Schema(name, attributes, index);
         c.addSchema(new_table);
         return "SUCCESS";
     }

@@ -19,6 +19,7 @@ public class Schema {
     private ArrayList<Attribute> attributes;
     private ArrayList<Integer> pageOrder;
     private ArrayList<Integer> openPages;
+    private Index index;
 
     /**
      * Constructor for a new Schema object
@@ -26,13 +27,14 @@ public class Schema {
      * @param name the name of the table.
      * @param attributes the list of non-key attributes for the table.
      */
-    public Schema (String name, ArrayList<Attribute> attributes) {
+    public Schema (String name, ArrayList<Attribute> attributes, Index index) {
         this.name = name;
         this.attributes = attributes;
         this.pageOrder = new ArrayList<>();
         this.openPages = new ArrayList<>();
         this.pages = 0;
         this.records = 0;
+        this.index = index;
     }
 
     /**
@@ -84,8 +86,8 @@ public class Schema {
     @Override
     public String toString() {
         String output = name;
-        for (Attribute a: attributes) {
-            output += "\n\t" + a.toString();
+        for (Attribute attribute: attributes) {
+            output += "\n\t" + attribute.toString();
         }
         output += "\nPages: " + pages;
         output += "\nRecords: " + records;
@@ -131,6 +133,8 @@ public class Schema {
             buffer.put(attributeBytes);
         }
 
+        //set index
+        buffer.put(index.toBytes());
         return buffer.array();
     }
 
@@ -302,6 +306,9 @@ public class Schema {
         for (Attribute attribute : attributes) {
             arraySize += attribute.getAttributeByteSize();
         }
+
+        //add number for index
+        arraySize += index.getIndexByteSize();
 
         //return array size
         return arraySize;
