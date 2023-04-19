@@ -1,5 +1,7 @@
 package src.Catalog;
 
+import src.Index.Index;
+
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;

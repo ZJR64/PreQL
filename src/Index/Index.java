@@ -1,4 +1,4 @@
-package src.Catalog;
+package src.Index;
 
 public class Index {
 
@@ -6,12 +6,12 @@ public class Index {
         //TODO constructor for index
     }
 
-    public void addIndex(Object primaryKeyValue) {
-        //TODO add an index to the tree
+    public void addToIndex(Object primaryKeyValue) {
+        //TODO add to the tree
     }
 
-    public void removeIndex(Object primaryKeyValue) {
-        //TODO remove an index from the tree
+    public void removeFromIndex(Object primaryKeyValue) {
+        //TODO remove from the tree
     }
 
     public int findIndex(Object primaryKeyValue) {
