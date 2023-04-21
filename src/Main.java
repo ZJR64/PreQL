@@ -14,7 +14,7 @@ public class Main {
      * @param args the command line arguments.
      */
     public static void main(String[] args) {
-        if (args.length == 3) {
+        if (args.length == 4) {
             //check if directory exists
             if (!Helper.checkDir(args[0])) {
                 System.err.println("Error: directory could not be created at " + args[0]);
@@ -33,9 +33,13 @@ public class Main {
                 System.out.println(helpMessage);
                 return;
             }
+            boolean indexing = false;
+            if(Helper.isTrue(args[3])){
+                indexing = true;
+            }
 
             //create the database
-            Database db = new Database(args[0], Integer.parseInt(args[1]), Integer.parseInt(args[2]));
+            Database db = new Database(args[0], Integer.parseInt(args[1]), Integer.parseInt(args[2]), indexing);
             db.run();
         }
         else {

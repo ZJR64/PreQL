@@ -68,4 +68,18 @@ public class Helper {
         }
         return inverse;
     }
+
+    /**
+     *
+     * @param bool A string that is either 'true' or anything else.
+     * @return true if the string is true, false if the string is anything else.
+     */
+    public static boolean isTrue(String bool){
+        if(bool.equals("true")){
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
 }

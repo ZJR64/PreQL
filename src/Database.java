@@ -25,6 +25,7 @@ public class Database {
     private final String databaseName = "PrQL";
     private String location;
     private String dbFile;
+    private boolean indexing;
     private int bufferSize;
     private int pageSize;
     private Catalog catalog;
@@ -36,12 +37,13 @@ public class Database {
      * @param location the location of the database.
      * @param pageSize the size of each page of the database.
      * @param bufferSize the size of the buffer.
+     * @param indexing whether this database uses indexing or not.
      */
-    public Database(String location, int pageSize, int bufferSize) {
+    public Database(String location, int pageSize, int bufferSize, boolean indexing) {
         this.location = location;
         this.bufferSize = bufferSize;
         this.dbFile = location + File.separator + "db";
-
+        this.indexing = indexing;
         System.out.println("Welcome to " + databaseName);
 
         //check for existing database
