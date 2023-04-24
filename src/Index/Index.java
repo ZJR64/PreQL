@@ -1,8 +1,10 @@
 package src.Index;
 
 import src.StorageManager.BufferManager;
+import src.StorageManager.Record;
 
 import java.nio.Buffer;
+import java.util.ArrayList;
 
 public class Index {
 
@@ -34,14 +36,8 @@ public class Index {
         return -1;
     }
 
-    public int findRange(Object primaryKeyValueOne, Object primaryKeyValueTwo) {
-        //TODO find range between two values
-        return -1;
-    }
-
-    public int findNot(Object primaryKeyValue) {
-        //TODO find indexes that do not comply
-        return -1;
+    public void updateIndex(ArrayList<Record> records, int pageNumber) {
+        //TODO update the index of whole page
     }
 
     public byte[] toBytes(){

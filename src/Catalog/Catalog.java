@@ -1,6 +1,7 @@
 package src.Catalog;
 
 import src.Helper;
+import src.StorageManager.BufferManager;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,9 +17,10 @@ import java.util.ArrayList;
  * @author Zak Rutherford zjr6302@rit.edu
  */
 public class Catalog {
-
     private String catPath;
     private ArrayList<Schema> schemas;
+    private boolean indexing;
+    private BufferManager bufferManager;
 
 
     /**
@@ -27,9 +29,13 @@ public class Catalog {
      * @param catPath the file path to the catalog.
      * @param pageSize the size of each page of the database.
      */
-    public Catalog(String catPath, int pageSize) {
+    public Catalog(String catPath, int pageSize, boolean indexing, BufferManager bufferManager) {
         this.schemas = new ArrayList<Schema>();
         this.catPath = catPath;
+        this.indexing = indexing;
+        if (indexing) {
+            this.bufferManager = bufferManager;
+        }
         if (Helper.checkFile(catPath)) {
             //make the catalog read from file
             byte[] byteArray;

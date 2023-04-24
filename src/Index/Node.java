@@ -6,11 +6,14 @@ import java.util.Map;
 public class Node {
 
     boolean internal;
-    Map<Object, Integer> values;
+    Map<Object, Integer> pageNums;
+    Map<Object, Integer> indexes;
+    Integer FinalValue;
 
     public Node(boolean isInternal) {
         //TODO make a new node
-        values = new HashMap<Object, Integer>();
+        pageNums = new HashMap<Object, Integer>();
+        indexes = new HashMap<Object, Integer>();
         this.internal = isInternal;
     }
 
@@ -18,12 +21,20 @@ public class Node {
         //TODO make a node off of bytes
     }
 
-    public Map<Object, Integer> getValues() {
-        return values;
+    public Map<Object, Integer> getPageNums() {
+        return pageNums;
     }
 
-    public void setValues(Map<Object, Integer> values) {
-        this.values = values;
+    public void setPageNums(Map<Object, Integer> pageNums) {
+        this.pageNums = pageNums;
+    }
+
+    public Map<Object, Integer> getIndexes() {
+        return pageNums;
+    }
+
+    public void setIndexes(Map<Object, Integer> indexes) {
+        this.indexes = indexes;
     }
 
     public boolean isInternal() {
