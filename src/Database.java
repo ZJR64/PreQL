@@ -42,8 +42,8 @@ public class Database {
     public Database(String location, int pageSize, int bufferSize, boolean indexing) {
         this.location = location;
         this.bufferSize = bufferSize;
-        this.dbFile = location + File.separator + "db";
         this.indexing = indexing;
+        this.dbFile = location + File.separator + "db";
         System.out.println("Welcome to " + databaseName);
 
         //check for existing database
@@ -65,7 +65,16 @@ public class Database {
                 return;
             }
             //extract info
-            this.pageSize = ByteBuffer.wrap(byteArray).getInt();
+            ByteBuffer buffer = ByteBuffer.wrap(byteArray);
+            this.pageSize = buffer.getInt();
+            //get indexing
+            int indexNum = buffer.getInt();
+            if (indexNum == 0) {
+                this.indexing = false;
+            }
+            else {
+                this.indexing = true;
+            }
         }
         else {
             System.out.println("No existing db found");
@@ -73,10 +82,16 @@ public class Database {
 
             //create file
             try {
-                ByteBuffer buffer = ByteBuffer.wrap(new byte[Integer.SIZE/Byte.SIZE]);
+                ByteBuffer buffer = ByteBuffer.wrap(new byte[Integer.BYTES * 2]);
                 FileOutputStream outputStream = new FileOutputStream(dbFile);
                 //store page size
                 buffer.putInt(pageSize);
+                if (this.indexing) {
+                    buffer.putInt(1);
+                }
+                else {
+                    buffer.putInt(0);
+                }
                 outputStream.write(buffer.array());
                 outputStream.flush();
                 outputStream.close();
@@ -91,7 +106,6 @@ public class Database {
 
         System.out.println("Page Size: " + this.pageSize);
         System.out.println("Buffer Size: " + this.bufferSize);
-
 
         //create catalog
         String catPath = location + "\\catalog";
