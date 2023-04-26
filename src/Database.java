@@ -67,6 +67,7 @@ public class Database {
             //extract info
             ByteBuffer buffer = ByteBuffer.wrap(byteArray);
             this.pageSize = buffer.getInt();
+
             //get indexing
             int indexNum = buffer.getInt();
             if (indexNum == 0) {
@@ -111,7 +112,7 @@ public class Database {
         String catPath = location + "\\catalog";
         this.catalog = new Catalog(catPath, pageSize, false, new BufferManager(pageSize, bufferSize, location));
         BufferManager bm = new BufferManager(pageSize, bufferSize, location);
-        this.storageManager = new StorageManager(bm, this.catalog);
+        this.storageManager = new StorageManager(bm, this.catalog, this.indexing);
     }
 
     /**

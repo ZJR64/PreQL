@@ -17,10 +17,12 @@ public class StorageManager {
 
     public BufferManager bm;
     private Catalog c;
+    private boolean indexing;
 
-    public StorageManager(BufferManager bm, Catalog c){
+    public StorageManager(BufferManager bm, Catalog c, boolean indexing){
         this.bm = bm;
         this.c = c;
+        this.indexing = indexing;
     }
 
     /**
@@ -692,6 +694,7 @@ public class StorageManager {
             }
         }
 
+        //TODO index if indexing
         Index index = new Index(c.getBufferManager(), name);
         Schema new_table = new Schema(name, attributes, index);
         c.addSchema(new_table);
