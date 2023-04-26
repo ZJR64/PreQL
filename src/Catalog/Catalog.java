@@ -55,7 +55,7 @@ public class Catalog {
 
             //get schemas
             while (schemas.size() < numSchemas) {
-                schemas.add(new Schema(buffer));
+                schemas.add(new Schema(buffer, this.bufferManager));
             }
         }
     }

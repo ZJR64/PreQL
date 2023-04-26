@@ -4,6 +4,7 @@ import src.StorageManager.BufferManager;
 import src.StorageManager.Record;
 
 import java.nio.Buffer;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -14,14 +15,15 @@ public class Index {
     private BufferManager bufferManager;
 
     public Index(BufferManager bufferManager, String name) {
-        //TODO constructor for new index
         this.bufferManager = bufferManager;
         root = 0;
         this.tableName = name;
     }
 
-    public Index(byte[] bytes) {
-        //TODO constructor for index from bytes
+    public Index(BufferManager bufferManager, ByteBuffer buffer, String tableName) {
+        this.bufferManager = bufferManager;
+        this.root = buffer.getInt();
+        this.tableName = tableName;
     }
 
     public void addToIndex(Object primaryKeyValue) {
@@ -48,13 +50,12 @@ public class Index {
     }
 
     public byte[] toBytes(){
-        //TODO convert to byte array
-        byte[] no = new byte[2];
-        return no;
+        ByteBuffer buffer = ByteBuffer.wrap(new byte[getIndexByteSize()]);
+        buffer.putInt(root);
+        return buffer.array();
     }
 
     public int getIndexByteSize() {
-        //TODO return the number of bytes needed for the index
-        return 0;
+        return Integer.BYTES;
     }
 }

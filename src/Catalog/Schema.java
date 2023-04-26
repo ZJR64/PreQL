@@ -1,6 +1,7 @@
 package src.Catalog;
 
 import src.Index.Index;
+import src.StorageManager.BufferManager;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -44,7 +45,7 @@ public class Schema {
      *
      * @param buffer the buffer containing the schema.
      */
-    public Schema (ByteBuffer buffer) {
+    public Schema (ByteBuffer buffer, BufferManager bufferManager) {
         //get name
         int nameSize = buffer.getInt();
         byte[] nameArray = new byte[nameSize];
@@ -78,6 +79,9 @@ public class Schema {
         while(attributes.size() < numAttributes) {
             attributes.add(new Attribute(buffer));
         }
+
+        //get index
+        this.index = new Index(bufferManager, buffer, name);
     }
 
     /**
@@ -137,6 +141,8 @@ public class Schema {
 
         //set index
         buffer.put(index.toBytes());
+
+        //return
         return buffer.array();
     }
 
