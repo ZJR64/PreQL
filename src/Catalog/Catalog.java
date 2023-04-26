@@ -64,6 +64,9 @@ public class Catalog {
      * Method that safely stores the Catalog when the database is shut down.
      */
     public void shutDown(){
+        //shut down
+        bufferManager.shutDown();
+
         //make bytes
         ByteBuffer buffer = ByteBuffer.wrap(new byte[getCatalogByteSize()]);
 
