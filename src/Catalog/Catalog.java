@@ -95,6 +95,10 @@ public class Catalog {
         }
     }
 
+    public BufferManager getBufferManager() {
+        return bufferManager;
+    }
+
     /**
      * Converts the schemas into a printable form for the user.
      *

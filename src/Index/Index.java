@@ -5,6 +5,7 @@ import src.StorageManager.Record;
 
 import java.nio.Buffer;
 import java.util.ArrayList;
+import java.util.Map;
 
 public class Index {
 
@@ -14,7 +15,7 @@ public class Index {
 
     public Index(BufferManager bufferManager, String name) {
         //TODO constructor for new index
-        this.bufferManager = bufferManager; //TODO make new buffer manager????!!!!!????
+        this.bufferManager = bufferManager;
         root = 0;
         this.tableName = name;
     }
@@ -31,9 +32,15 @@ public class Index {
         //TODO remove from the tree
     }
 
-    public int find(Object primaryKeyValue) {
-        //TODO find the page of the given primaryKey
-        return -1;
+    public int[] find(Object primaryKeyValue) {
+        //TODO get node
+        Node currentNode = new Node(false);
+        while (currentNode.isInternal()) {
+            for (Map.Entry<Object, Integer> entry : currentNode.getPageNums().entrySet())
+                System.out.println("Key = " + entry.getKey() +
+                        ", Value = " + entry.getValue());
+        }
+        return null;
     }
 
     public void updateIndex(ArrayList<Record> records, int pageNumber) {

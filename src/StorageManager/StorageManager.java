@@ -692,7 +692,7 @@ public class StorageManager {
             }
         }
 
-        Index index = new Index(bm, name);
+        Index index = new Index(c.getBufferManager(), name);
         Schema new_table = new Schema(name, attributes, index);
         c.addSchema(new_table);
         return "SUCCESS";
