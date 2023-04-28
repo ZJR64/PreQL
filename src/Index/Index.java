@@ -93,7 +93,11 @@ public class Index {
     }
 
     public void updateIndex(ArrayList<Record> records, int pageNumber) {
-        //TODO update the index of whole page
+        for (int i = 0; i < records.size(); i++ ){
+            Object key = records.get(i).getPrimaryKey();
+            removeFromIndex(key);
+            addToIndex(key, pageNumber, i);
+        }
     }
 
     public byte[] toBytes(){
