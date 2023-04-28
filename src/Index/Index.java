@@ -35,12 +35,21 @@ public class Index {
         this.size = buffer.getInt();
     }
 
-    public void addToIndex(Object primaryKeyValue) {
-        //TODO add to the tree
+    public void addToIndex(Object primaryKeyValue, int pageNum, int index) {
+        //get leaf node
+        Node currentNode = getToLeafNode(primaryKeyValue);
+        Map<Object, Integer> temp = currentNode.getPageNums();
+        if (temp.size() > size - 2) {
+
+        }
     }
 
     public void removeFromIndex(Object primaryKeyValue) {
         //TODO remove from the tree
+    }
+
+    public void splitNode() {
+        //TODO split node and add value to parent
     }
 
     public Node getToLeafNode(Object primaryKeyValue) {
@@ -66,23 +75,8 @@ public class Index {
     }
 
     public int[] find(Object primaryKeyValue) {
-        //setup initial
-        byte[] nodeBytes = bufferManager.getPage(pageName, root);
-        Node currentNode = new Node(nodeBytes);
-
-        //loop through internal
-        while (currentNode.isInternal()) {
-            for (Map.Entry<Object, Integer> entry : currentNode.getPageNums().entrySet()) {
-                Object key = entry.getKey();
-                if (lessThan(key, primaryKeyValue)) {
-                    nodeBytes = bufferManager.getPage(pageName, entry.getValue());
-                    currentNode = new Node(nodeBytes);
-                    break;
-                }
-            }
-            nodeBytes = bufferManager.getPage(pageName, currentNode.getFinalValue());
-            currentNode = new Node(nodeBytes);
-        }
+        //get leaf node
+        Node currentNode = getToLeafNode(primaryKeyValue);
 
         //get exact value
         for (Map.Entry<Object, Integer> entry : currentNode.getPageNums().entrySet()) {
