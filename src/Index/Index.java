@@ -92,7 +92,7 @@ public class Index {
     public Node getToLeafNode(Object primaryKeyValue) {
         //setup initial
         byte[] nodeBytes = bufferManager.getPage(pageName, root);
-        Node currentNode = new Node(nodeBytes);
+        Node currentNode = new Node(nodeBytes, keyType);
 
         //loop through internal
         while (currentNode.isInternal()) {
@@ -100,12 +100,12 @@ public class Index {
                 Object key = entry.getKey();
                 if (lessThan(key, primaryKeyValue)) {
                     nodeBytes = bufferManager.getPage(pageName, entry.getValue());
-                    currentNode = new Node(nodeBytes);
+                    currentNode = new Node(nodeBytes, keyType);
                     break;
                 }
             }
             nodeBytes = bufferManager.getPage(pageName, currentNode.getFinalValue());
-            currentNode = new Node(nodeBytes);
+            currentNode = new Node(nodeBytes, keyType);
         }
 
         return currentNode;
@@ -166,7 +166,11 @@ public class Index {
      * @param pageNumber The pagenumber of ...
      */
     public void updateIndex(ArrayList<Record> records, int pageNumber) {
-        //TODO update the index of whole page
+        for (int i = 0; i < records.size(); i++ ){
+            Object key = records.get(i).getPrimaryKey();
+            removeFromIndex(key);
+            addToIndex(key, pageNumber, i);
+        }
     }
 
     /**
