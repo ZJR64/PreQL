@@ -41,16 +41,33 @@ public class Index {
         //setup initial
         Node parentNode = null;
         byte[] nodeBytes = bufferManager.getPage(pageName, root);
-        Node currentNode = new Node(false);
+        Node currentNode = new Node(nodeBytes);
 
+        //loop through internal
         while (currentNode.isInternal()) {
             for (Map.Entry<Object, Integer> entry : currentNode.getPageNums().entrySet()) {
                 Object key = entry.getKey();
                 if (lessThan(key, primaryKeyValue)) {
-
+                    nodeBytes = bufferManager.getPage(pageName, entry.getValue());
+                    currentNode = new Node(nodeBytes);
+                    break;
                 }
             }
+            nodeBytes = bufferManager.getPage(pageName, currentNode.getFinalValue());
+            currentNode = new Node(nodeBytes);
         }
+
+        //get exact value
+        for (Map.Entry<Object, Integer> entry : currentNode.getPageNums().entrySet()) {
+            Object key = entry.getKey();
+            if (equals(key, primaryKeyValue)) {
+                int[] results = new int[2];
+                results[0] = currentNode.getPageNums().get(key);
+                results[1] = currentNode.getIndexes().get(key);
+                return results;
+            }
+        }
+
         return null;
     }
 

@@ -38,6 +38,14 @@ public class Node {
         this.indexes = indexes;
     }
 
+    public Integer getFinalValue() {
+        return finalValue;
+    }
+
+    public void setFinalValue(Integer finalValue) {
+        this.finalValue = finalValue;
+    }
+
     public boolean isInternal() {
         return internal;
     }
