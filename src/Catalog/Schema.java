@@ -37,7 +37,7 @@ public class Schema {
         this.openPages = new ArrayList<>();
         this.pages = 0;
         this.records = 0;
-        this.index = new Index(bufferManager, name, this.getKey().getType());
+        this.index = new Index(bufferManager, name, this.getKey().getType(), this.getKey().getSize());
     }
 
     /**

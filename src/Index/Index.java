@@ -14,12 +14,17 @@ public class Index {
     private String pageName;
     private BufferManager bufferManager;
     private String keyType;
+    private int size;
 
-    public Index(BufferManager bufferManager, String tableName, String keyType) {
+    public Index(BufferManager bufferManager, String tableName, String keyType, int keySize) {
         this.bufferManager = bufferManager;
         root = 0;
         this.pageName = tableName + ".idx";
         this.keyType = keyType;
+
+        //get N for the tree
+        int pairSize = keySize + Integer.BYTES;
+        this.size = (int) (Math.floor(bufferManager.getPageSize()/ pairSize) - 1);
     }
 
     public Index(BufferManager bufferManager, String tableName, String keyType, ByteBuffer buffer) {
@@ -27,6 +32,7 @@ public class Index {
         this.root = buffer.getInt();
         this.pageName = tableName + ".idx";
         this.keyType = keyType;
+        this.size = buffer.getInt();
     }
 
     public void addToIndex(Object primaryKeyValue) {
@@ -37,9 +43,30 @@ public class Index {
         //TODO remove from the tree
     }
 
+    public Node getToLeafNode(Object primaryKeyValue) {
+        //setup initial
+        byte[] nodeBytes = bufferManager.getPage(pageName, root);
+        Node currentNode = new Node(nodeBytes);
+
+        //loop through internal
+        while (currentNode.isInternal()) {
+            for (Map.Entry<Object, Integer> entry : currentNode.getPageNums().entrySet()) {
+                Object key = entry.getKey();
+                if (lessThan(key, primaryKeyValue)) {
+                    nodeBytes = bufferManager.getPage(pageName, entry.getValue());
+                    currentNode = new Node(nodeBytes);
+                    break;
+                }
+            }
+            nodeBytes = bufferManager.getPage(pageName, currentNode.getFinalValue());
+            currentNode = new Node(nodeBytes);
+        }
+
+        return currentNode;
+    }
+
     public int[] find(Object primaryKeyValue) {
         //setup initial
-        Node parentNode = null;
         byte[] nodeBytes = bufferManager.getPage(pageName, root);
         Node currentNode = new Node(nodeBytes);
 
@@ -78,6 +105,7 @@ public class Index {
     public byte[] toBytes(){
         ByteBuffer buffer = ByteBuffer.wrap(new byte[getIndexByteSize()]);
         buffer.putInt(root);
+        buffer.putInt(size);
         return buffer.array();
     }
 
@@ -181,6 +209,7 @@ public class Index {
     }
 
     public int getIndexByteSize() {
-        return Integer.BYTES;
+        //count both root int and int representing size
+        return Integer.BYTES*2;
     }
 }
