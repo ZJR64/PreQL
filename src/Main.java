@@ -6,7 +6,7 @@ package src;
  * @author Zak Rutherford zjr6302@rit.edu
  */
 public class Main {
-    static String helpMessage = "java Main <db loc> <page size> <buffer size>";
+    static String helpMessage = "java Main <db loc> <page size> <buffer size> <indexing>";
     /**
      * The main method.  It checks the number of command line arguments,
      * then runs the database.

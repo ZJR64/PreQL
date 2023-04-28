@@ -108,6 +108,9 @@ public class StorageManager {
      */
     public ArrayList<Record> getRecords(String tableName, WhereClause where) {
         Schema schema = c.getSchema(tableName);
+        if(schema == null){
+            return null;
+        }
         ArrayList<Attribute> attributes = schema.getAttributes();
 
         //change attribute names
@@ -164,6 +167,9 @@ public class StorageManager {
         ArrayList<String> prints = new ArrayList<>();
         if (columns[0].equals("*")){
             for (String s : tableNames) {
+                if(c.getSchema(s) == null){
+                    return "No such table " + s.concat("\nERROR");
+                }
                 for (Attribute a : c.getSchema(s).getAttributes()) {
                     prints.add(a.getName());
                 }
