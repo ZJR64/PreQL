@@ -1,18 +1,22 @@
 package src.Index;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
 public class Node {
 
-    boolean internal;
-    Integer parent;
-    Map<Object, Integer> pageNums;
-    Map<Object, Integer> indexes;
-    Integer finalValue;
+    private boolean internal;
+    private Integer parent;
+    private Map<Object, Integer> pageNums;
+    private Map<Object, Integer> indexes;
+    private Integer finalValue;
+    private String keyType;
 
-    public Node(boolean isInternal, Integer parent) {
+    public Node(boolean isInternal, Integer parent, String primaryKeyType) {
         //TODO make a new node
         pageNums = new HashMap<Object, Integer>();
         indexes = new HashMap<Object, Integer>();
@@ -21,7 +25,7 @@ public class Node {
         this.parent = parent;
     }
 
-    public Node(byte[] bytes) {
+    public Node(byte[] bytes, String primaryKeyType) {
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
 
         //get isInternal
@@ -40,20 +44,24 @@ public class Node {
         int numValues = buffer.getInt();
 
         //get pageNums
+        this.pageNums = new HashMap<Object, Integer>();
         for (int i = 0; i < numValues; i++) {
             //TODO
-            //convert bytes to object
-            //store in map
+            Object key = convertFromBytes(buffer);
+            int value = buffer.getInt();
+            pageNums.put(key, value);
         }
 
         //get number of indexes
         numValues = buffer.getInt();
 
         //get indexes
+        this.indexes = new HashMap<Object, Integer>();
         for (int i = 0; i < numValues; i++) {
             //TODO
-            //convert bytes to object
-            //store in map
+            Object key = convertFromBytes(buffer);
+            int value = buffer.getInt();
+            indexes.put(key, value);
         }
 
         //get final value
@@ -119,7 +127,8 @@ public class Node {
 
         //set pageNums
         for (Map.Entry<Object, Integer> entry : pageNums.entrySet()) {
-            putObjectBytes(buffer, entry.getKey());
+            //set key
+            buffer.put(convertToBytes(entry.getKey()));
             //set page num
             buffer.putInt(entry.getValue());
         }
@@ -128,10 +137,11 @@ public class Node {
         buffer.putInt(indexes.size());
 
         //set indexes
-        for (int i = 0; i < indexes.size(); i++) {
-            //TODO
-            //convert bytes to object
-            //store in database
+        for (Map.Entry<Object, Integer> entry : indexes.entrySet()) {
+            //set key
+            buffer.put(convertToBytes(entry.getKey()));
+            //set page num
+            buffer.putInt(entry.getValue());
         }
 
         //set final value
@@ -140,8 +150,87 @@ public class Node {
         return buffer.array();
     }
 
-    public void putObjectBytes(ByteBuffer buffer, Object keyValue) {
-        //TODO
+    // Convert object to byte[]
+    public byte[] convertToBytes(Object keyValue) {
+        if (keyType.contains("char")) {
+            //string
+            String key = (String) keyValue;
+            byte[] stringBytes = key.getBytes();
+            ByteBuffer buffer = ByteBuffer.wrap(new byte[Integer.BYTES + stringBytes.length]);
+            buffer.putInt(stringBytes.length);
+            buffer.put(stringBytes);
+
+            return buffer.array();
+        }
+        else if (keyType.equalsIgnoreCase("integer")) {
+            //integer
+            int key = (int) keyValue;
+
+            ByteBuffer buffer = ByteBuffer.wrap(new byte[Integer.BYTES * 2]);
+            buffer.putInt(Integer.BYTES);
+            buffer.putInt(key);
+            return buffer.array();
+        }
+        else if (keyType.equalsIgnoreCase("boolean")) {
+            //boolean
+            boolean key = (boolean) keyValue;
+
+            ByteBuffer buffer = ByteBuffer.wrap(new byte[Integer.BYTES + Integer.BYTES]);
+            buffer.putInt(Integer.BYTES);
+            if (key) {
+                buffer.putInt(1);
+            }
+            else {
+                buffer.putInt(0);
+            }
+            return buffer.array();
+        }
+        else {
+            //double
+            double key = (double) keyValue;
+
+            ByteBuffer buffer = ByteBuffer.wrap(new byte[Integer.BYTES + Double.BYTES]);
+            buffer.putInt(Double.BYTES);
+            buffer.putDouble(key);
+            return buffer.array();
+        }
+    }
+
+    // Convert byte[] to object
+    public Object convertFromBytes(ByteBuffer buffer) {
+        //get size
+        int size = buffer.getInt();
+
+        if (keyType.contains("char")) {
+            //string
+            byte[] stringArray = new byte[size];
+            buffer.get(stringArray);
+            String key = new String(stringArray);
+
+            return key;
+        }
+        else if (keyType.equalsIgnoreCase("integer")) {
+            //integer
+            int key = buffer.getInt();
+            return key;
+        }
+        else if (keyType.equalsIgnoreCase("boolean")) {
+            //boolean
+            int key = buffer.getInt();
+
+            if (key == 1) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        else {
+            //double
+            double key = buffer.getDouble();
+
+            return key;
+        }
     }
 
     public int getNodeByteSize() {
@@ -149,7 +238,7 @@ public class Node {
 
         //go through entire file
         for (Map.Entry<Object, Integer> entry : this.getPageNums().entrySet()) {
-            //TODO store primary object
+            size += convertToBytes(entry.getKey()).length;
             size += Integer.BYTES;
         }
 

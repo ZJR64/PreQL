@@ -322,6 +322,10 @@ public class Schema {
         return arraySize;
     }
 
+    public Index getIndex() {
+        return this.index;
+    }
+
     public void addAttribute(Attribute attribute) {
         attributes.add(attribute);
     }
