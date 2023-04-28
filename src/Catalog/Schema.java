@@ -30,14 +30,14 @@ public class Schema {
      * @param name the name of the table.
      * @param attributes the list of non-key attributes for the table.
      */
-    public Schema (String name, ArrayList<Attribute> attributes, Index index) {
+    public Schema (String name, ArrayList<Attribute> attributes, BufferManager bufferManager) {
         this.name = name;
         this.attributes = attributes;
         this.pageOrder = new ArrayList<>();
         this.openPages = new ArrayList<>();
         this.pages = 0;
         this.records = 0;
-        this.index = index;
+        this.index = new Index(bufferManager, name, this.getKey().getType());
     }
 
     /**
@@ -81,7 +81,7 @@ public class Schema {
         }
 
         //get index
-        this.index = new Index(bufferManager, buffer, name);
+        this.index = new Index(bufferManager, name, this.getKey().getType(), buffer);
     }
 
     /**

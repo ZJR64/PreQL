@@ -8,12 +8,13 @@ public class Node {
     boolean internal;
     Map<Object, Integer> pageNums;
     Map<Object, Integer> indexes;
-    Integer FinalValue;
+    Integer finalValue;
 
     public Node(boolean isInternal) {
         //TODO make a new node
         pageNums = new HashMap<Object, Integer>();
         indexes = new HashMap<Object, Integer>();
+        finalValue = null;
         this.internal = isInternal;
     }
 
@@ -48,5 +49,23 @@ public class Node {
     public byte[] toBytes() {
         //TODO write node to bytes
         return null;
+    }
+
+    public int getNodeByteSize() {
+        int size = 0;
+
+        //go through entire file
+        for (Map.Entry<Object, Integer> entry : this.getPageNums().entrySet()) {
+            //TODO store primary object
+            size += Integer.BYTES;
+        }
+
+        //add final value
+        if (finalValue != null) {
+            size += Integer.BYTES;
+        }
+
+        //return size
+        return size;
     }
 }
