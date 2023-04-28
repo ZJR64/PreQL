@@ -33,6 +33,7 @@ public class StorageManager {
      * @return A string reporting the success/failure of the command.
      */
     public String insert(String tableName, ArrayList<ArrayList<String>> tuples) {
+
         Schema table = c.getSchema(tableName);
         Map<String, Object> attributes;
         if(table == null){
@@ -40,9 +41,9 @@ public class StorageManager {
         }
         String fileName = table.getFileName();
 
-        for(ArrayList<String> tuple : tuples){  // for tuple in tuples, for loop will create tuples into records.
+        for(ArrayList<String> tuple : tuples){                      // for tuple in tuples, for loop will create tuples into records.
             attributes = StorageManagerHelper.checkAttributes(table, tuple, bm);
-            if(attributes != null){ // we're good, the tuple is valid and we can make the record.
+            if(attributes != null){                                 // we're good, the tuple is valid and we can make the record.
                 //check if first page
                 if(table.getPages() == 0){
                     bm.addPage(fileName, table.getOpenPages());
@@ -77,6 +78,14 @@ public class StorageManager {
             }
         }
         return "SUCCESS";
+    }
+
+    /** if Indexing is on for the database, then insertions will occur using
+     * indexing
+     * @return A string reporting success or failure of the operation.
+     */
+    private String indexInsert(){
+        return null;
     }
 
 
