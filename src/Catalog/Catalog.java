@@ -33,9 +33,8 @@ public class Catalog {
         this.schemas = new ArrayList<Schema>();
         this.catPath = catPath;
         this.indexing = indexing;
-        if (indexing) {
-            this.bufferManager = bufferManager;
-        }
+        this.bufferManager = bufferManager;
+
         if (Helper.checkFile(catPath)) {
             //make the catalog read from file
             byte[] byteArray;
