@@ -110,7 +110,7 @@ public class Database {
 
         //create catalog
         String catPath = location + "\\catalog";
-        this.catalog = new Catalog(catPath, pageSize, false, new BufferManager(pageSize, bufferSize, location));
+        this.catalog = new Catalog(catPath, pageSize, indexing, new BufferManager(pageSize, bufferSize, location));
         BufferManager bm = new BufferManager(pageSize, bufferSize, location);
         this.storageManager = new StorageManager(bm, this.catalog, this.indexing);
     }

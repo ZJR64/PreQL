@@ -236,16 +236,31 @@ public class Node {
     public int getNodeByteSize() {
         int size = 0;
 
-        //go through entire file
-        for (Map.Entry<Object, Integer> entry : this.getPageNums().entrySet()) {
-            size += convertToBytes(entry.getKey()).length;
+        //count isInternal
+        size += Integer.BYTES;
+
+        //count parent
+        size += Integer.BYTES;
+
+        //count number of pageNums
+        size += Integer.BYTES;
+
+        //count pageNums
+        for (Map.Entry<Object, Integer> entry : pageNums.entrySet()) {
             size += Integer.BYTES;
         }
 
-        //add final value
-        if (finalValue != null) {
+        //countnumber of pageNums
+        size += Integer.BYTES;
+
+        //count indexes
+        for (Map.Entry<Object, Integer> entry : indexes.entrySet()) {
             size += Integer.BYTES;
         }
+
+        //count final value
+        size += Integer.BYTES;
+
 
         //return size
         return size;
