@@ -55,7 +55,8 @@ public class Node {
             //TODO
             Object key = convertFromBytes(buffer);
             int value = buffer.getInt();
-            pageNums.put(key, value);
+            TreeMapObj toBePut = new TreeMapObj(primaryKeyType, key);
+            pageNums.put(toBePut, value);
         }
 
         //get number of indexes
@@ -67,7 +68,8 @@ public class Node {
             //TODO
             Object key = convertFromBytes(buffer);
             int value = buffer.getInt();
-            indexes.put(key, value);
+            TreeMapObj toBePut = new TreeMapObj(primaryKeyType, key);
+            indexes.put(toBePut, value);
         }
 
         //get final value
