@@ -42,7 +42,7 @@ public class Index {
 
         //create first node
         bufferManager.addPage(pageName, openPages);
-        Node rootNode = new Node(false, -1, keyType);
+        Node rootNode = new Node(false, -1, keyType, 0);
         bufferManager.writePage(pageName, root, rootNode.toBytes());
     }
 
@@ -91,7 +91,7 @@ public class Index {
         temp.put(primaryKeyValue, index);
         currentNode.setIndexes(temp);
 
-        bufferManager.writePage(pageName, 0, currentNode.toBytes());
+        bufferManager.writePage(pageName, currentNode.getSelf(), currentNode.toBytes());
     }
 
     /**
@@ -114,6 +114,8 @@ public class Index {
         if (temp.size() < Math.ceil((size - 1)/2)) {
             //TODO merge the leaf
         }
+
+        bufferManager.writePage(pageName, currentNode.getSelf(), currentNode.toBytes());
     }
 
     /**
@@ -132,7 +134,7 @@ public class Index {
     public Node getToLeafNode(Object primaryKeyValue) {
         //setup initial
         byte[] nodeBytes = bufferManager.getPage(pageName, root);
-        Node currentNode = new Node(nodeBytes, keyType);
+        Node currentNode = new Node(nodeBytes, keyType, root);
 
         //loop through internal
         while (currentNode.isInternal()) {
@@ -140,12 +142,12 @@ public class Index {
                 Object key = entry.getKey();
                 if (lessThan(key, primaryKeyValue)) {
                     nodeBytes = bufferManager.getPage(pageName, entry.getValue());
-                    currentNode = new Node(nodeBytes, keyType);
+                    currentNode = new Node(nodeBytes, keyType, entry.getValue());
                     break;
                 }
             }
             nodeBytes = bufferManager.getPage(pageName, currentNode.getFinalValue());
-            currentNode = new Node(nodeBytes, keyType);
+            currentNode = new Node(nodeBytes, keyType, currentNode.getFinalValue());
         }
 
         return currentNode;
