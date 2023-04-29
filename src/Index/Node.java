@@ -166,7 +166,8 @@ public class Node {
     public byte[] convertToBytes(Object keyValue) {
         if (keyType.contains("char")) {
             //string
-            String key = (String) keyValue;
+            TreeMapObj tmo = (TreeMapObj) keyValue;
+            String key = (String) tmo.getPrimaryKeyValue();
             byte[] stringBytes = key.getBytes();
             ByteBuffer buffer = ByteBuffer.wrap(new byte[Integer.BYTES + stringBytes.length]);
             buffer.putInt(stringBytes.length);
@@ -176,7 +177,8 @@ public class Node {
         }
         else if (keyType.equalsIgnoreCase("integer")) {
             //integer
-            int key = (int) keyValue;
+            TreeMapObj tmo = (TreeMapObj) keyValue;
+            int key = (int) tmo.getPrimaryKeyValue();
 
             ByteBuffer buffer = ByteBuffer.wrap(new byte[Integer.BYTES * 2]);
             buffer.putInt(Integer.BYTES);
@@ -185,7 +187,8 @@ public class Node {
         }
         else if (keyType.equalsIgnoreCase("boolean")) {
             //boolean
-            boolean key = (boolean) keyValue;
+            TreeMapObj tmo = (TreeMapObj) keyValue;
+            boolean key = (boolean) tmo.getPrimaryKeyValue();
 
             ByteBuffer buffer = ByteBuffer.wrap(new byte[Integer.BYTES + Integer.BYTES]);
             buffer.putInt(Integer.BYTES);
@@ -199,7 +202,8 @@ public class Node {
         }
         else {
             //double
-            double key = (double) keyValue;
+            TreeMapObj tmo = (TreeMapObj) keyValue;
+            double key = (double) tmo.getPrimaryKeyValue();
 
             ByteBuffer buffer = ByteBuffer.wrap(new byte[Integer.BYTES + Double.BYTES]);
             buffer.putInt(Double.BYTES);
