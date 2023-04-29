@@ -111,7 +111,7 @@ public class Index {
         currentNode.setIndexes(temp);
 
         //check if compliant
-        if (temp.size() < Math.ceil((size - 1)/2)) {
+        if (temp.size() < Math.ceil((size - 1)/2) && currentNode.getSelf() != root) {
             underfull(currentNode, primaryKeyValue);
         }
 
@@ -121,8 +121,50 @@ public class Index {
     /**
      * Splits a node into two when a node is full.
      */
-    public void splitNode() {
-        //TODO split node and add value to parent
+    public void splitNode(Node currentNode, boolean isInternal) {
+        //make new node
+        int newNum = bufferManager.addPage(pageName, openPages);
+        Node newNode = new Node(isInternal, currentNode.getParent(), keyType, newNum);
+
+        //split values between new node and current
+        TreeMap<Object, Integer> currentPages = currentNode.getPageNums();
+        TreeMap<Object, Integer> currentIndexes = currentNode.getPageNums();
+        TreeMap<Object, Integer> newPages = new TreeMap<Object, Integer>();
+        TreeMap<Object, Integer> newIndexes = new TreeMap<Object, Integer>();
+
+        while (currentPages.size() > newPages.size()) {
+            //get first entry
+            Map.Entry<Object, Integer> pageEntry = currentPages.firstEntry();
+            Map.Entry<Object, Integer> indexEntry = currentPages.firstEntry();
+            //remove from current
+            currentPages.remove(pageEntry.getKey());
+            currentIndexes.remove(indexEntry.getKey());
+            //add to new
+            newPages.put(pageEntry.getKey(), pageEntry.getValue());
+            newIndexes.put(indexEntry.getKey(), pageEntry.getValue());
+        }
+
+        //save new values of current
+        currentNode.setPageNums(currentPages);
+        currentNode.setIndexes(currentIndexes);
+        bufferManager.writePage(pageName, currentNode.getSelf(), currentNode.toBytes());
+
+        //save new values of new
+        newNode.setPageNums(newPages);
+        newNode.setIndexes(newIndexes);
+        bufferManager.writePage(pageName, newNode.getSelf(), newNode.toBytes());
+
+        //if root, create new root
+        if (currentNode.getSelf() == root) {
+
+        }
+        else {
+            //get parent
+            byte[] parentBytes = bufferManager.getPage(pageName, currentNode.getParent());
+            Node parentNode = new Node(parentBytes, keyType, currentNode.getParent());
+            TreeMap<Object, Integer> parentMap = parentNode.getPageNums();
+        }
+
     }
 
     public int underfull(Node current, Object primKey) {
@@ -138,6 +180,7 @@ public class Index {
             }
         }
         if (parent.getParent() == -1 && parent.getPageNums().size() <= 1){
+            //TODO changeRoot();
         }
         if (parent.getPageNums().size() < Math.ceilDiv(size, 2)){
             underfull(parent, primKey);
