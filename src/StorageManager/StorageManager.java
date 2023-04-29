@@ -111,7 +111,7 @@ public class StorageManager {
                     arr = ind.findLessThan(primaryKey);
                     int pgNum = arr[0];
                     int index = arr[1];
-                    byte [] buf = bm.getPage(fileName, pgNum);
+                    byte[] buf = bm.getPage(fileName, pgNum);
                     Page pg = new Page(pgNum, table, bm.getPageSize(), buf);
                     ind.addToIndex(primaryKey, pgNum, index);
                     pg.addRecordWithIndex(rec, index);
