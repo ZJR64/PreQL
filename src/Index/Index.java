@@ -196,6 +196,8 @@ public class Index {
         }
 
         //get less than
+
+
         for (Map.Entry<Object, Integer> entry : currentNode.getPageNums().entrySet()) {
             Object key = entry.getKey();
             if (equals(key, primaryKeyValue)) {
@@ -208,7 +210,11 @@ public class Index {
                 return results;
             }
         }
-        return null;
+
+        int[] results = new int[2];
+        results[0] = currentNode.getPageNums().lastEntry().getValue();
+        results[1] = currentNode.getIndexes().lastEntry().getValue() + 1;
+        return results;
     }
 
     /**
