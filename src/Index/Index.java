@@ -90,6 +90,8 @@ public class Index {
         temp = currentNode.getIndexes();
         temp.put(primaryKeyValue, index);
         currentNode.setIndexes(temp);
+
+        bufferManager.writePage(pageName, 0, currentNode.toBytes());
     }
 
     /**
@@ -190,10 +192,6 @@ public class Index {
         //get leaf node
         Node currentNode = getToLeafNode(primaryKeyValue);
 
-        //return if node empty
-        if (currentNode.getPageNums().size() < 1) {
-            return null;
-        }
 
         //get less than
 

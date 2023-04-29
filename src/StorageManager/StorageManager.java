@@ -35,14 +35,14 @@ public class StorageManager {
     public String insert(String tableName, ArrayList<ArrayList<String>> tuples) {
 
         Schema table = c.getSchema(tableName);
-        Map<String, Object> attributes;
         if(table == null){
             return "No such table " + tableName.concat("\nERROR");
         }
-        String fileName = table.getFileName();
         if(indexing){
             return indexInsert(table, tuples);
         }
+        String fileName = table.getFileName();
+        Map<String, Object> attributes;
         for(ArrayList<String> tuple : tuples){                      // for tuple in tuples, for loop will create tuples into records.
             attributes = StorageManagerHelper.checkAttributes(table, tuple, bm);
             if(attributes != null){                                 // we're good, the tuple is valid and we can make the record.
@@ -91,7 +91,36 @@ public class StorageManager {
      * @return A string reporting success or failure of the operation.
      */
     private String indexInsert(Schema table, ArrayList<ArrayList<String>> tuples){
-        return null;
+        Map<String, Object> attributes;
+        String fileName = table.getFileName();
+        Index ind = table.getIndex();
+        for(ArrayList<String> tuple : tuples){
+            attributes = StorageManagerHelper.checkAttributes(table, tuple, bm);
+            if(attributes != null){
+                int[] arr;
+                Record rec = new Record(table, attributes);
+                Object primaryKey = rec.getPrimaryKey();
+                if(table.getPages() == 0){
+                    bm.addPage(fileName, table.getOpenPages());
+                    Page pg = new Page(0, table, bm.getPageSize(), 0);
+                    pg.addRecord(rec);
+                    bm.writePage(fileName, 0, pg.getBytes());
+                    ind.addToIndex(primaryKey, 0, 0);
+
+                }
+                else{
+                    arr = ind.findLessThan(primaryKey);
+                    int pgNum = arr[0];
+                    int index = arr[1];
+                    ind.addToIndex(primaryKey, pgNum, index);
+                }
+
+            }
+            else{
+                return "\nERROR";
+            }
+        }
+        return "SUCCESS";
     }
 
 

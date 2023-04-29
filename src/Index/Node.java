@@ -20,9 +20,10 @@ public class Node {
     public Node(boolean isInternal, Integer parent, String primaryKeyType) {
         pageNums = new TreeMap<Object, Integer>();
         indexes = new TreeMap<Object, Integer>();
-        finalValue = null;
+        finalValue = -1;
         this.internal = isInternal;
         this.parent = parent;
+        this.keyType = primaryKeyType;
     }
 
     public Node(byte[] bytes, String primaryKeyType) {
@@ -42,6 +43,8 @@ public class Node {
 
         //get number of pageNums
         int numValues = buffer.getInt();
+
+        this.keyType = primaryKeyType;
 
         //get pageNums
         this.pageNums = new TreeMap<Object, Integer>();
@@ -247,6 +250,7 @@ public class Node {
 
         //count pageNums
         for (Map.Entry<Object, Integer> entry : pageNums.entrySet()) {
+            size += convertToBytes(entry.getKey()).length;
             size += Integer.BYTES;
         }
 
@@ -255,6 +259,7 @@ public class Node {
 
         //count indexes
         for (Map.Entry<Object, Integer> entry : indexes.entrySet()) {
+            size += convertToBytes(entry.getKey()).length;
             size += Integer.BYTES;
         }
 
