@@ -365,9 +365,21 @@ public class Index {
     public void updateIndex(ArrayList<Record> records, int pageNumber) {
         for (int i = 0; i < records.size(); i++ ){
             Object key = records.get(i).getPrimaryKey();
-            removeFromIndex(key);
-            addToIndex(key, pageNumber, i);
+            update(key, pageNumber, i);
         }
+    }
+
+    private void update(Object primaryKeyValue, int page, int index) {
+        Node currentNode = getToLeafNode(primaryKeyValue);
+        TreeMap<Object, Integer> pages = currentNode.getPageNums();
+        TreeMap<Object, Integer> indexes = currentNode.getIndexes();
+        //set values
+        pages.put(primaryKeyValue, page);
+        indexes.put(primaryKeyValue, index);
+        //save values
+        currentNode.setIndexes(indexes);
+        currentNode.setPageNums(pages);
+        bufferManager.writePage(pageName, currentNode.getSelf(), currentNode.toBytes());
     }
 
     /**
