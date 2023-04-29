@@ -100,12 +100,13 @@ public class StorageManager {
                 int[] arr;
                 Record rec = new Record(table, attributes);
                 Object primaryKey = rec.getPrimaryKey();
+                String type = rec.getKeyType();
                 if(table.getPages() == 0){
                     bm.addPage(fileName, table.getOpenPages());
                     Page pg = new Page(0, table, bm.getPageSize(), 0);
                     pg.addRecord(rec);
                     bm.writePage(fileName, 0, pg.getBytes());
-                    ind.addToIndex(primaryKey, 0, 0);
+                    ind.addToIndex(primaryKey, 0, 0, type);
                 }
                 else{
                     arr = ind.findLessThan(primaryKey);
@@ -113,7 +114,7 @@ public class StorageManager {
                     int index = arr[1];
                     byte[] buf = bm.getPage(fileName, pgNum);
                     Page pg = new Page(pgNum, table, bm.getPageSize(), buf);
-                    ind.addToIndex(primaryKey, pgNum, index);
+                    ind.addToIndex(primaryKey, pgNum, index, type);
                     pg.addRecordWithIndex(rec, index);
                     byte [] changedBuf = pg.getBytes();
                     bm.writePage(fileName, pgNum, changedBuf);

@@ -13,14 +13,14 @@ public class Node {
     private boolean internal;
     private Integer parent;
     private Integer self;
-    private TreeMap<Object, Integer> pageNums;
-    private TreeMap<Object, Integer> indexes;
+    private TreeMap<TreeMapObj, Integer> pageNums;
+    private TreeMap<TreeMapObj, Integer> indexes;
     private Integer finalValue;
     private String keyType;
 
     public Node(boolean isInternal, Integer parent, String primaryKeyType, int self) {
-        pageNums = new TreeMap<Object, Integer>();
-        indexes = new TreeMap<Object, Integer>();
+        pageNums = new TreeMap<TreeMapObj, Integer>();
+        indexes = new TreeMap<TreeMapObj, Integer>();
         finalValue = -1;
         this.internal = isInternal;
         this.parent = parent;
@@ -50,7 +50,7 @@ public class Node {
         this.keyType = primaryKeyType;
 
         //get pageNums
-        this.pageNums = new TreeMap<Object, Integer>();
+        this.pageNums = new TreeMap<TreeMapObj, Integer>();
         for (int i = 0; i < numValues; i++) {
             //TODO
             Object key = convertFromBytes(buffer);
@@ -62,7 +62,7 @@ public class Node {
         numValues = buffer.getInt();
 
         //get indexes
-        this.indexes = new TreeMap<Object, Integer>();
+        this.indexes = new TreeMap<TreeMapObj, Integer>();
         for (int i = 0; i < numValues; i++) {
             //TODO
             Object key = convertFromBytes(buffer);
@@ -74,19 +74,19 @@ public class Node {
         this.finalValue = buffer.getInt();
     }
 
-    public TreeMap<Object, Integer> getPageNums() {
+    public TreeMap<TreeMapObj, Integer> getPageNums() {
         return pageNums;
     }
 
-    public void setPageNums(TreeMap<Object, Integer> pageNums) {
+    public void setPageNums(TreeMap<TreeMapObj, Integer> pageNums) {
         this.pageNums = pageNums;
     }
 
-    public TreeMap<Object, Integer> getIndexes() {
+    public TreeMap<TreeMapObj, Integer> getIndexes() {
         return pageNums;
     }
 
-    public void setIndexes(TreeMap<Object, Integer> indexes) {
+    public void setIndexes(TreeMap<TreeMapObj, Integer> indexes) {
         this.indexes = indexes;
     }
 
@@ -136,7 +136,7 @@ public class Node {
         buffer.putInt(pageNums.size());
 
         //set pageNums
-        for (Map.Entry<Object, Integer> entry : pageNums.entrySet()) {
+        for (Map.Entry<TreeMapObj, Integer> entry : pageNums.entrySet()) {
             //set key
             buffer.put(convertToBytes(entry.getKey()));
             //set page num
@@ -147,7 +147,7 @@ public class Node {
         buffer.putInt(indexes.size());
 
         //set indexes
-        for (Map.Entry<Object, Integer> entry : indexes.entrySet()) {
+        for (Map.Entry<TreeMapObj, Integer> entry : indexes.entrySet()) {
             //set key
             buffer.put(convertToBytes(entry.getKey()));
             //set page num
@@ -256,7 +256,7 @@ public class Node {
         size += Integer.BYTES;
 
         //count pageNums
-        for (Map.Entry<Object, Integer> entry : pageNums.entrySet()) {
+        for (Map.Entry<TreeMapObj, Integer> entry : pageNums.entrySet()) {
             size += convertToBytes(entry.getKey()).length;
             size += Integer.BYTES;
         }
@@ -265,7 +265,7 @@ public class Node {
         size += Integer.BYTES;
 
         //count indexes
-        for (Map.Entry<Object, Integer> entry : indexes.entrySet()) {
+        for (Map.Entry<TreeMapObj, Integer> entry : indexes.entrySet()) {
             size += convertToBytes(entry.getKey()).length;
             size += Integer.BYTES;
         }

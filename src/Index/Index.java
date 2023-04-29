@@ -1,5 +1,6 @@
 package src.Index;
 
+import com.sun.source.tree.Tree;
 import src.StorageManager.BufferManager;
 import src.StorageManager.Record;
 
@@ -76,19 +77,20 @@ public class Index {
      * @param pageNum
      * @param index
      */
-    public void addToIndex(Object primaryKeyValue, int pageNum, int index) {
+    public void addToIndex(Object primaryKeyValue, int pageNum, int index, String type) {
         //get leaf node
         Node currentNode = getToLeafNode(primaryKeyValue);
-        TreeMap<Object, Integer> temp = currentNode.getPageNums();
+        TreeMap<TreeMapObj, Integer> temp = currentNode.getPageNums();
         if (temp.size() > size - 2) {
             splitNode(currentNode, false);
         }
 
+        TreeMapObj newVal = new TreeMapObj(type,primaryKeyValue);
         //add values
-        temp.put(primaryKeyValue, pageNum);
+        temp.put(newVal, pageNum);
         currentNode.setPageNums(temp);
         temp = currentNode.getIndexes();
-        temp.put(primaryKeyValue, index);
+        temp.put(newVal, index);
         currentNode.setIndexes(temp);
 
         bufferManager.writePage(pageName, currentNode.getSelf(), currentNode.toBytes());
@@ -98,16 +100,16 @@ public class Index {
      * Removes the node associated with the primary key from the B+ tree.
      * @param primaryKeyValue The primary key value of the node being removed.
      */
-    public void removeFromIndex(Object primaryKeyValue) {
+    public void removeFromIndex(Object primaryKeyValue, String type) {
         //get leaf node
         Node currentNode = getToLeafNode(primaryKeyValue);
-        TreeMap<Object, Integer> temp = currentNode.getPageNums();
-
+        TreeMap<TreeMapObj, Integer> temp = currentNode.getPageNums();
+        TreeMapObj toBeRemoved = new TreeMapObj(type, primaryKeyValue);
         //remove values
-        temp.remove(primaryKeyValue);
+        temp.remove(toBeRemoved);
         currentNode.setPageNums(temp);
         temp = currentNode.getIndexes();
-        temp.remove(primaryKeyValue);
+        temp.remove(toBeRemoved);
         currentNode.setIndexes(temp);
 
         //check if compliant
@@ -127,20 +129,20 @@ public class Index {
         Node newNode = new Node(isInternal, currentNode.getParent(), keyType, newNum);
 
         //split values between new node and current
-        TreeMap<Object, Integer> currentPages = currentNode.getPageNums();
-        TreeMap<Object, Integer> currentIndexes = currentNode.getPageNums();
-        TreeMap<Object, Integer> newPages = new TreeMap<Object, Integer>();
-        TreeMap<Object, Integer> newIndexes = new TreeMap<Object, Integer>();
+        TreeMap<TreeMapObj, Integer> currentPages = currentNode.getPageNums();
+        TreeMap<TreeMapObj, Integer> currentIndexes = currentNode.getPageNums();
+        TreeMap<TreeMapObj, Integer> newPages = new TreeMap<TreeMapObj, Integer>();
+        TreeMap<TreeMapObj, Integer> newIndexes = new TreeMap<TreeMapObj, Integer>();
 
         while (currentPages.size() > newPages.size()) {
             //transfer indexes only when not internal
             if (!isInternal) {
-                Map.Entry<Object, Integer> indexEntry = currentPages.firstEntry();
+                Map.Entry<TreeMapObj, Integer> indexEntry = currentPages.firstEntry();
                 currentIndexes.remove(indexEntry.getKey());
                 newIndexes.put(indexEntry.getKey(), indexEntry.getValue());
             }
             //get first entry
-            Map.Entry<Object, Integer> pageEntry = currentPages.firstEntry();
+            Map.Entry<TreeMapObj, Integer> pageEntry = currentPages.firstEntry();
 
             //remove from current
             currentPages.remove(pageEntry.getKey());
@@ -163,7 +165,7 @@ public class Index {
         if (currentNode.getSelf() == this.root) {
             int newParentNum = bufferManager.addPage(pageName, openPages);
             Node newParentNode = new Node(isInternal, currentNode.getParent(), keyType, newNum);
-            TreeMap<Object, Integer> children = new TreeMap<Object, Integer>();
+            TreeMap<TreeMapObj, Integer> children = new TreeMap<TreeMapObj, Integer>();
             children.put(currentNode.getPageNums().firstKey(), newNode.getSelf());
 
             //save values
@@ -180,7 +182,7 @@ public class Index {
             Node parentNode = new Node(parentBytes, keyType, currentNode.getParent());
 
             //add new value to parent
-            TreeMap<Object, Integer> parentMap = parentNode.getPageNums();
+            TreeMap<TreeMapObj, Integer> parentMap = parentNode.getPageNums();
             parentMap.put(currentNode.getPageNums().firstKey(), newNode.getSelf());
 
             //save parent
@@ -278,7 +280,7 @@ public class Index {
 
         //loop through internal
         while (currentNode.isInternal()) {
-            for (Map.Entry<Object, Integer> entry : currentNode.getPageNums().entrySet()) {
+            for (Map.Entry<TreeMapObj, Integer> entry : currentNode.getPageNums().entrySet()) {
                 Object key = entry.getKey();
                 if (lessThan(key, primaryKeyValue)) {
                     nodeBytes = bufferManager.getPage(pageName, entry.getValue());
@@ -310,7 +312,7 @@ public class Index {
         }
 
         //get exact value
-        for (Map.Entry<Object, Integer> entry : currentNode.getPageNums().entrySet()) {
+        for (Map.Entry<TreeMapObj, Integer> entry : currentNode.getPageNums().entrySet()) {
             Object key = entry.getKey();
             if (equals(key, primaryKeyValue)) {
                 int[] results = new int[2];
@@ -338,7 +340,7 @@ public class Index {
         //get less than
 
 
-        for (Map.Entry<Object, Integer> entry : currentNode.getPageNums().entrySet()) {
+        for (Map.Entry<TreeMapObj, Integer> entry : currentNode.getPageNums().entrySet()) {
             Object key = entry.getKey();
             if (equals(key, primaryKeyValue)) {
                 return null;
@@ -365,17 +367,20 @@ public class Index {
     public void updateIndex(ArrayList<Record> records, int pageNumber) {
         for (int i = 0; i < records.size(); i++ ){
             Object key = records.get(i).getPrimaryKey();
-            update(key, pageNumber, i);
+            String type = records.get(i).getKeyType();
+
+            update(key, pageNumber, i, type);
         }
     }
 
-    private void update(Object primaryKeyValue, int page, int index) {
+    private void update(Object primaryKeyValue, int page, int index, String type) {
         Node currentNode = getToLeafNode(primaryKeyValue);
-        TreeMap<Object, Integer> pages = currentNode.getPageNums();
-        TreeMap<Object, Integer> indexes = currentNode.getIndexes();
+        TreeMap<TreeMapObj, Integer> pages = currentNode.getPageNums();
+        TreeMap<TreeMapObj, Integer> indexes = currentNode.getIndexes();
         //set values
-        pages.put(primaryKeyValue, page);
-        indexes.put(primaryKeyValue, index);
+        TreeMapObj toBeAdded = new TreeMapObj(type, primaryKeyValue);
+        pages.put(toBeAdded, page);
+        indexes.put(toBeAdded, index);
         //save values
         currentNode.setIndexes(indexes);
         currentNode.setPageNums(pages);
@@ -453,7 +458,7 @@ public class Index {
             }
         }
         catch (Exception e) {
-            System.err.println(e);
+            e.printStackTrace();
         }
         return false;
     }
@@ -510,7 +515,9 @@ public class Index {
                 }
             }
         }
-        catch (Exception e) {}
+        catch (Exception e) {
+            e.printStackTrace();
+        }
         return false;
     }
 

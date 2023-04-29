@@ -77,6 +77,15 @@ public class Record {
     }
 
     /**
+     * gets the type of the primaryKey.
+     * @return A string containing the type of the primarykey.
+     */
+    public String getKeyType(){
+        Attribute keyAttribute = schema.getKey();
+        return keyAttribute.getType();
+    }
+
+    /**
      * Gets the value of an attribute.
      *
      * @param name the name of the attribute.

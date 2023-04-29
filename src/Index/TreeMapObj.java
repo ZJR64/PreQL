@@ -4,7 +4,7 @@ package src.Index;
  * This is a special object for the TreeMaps to be able to properly sort, and
  * still work with primitive types (String, integer, double).
  */
-public class TreeMapObj {
+public class TreeMapObj implements Comparable<TreeMapObj> {
     private String type;
     private Object primaryKeyValue;
 
@@ -28,9 +28,9 @@ public class TreeMapObj {
         return this.primaryKeyValue;
     }
 
-    public int compareTo(Object other){
+
+    public int compareTo(TreeMapObj otherTree){
         try {
-            TreeMapObj otherTree = (TreeMapObj) other;
             if (this.type.equalsIgnoreCase(otherTree.type)) {
                 if (type.equalsIgnoreCase("String")) {
                     String thisPK = (String) primaryKeyValue;
@@ -58,4 +58,5 @@ public class TreeMapObj {
             return -10000;
         }
     }
+
 }
