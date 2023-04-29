@@ -12,22 +12,25 @@ public class Node {
 
     private boolean internal;
     private Integer parent;
+    private Integer self;
     private TreeMap<Object, Integer> pageNums;
     private TreeMap<Object, Integer> indexes;
     private Integer finalValue;
     private String keyType;
 
-    public Node(boolean isInternal, Integer parent, String primaryKeyType) {
+    public Node(boolean isInternal, Integer parent, String primaryKeyType, int self) {
         pageNums = new TreeMap<Object, Integer>();
         indexes = new TreeMap<Object, Integer>();
         finalValue = -1;
         this.internal = isInternal;
         this.parent = parent;
         this.keyType = primaryKeyType;
+        this.self = self;
     }
 
-    public Node(byte[] bytes, String primaryKeyType) {
+    public Node(byte[] bytes, String primaryKeyType, int self) {
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
+        this.self = self;
 
         //get isInternal
         int internalNum = buffer.getInt();
@@ -109,6 +112,10 @@ public class Node {
 
     public void setParent(Integer parent) {
         this.parent = parent;
+    }
+
+    public int getSelf() {
+        return self;
     }
 
     public byte[] toBytes() {
