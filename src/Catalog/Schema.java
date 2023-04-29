@@ -147,6 +147,14 @@ public class Schema {
     }
 
     /**
+     * getter method for Index.
+     *
+     * @return Index.
+     */
+    public Index getIndex(){
+        return this.index;
+    }
+    /**
      * getter method for name of the table.
      *
      * @return name of the schema.
@@ -320,10 +328,6 @@ public class Schema {
 
         //return array size
         return arraySize;
-    }
-
-    public Index getIndex() {
-        return this.index;
     }
 
     public void addAttribute(Attribute attribute) {

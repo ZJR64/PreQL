@@ -112,7 +112,7 @@ public class Index {
 
         //check if compliant
         if (temp.size() < Math.ceil((size - 1)/2)) {
-            //TODO merge the leaf
+            underfull(currentNode, primaryKeyValue);
         }
     }
 
@@ -123,12 +123,42 @@ public class Index {
         //TODO split node and add value to parent
     }
 
-    /**
-     * Gets a leaf node with the passed in primaryKeyValue
-     *
-     * @param primaryKeyValue The primaryKey value of the node being searched for.
-     * @return The node at that level
-     */
+    public int underfull(Node current, Object primKey) {
+        Node parent = new Node(bufferManager.getPage(pageName, current.getParent()), keyType);
+
+        if (mergeLeft(current, parent, primKey) != 1){
+            if (mergeRight(current, parent, primKey) != 1){
+                if (borrowLeft(current, parent, primKey) != 1){
+                    if (borrowRight(current, parent, primKey) != 1){
+                        return -1;
+                    }
+                }
+            }
+        }
+        if (parent.getParent() == -1 && parent.getPageNums().size() <= 1){
+            changeRoot();
+        }
+        if (parent.getPageNums().size() < Math.ceilDiv(size, 2)){
+            underfull(parent, primKey);
+        }
+        return 1;
+
+    }
+
+    public int mergeLeft(Node current, Node parent, Object primKey){
+
+        return 0;
+    }
+    public int mergeRight(Node current, Node parent, Object primKey){
+        return 0;
+    }
+    public int borrowLeft(Node current, Node parent, Object primKey){
+        return 0;
+    }
+    public int borrowRight(Node current, Node parent, Object primKey){
+        return 0;
+    }
+
     public Node getToLeafNode(Object primaryKeyValue) {
         //setup initial
         byte[] nodeBytes = bufferManager.getPage(pageName, root);
