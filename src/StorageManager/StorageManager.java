@@ -106,13 +106,16 @@ public class StorageManager {
                     pg.addRecord(rec);
                     bm.writePage(fileName, 0, pg.getBytes());
                     ind.addToIndex(primaryKey, 0, 0);
-
                 }
                 else{
                     arr = ind.findLessThan(primaryKey);
                     int pgNum = arr[0];
                     int index = arr[1];
+                    byte [] buf = bm.getPage(fileName, pgNum);
+                    Page pg = new Page(pgNum, table, bm.getPageSize(), buf);
                     ind.addToIndex(primaryKey, pgNum, index);
+                    pg.addRecordWithIndex(rec, index);
+                    bm.addPage(fileName, table.getOpenPages());
                 }
 
             }
