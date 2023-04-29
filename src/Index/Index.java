@@ -15,6 +15,7 @@ public class Index {
     private BufferManager bufferManager;
     private String keyType;
     private int size;
+    private ArrayList<Integer> openPages;
 
     /**
      * Constructor for a NEW B+ tree.
@@ -34,6 +35,12 @@ public class Index {
         //get N for the tree
         int pairSize = keySize + Integer.BYTES;
         this.size = (int) (Math.floor(bufferManager.getPageSize()/ pairSize) - 1);
+
+        //create open pages
+        this.openPages = new ArrayList<Integer>();
+
+        //create first node
+        bufferManager.addPage(pageName, openPages);
     }
 
     /**
@@ -50,6 +57,13 @@ public class Index {
         this.pageName = tableName + ".idx";
         this.keyType = keyType;
         this.size = buffer.getInt();
+
+        //get open pages
+        int numOpenPages = buffer.getInt();
+        this.openPages = new ArrayList<Integer>();
+        for (int i = 0; i < numOpenPages; i++) {
+            openPages.add(buffer.getInt());
+        }
     }
 
     /**
@@ -184,6 +198,14 @@ public class Index {
         ByteBuffer buffer = ByteBuffer.wrap(new byte[getIndexByteSize()]);
         buffer.putInt(root);
         buffer.putInt(size);
+
+        //set openPages
+        buffer.putInt(openPages.size());
+        for (int num: openPages) {
+            buffer.putInt(num);;
+        }
+
+        //return bytes
         return buffer.array();
     }
 
@@ -243,9 +265,6 @@ public class Index {
         }
         return false;
     }
-
-
-    //TODO returns true if primaryKey is less than primaryKeySearch
 
     /**
      * Determines whether the primarykey is less than the other primarykey.
@@ -309,6 +328,15 @@ public class Index {
      */
     public int getIndexByteSize() {
         //count both root int and int representing size
-        return Integer.BYTES*2;
+        int size = Integer.BYTES*2;
+
+        //count the open page array
+        size += Integer.BYTES;
+        for (int num: openPages) {
+            size += Integer.BYTES;
+        }
+
+        //return
+        return size;
     }
 }
