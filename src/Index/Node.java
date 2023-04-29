@@ -1,5 +1,7 @@
 package src.Index;
 
+import sun.reflect.generics.tree.Tree;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -53,10 +55,8 @@ public class Node {
         this.pageNums = new TreeMap<TreeMapObj, Integer>();
         for (int i = 0; i < numValues; i++) {
             //TODO
-            Object key = convertFromBytes(buffer);
-            int value = buffer.getInt();
-            TreeMapObj toBePut = new TreeMapObj(primaryKeyType, key);
-            pageNums.put(toBePut, value);
+            TreeMapObj key = new TreeMapObj(primaryKeyType, buffer);
+            pageNums.put(key, buffer.getInt());
         }
 
         //get number of indexes
@@ -66,10 +66,8 @@ public class Node {
         this.indexes = new TreeMap<TreeMapObj, Integer>();
         for (int i = 0; i < numValues; i++) {
             //TODO
-            Object key = convertFromBytes(buffer);
-            int value = buffer.getInt();
-            TreeMapObj toBePut = new TreeMapObj(primaryKeyType, key);
-            indexes.put(toBePut, value);
+            TreeMapObj key = new TreeMapObj(primaryKeyType, buffer);
+            indexes.put(key, buffer.getInt());
         }
 
         //get final value
@@ -140,7 +138,7 @@ public class Node {
         //set pageNums
         for (Map.Entry<TreeMapObj, Integer> entry : pageNums.entrySet()) {
             //set key
-            buffer.put(convertToBytes(entry.getKey()));
+            buffer.put(entry.getKey().toBytes());
             //set page num
             buffer.putInt(entry.getValue());
         }
@@ -151,7 +149,7 @@ public class Node {
         //set indexes
         for (Map.Entry<TreeMapObj, Integer> entry : indexes.entrySet()) {
             //set key
-            buffer.put(convertToBytes(entry.getKey()));
+            buffer.put(entry.getKey().toBytes());
             //set page num
             buffer.putInt(entry.getValue());
         }
@@ -160,93 +158,6 @@ public class Node {
         buffer.putInt(finalValue);
 
         return buffer.array();
-    }
-
-    // Convert object to byte[]
-    public byte[] convertToBytes(Object keyValue) {
-        if (keyType.contains("char")) {
-            //string
-            TreeMapObj tmo = (TreeMapObj) keyValue;
-            String key = (String) tmo.getPrimaryKeyValue();
-            byte[] stringBytes = key.getBytes();
-            ByteBuffer buffer = ByteBuffer.wrap(new byte[Integer.BYTES + stringBytes.length]);
-            buffer.putInt(stringBytes.length);
-            buffer.put(stringBytes);
-
-            return buffer.array();
-        }
-        else if (keyType.equalsIgnoreCase("integer")) {
-            //integer
-            TreeMapObj tmo = (TreeMapObj) keyValue;
-            int key = (int) tmo.getPrimaryKeyValue();
-
-            ByteBuffer buffer = ByteBuffer.wrap(new byte[Integer.BYTES * 2]);
-            buffer.putInt(Integer.BYTES);
-            buffer.putInt(key);
-            return buffer.array();
-        }
-        else if (keyType.equalsIgnoreCase("boolean")) {
-            //boolean
-            TreeMapObj tmo = (TreeMapObj) keyValue;
-            boolean key = (boolean) tmo.getPrimaryKeyValue();
-
-            ByteBuffer buffer = ByteBuffer.wrap(new byte[Integer.BYTES + Integer.BYTES]);
-            buffer.putInt(Integer.BYTES);
-            if (key) {
-                buffer.putInt(1);
-            }
-            else {
-                buffer.putInt(0);
-            }
-            return buffer.array();
-        }
-        else {
-            //double
-            TreeMapObj tmo = (TreeMapObj) keyValue;
-            double key = (double) tmo.getPrimaryKeyValue();
-
-            ByteBuffer buffer = ByteBuffer.wrap(new byte[Integer.BYTES + Double.BYTES]);
-            buffer.putInt(Double.BYTES);
-            buffer.putDouble(key);
-            return buffer.array();
-        }
-    }
-
-    // Convert byte[] to object
-    public Object convertFromBytes(ByteBuffer buffer) {
-        //get size
-        int size = buffer.getInt();
-
-        if (keyType.contains("char")) {
-            //string
-            byte[] stringArray = new byte[size];
-            buffer.get(stringArray);
-            String key = new String(stringArray);
-
-            return key;
-        }
-        else if (keyType.equalsIgnoreCase("integer")) {
-            //integer
-            int key = buffer.getInt();
-            return key;
-        }
-        else if (keyType.equalsIgnoreCase("boolean")) {
-            //boolean
-            int key = buffer.getInt();
-
-            if (key == 1) {
-                return true;
-            }
-            else {
-                return false;
-            }
-        }
-        else {
-            //double
-            double key = buffer.getDouble();
-
-            return key;
-        }
     }
 
     public int getNodeByteSize() {
@@ -263,7 +174,7 @@ public class Node {
 
         //count pageNums
         for (Map.Entry<TreeMapObj, Integer> entry : pageNums.entrySet()) {
-            size += convertToBytes(entry.getKey()).length;
+            size += entry.getKey().getByteSize();
             size += Integer.BYTES;
         }
 
@@ -272,7 +183,7 @@ public class Node {
 
         //count indexes
         for (Map.Entry<TreeMapObj, Integer> entry : indexes.entrySet()) {
-            size += convertToBytes(entry.getKey()).length;
+            size += entry.getKey().getByteSize();
             size += Integer.BYTES;
         }
 
