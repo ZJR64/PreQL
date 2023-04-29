@@ -6,20 +6,21 @@ import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 public class Node {
 
     private boolean internal;
     private Integer parent;
-    private Map<Object, Integer> pageNums;
-    private Map<Object, Integer> indexes;
+    private TreeMap<Object, Integer> pageNums;
+    private TreeMap<Object, Integer> indexes;
     private Integer finalValue;
     private String keyType;
 
     public Node(boolean isInternal, Integer parent, String primaryKeyType) {
         //TODO make a new node
-        pageNums = new HashMap<Object, Integer>();
-        indexes = new HashMap<Object, Integer>();
+        pageNums = new TreeMap<Object, Integer>();
+        indexes = new TreeMap<Object, Integer>();
         finalValue = null;
         this.internal = isInternal;
         this.parent = parent;
@@ -44,7 +45,7 @@ public class Node {
         int numValues = buffer.getInt();
 
         //get pageNums
-        this.pageNums = new HashMap<Object, Integer>();
+        this.pageNums = new TreeMap<Object, Integer>();
         for (int i = 0; i < numValues; i++) {
             //TODO
             Object key = convertFromBytes(buffer);
@@ -56,7 +57,7 @@ public class Node {
         numValues = buffer.getInt();
 
         //get indexes
-        this.indexes = new HashMap<Object, Integer>();
+        this.indexes = new TreeMap<Object, Integer>();
         for (int i = 0; i < numValues; i++) {
             //TODO
             Object key = convertFromBytes(buffer);
@@ -72,7 +73,7 @@ public class Node {
         return pageNums;
     }
 
-    public void setPageNums(Map<Object, Integer> pageNums) {
+    public void setPageNums(TreeMap<Object, Integer> pageNums) {
         this.pageNums = pageNums;
     }
 
@@ -80,7 +81,7 @@ public class Node {
         return pageNums;
     }
 
-    public void setIndexes(Map<Object, Integer> indexes) {
+    public void setIndexes(TreeMap<Object, Integer> indexes) {
         this.indexes = indexes;
     }
 

@@ -40,7 +40,9 @@ public class StorageManager {
             return "No such table " + tableName.concat("\nERROR");
         }
         String fileName = table.getFileName();
-
+        if(indexing){
+            return indexInsert(table, tuples);
+        }
         for(ArrayList<String> tuple : tuples){                      // for tuple in tuples, for loop will create tuples into records.
             attributes = StorageManagerHelper.checkAttributes(table, tuple, bm);
             if(attributes != null){                                 // we're good, the tuple is valid and we can make the record.
@@ -80,11 +82,15 @@ public class StorageManager {
         return "SUCCESS";
     }
 
-    /** if Indexing is on for the database, then insertions will occur using
-     * indexing
+    /**
+     * If Indexing is on for the database, then insertions will occur using
+     * indexing.
+     *
+     * @param table The table being inserted into
+     * @param tuples The records being inserted into the table.
      * @return A string reporting success or failure of the operation.
      */
-    private String indexInsert(){
+    private String indexInsert(Schema table, ArrayList<ArrayList<String>> tuples){
         return null;
     }
 
