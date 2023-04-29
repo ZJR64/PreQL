@@ -232,7 +232,7 @@ public class Page {
         int cutoffPoint = recordList.size() / 2;
         for (int i = cutoffPoint; i < recordList.size(); i++) {
             Record currentRecord = recordList.get(i);
-            schema.getIndex().removeFromIndex(currentRecord.getPrimaryKey());
+            schema.getIndex().removeFromIndex(currentRecord.getPrimaryKey(), record.getKeyType());
             newPage.addRecord(currentRecord);
             //update schema
             schema.subRecord();
