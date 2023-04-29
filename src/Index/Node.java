@@ -18,7 +18,6 @@ public class Node {
     private String keyType;
 
     public Node(boolean isInternal, Integer parent, String primaryKeyType) {
-        //TODO make a new node
         pageNums = new TreeMap<Object, Integer>();
         indexes = new TreeMap<Object, Integer>();
         finalValue = null;
@@ -69,7 +68,7 @@ public class Node {
         this.finalValue = buffer.getInt();
     }
 
-    public Map<Object, Integer> getPageNums() {
+    public TreeMap<Object, Integer> getPageNums() {
         return pageNums;
     }
 
@@ -77,7 +76,7 @@ public class Node {
         this.pageNums = pageNums;
     }
 
-    public Map<Object, Integer> getIndexes() {
+    public TreeMap<Object, Integer> getIndexes() {
         return pageNums;
     }
 

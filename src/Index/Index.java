@@ -7,6 +7,7 @@ import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.TreeMap;
 
 public class Index {
 
@@ -78,10 +79,17 @@ public class Index {
     public void addToIndex(Object primaryKeyValue, int pageNum, int index) {
         //get leaf node
         Node currentNode = getToLeafNode(primaryKeyValue);
-        Map<Object, Integer> temp = currentNode.getPageNums();
+        TreeMap<Object, Integer> temp = currentNode.getPageNums();
         if (temp.size() > size - 2) {
-
+            //TODO split node
         }
+
+        //add values
+        temp.put(primaryKeyValue, pageNum);
+        currentNode.setPageNums(temp);
+        temp = currentNode.getIndexes();
+        temp.put(primaryKeyValue, index);
+        currentNode.setIndexes(temp);
     }
 
     /**
@@ -89,7 +97,21 @@ public class Index {
      * @param primaryKeyValue The primary key value of the node being removed.
      */
     public void removeFromIndex(Object primaryKeyValue) {
-        //TODO remove from the tree
+        //get leaf node
+        Node currentNode = getToLeafNode(primaryKeyValue);
+        TreeMap<Object, Integer> temp = currentNode.getPageNums();
+
+        //remove values
+        temp.remove(primaryKeyValue);
+        currentNode.setPageNums(temp);
+        temp = currentNode.getIndexes();
+        temp.remove(primaryKeyValue);
+        currentNode.setIndexes(temp);
+
+        //check if compliant
+        if (temp.size() < Math.ceil((size - 1)/2)) {
+            //TODO merge the leaf
+        }
     }
 
     /**
@@ -138,6 +160,11 @@ public class Index {
         //get leaf node
         Node currentNode = getToLeafNode(primaryKeyValue);
 
+        //return if node empty
+        if (currentNode.getPageNums().size() < 1) {
+            return null;
+        }
+
         //get exact value
         for (Map.Entry<Object, Integer> entry : currentNode.getPageNums().entrySet()) {
             Object key = entry.getKey();
@@ -163,7 +190,12 @@ public class Index {
         //get leaf node
         Node currentNode = getToLeafNode(primaryKeyValue);
 
-        //get exact value
+        //return if node empty
+        if (currentNode.getPageNums().size() < 1) {
+            return null;
+        }
+
+        //get less than
         for (Map.Entry<Object, Integer> entry : currentNode.getPageNums().entrySet()) {
             Object key = entry.getKey();
             if (equals(key, primaryKeyValue)) {
