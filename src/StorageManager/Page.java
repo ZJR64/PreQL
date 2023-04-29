@@ -135,6 +135,42 @@ public class Page {
     }
 
     /**
+     * Attempts to add the record to the page via a Record object with an index.
+     *
+     * @param newRecord the record being added.
+     * @param index the location to add the index to.
+     * @return true if operation completed, false if page needs to be split.
+     */
+    public boolean addRecordWithIndex(Record newRecord, int index) {
+        //get size already used
+        int usedSize = 0;
+        for (Record record : recordList) {
+            //add an Integer for the size indicator
+            usedSize += Integer.SIZE/Byte.SIZE;
+            usedSize += record.getSize();
+        }
+
+        //now check to see if length of new record would exceed free space
+        if (usedSize + newRecord.getSize() + Integer.SIZE/Byte.SIZE>  pageSize) {
+            //need to split page
+            return false;
+        }
+
+        //add to list
+        recordList.add(index, newRecord);
+
+        //update schema
+        schema.addRecord();
+
+        //update index values
+        schema.getIndex().updateIndex(recordList, pageNum);
+
+        //record added successfully
+        return true;
+    }
+
+
+    /**
      * Splits the page, sending back the number of the page that was created.
      *
      * @param bufferManager the buffer manager.
@@ -172,6 +208,49 @@ public class Page {
     }
 
     /**
+     * Splits the page, sending back the number of the page that was created.
+     *
+     * @param bufferManager the buffer manager.
+     * @param record the record object being added.
+     * @param index the index to add the record at
+     * @return the number of the newly created page.
+     */
+    public int splitWithIndex(BufferManager bufferManager, Record record, int index) {
+        //add page to buffer
+        int newPageNum = bufferManager.addPage(schema.getFileName(), schema.getOpenPages());
+
+        //create new page
+        Page newPage = new Page(newPageNum, schema, pageSize, this.pageNum);
+
+        //add to list
+        recordList.add(index, record);
+
+        //update schema
+        schema.addRecord();
+
+        //add half the records to new page and then remove them
+        int cutoffPoint = recordList.size() / 2;
+        for (int i = cutoffPoint; i < recordList.size(); i++) {
+            Record currentRecord = recordList.get(i);
+            schema.getIndex().removeFromIndex(currentRecord.getPrimaryKey());
+            newPage.addRecord(currentRecord);
+            //update schema
+            schema.subRecord();
+        }
+        recordList.subList(cutoffPoint, recordList.size()).clear();
+
+        //write new page to buffer
+        bufferManager.writePage(schema.getFileName() , newPageNum, newPage.getBytes());
+
+        // update the indexs of the records on the new page
+        schema.getIndex().updateIndex(recordList, newPageNum);
+
+        //return number of page
+        return newPageNum;
+    }
+
+
+    /**
      * Removes a record from the table by primary key.
      *
      * @param primaryKeyValue the value of the primary key.
@@ -201,9 +280,19 @@ public class Page {
         }
     }
 
+    /**
+     * Removes a record from the table by primary key.
+     *
+     * @param index the index of the record to remove.
+     */
     public void removeRecordWithIndex(int index) {
+        //remove from list
         recordList.remove(index);
 
+        //update the schema
+        schema.subRecord();
+
+        //update the index of all values
         schema.getIndex().updateIndex(recordList, pageNum);
 
         //check if there are no more records
