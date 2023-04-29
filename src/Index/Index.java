@@ -81,7 +81,7 @@ public class Index {
         Node currentNode = getToLeafNode(primaryKeyValue);
         TreeMap<Object, Integer> temp = currentNode.getPageNums();
         if (temp.size() > size - 2) {
-            //TODO split node
+            splitNode(currentNode, false);
         }
 
         //add values
@@ -133,15 +133,20 @@ public class Index {
         TreeMap<Object, Integer> newIndexes = new TreeMap<Object, Integer>();
 
         while (currentPages.size() > newPages.size()) {
+            //transfer indexes only when not internal
+            if (!isInternal) {
+                Map.Entry<Object, Integer> indexEntry = currentPages.firstEntry();
+                currentIndexes.remove(indexEntry.getKey());
+                newIndexes.put(indexEntry.getKey(), indexEntry.getValue());
+            }
             //get first entry
             Map.Entry<Object, Integer> pageEntry = currentPages.firstEntry();
-            Map.Entry<Object, Integer> indexEntry = currentPages.firstEntry();
+
             //remove from current
             currentPages.remove(pageEntry.getKey());
-            currentIndexes.remove(indexEntry.getKey());
+
             //add to new
             newPages.put(pageEntry.getKey(), pageEntry.getValue());
-            newIndexes.put(indexEntry.getKey(), pageEntry.getValue());
         }
 
         //save new values of current
@@ -155,14 +160,37 @@ public class Index {
         bufferManager.writePage(pageName, newNode.getSelf(), newNode.toBytes());
 
         //if root, create new root
-        if (currentNode.getSelf() == root) {
+        if (currentNode.getSelf() == this.root) {
+            int newParentNum = bufferManager.addPage(pageName, openPages);
+            Node newParentNode = new Node(isInternal, currentNode.getParent(), keyType, newNum);
+            TreeMap<Object, Integer> children = new TreeMap<Object, Integer>();
+            children.put(currentNode.getPageNums().firstKey(), newNode.getSelf());
 
+            //save values
+            newParentNode.setPageNums(children);
+            newParentNode.setFinalValue(currentNode.getSelf());
+
+            //save new parent
+            bufferManager.writePage(pageName, newParentNode.getSelf(), newParentNode.toBytes());
+            this.root = newParentNode.getSelf();
         }
         else {
             //get parent
             byte[] parentBytes = bufferManager.getPage(pageName, currentNode.getParent());
             Node parentNode = new Node(parentBytes, keyType, currentNode.getParent());
+
+            //add new value to parent
             TreeMap<Object, Integer> parentMap = parentNode.getPageNums();
+            parentMap.put(currentNode.getPageNums().firstKey(), newNode.getSelf());
+
+            //save parent
+            parentNode.setPageNums(parentMap);
+            bufferManager.writePage(pageName, parentNode.getSelf(), parentNode.toBytes());
+
+            //check if parent needs splitting
+            if (parentMap.size() > size - 1) {
+                splitNode(currentNode, true);
+            }
         }
 
     }
