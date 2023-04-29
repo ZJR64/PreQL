@@ -41,6 +41,8 @@ public class Index {
 
         //create first node
         bufferManager.addPage(pageName, openPages);
+        Node rootNode = new Node(false, -1, keyType);
+        bufferManager.writePage(pageName, root, rootNode.toBytes());
     }
 
     /**
