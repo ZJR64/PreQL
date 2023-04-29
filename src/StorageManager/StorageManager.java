@@ -115,7 +115,8 @@ public class StorageManager {
                     Page pg = new Page(pgNum, table, bm.getPageSize(), buf);
                     ind.addToIndex(primaryKey, pgNum, index);
                     pg.addRecordWithIndex(rec, index);
-                    bm.addPage(fileName, table.getOpenPages());
+                    byte [] changedBuf = pg.getBytes();
+                    bm.writePage(fileName, pgNum, changedBuf);
                 }
 
             }

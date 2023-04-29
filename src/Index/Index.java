@@ -126,7 +126,7 @@ public class Index {
     }
 
     public int underfull(Node current, Object primKey) {
-        Node parent = new Node(bufferManager.getPage(pageName, current.getParent()), keyType);
+        Node parent = new Node(bufferManager.getPage(pageName, current.getParent()), keyType, current.getParent());
 
         if (mergeLeft(current, parent, primKey) != 1){
             if (mergeRight(current, parent, primKey) != 1){
@@ -138,7 +138,6 @@ public class Index {
             }
         }
         if (parent.getParent() == -1 && parent.getPageNums().size() <= 1){
-            changeRoot();
         }
         if (parent.getPageNums().size() < Math.ceilDiv(size, 2)){
             underfull(parent, primKey);
@@ -147,16 +146,56 @@ public class Index {
 
     }
 
+    /**
+     * The first operation that happens when a node is underfull. Will attempt
+     * to merge the underfull node with the node to it's left in the B+ tree.
+     *
+     * @param current The current node that is underfull.
+     * @param parent The parent of the underfull node.
+     * @param primKey the primarykey that is getting deleted from the B+ tree.
+     * @return 1 if success, 0 if failure.
+     */
     public int mergeLeft(Node current, Node parent, Object primKey){
 
         return 0;
     }
+
+    /**
+     * The second operation that happens when a node is underfull. Will attempt
+     * to merge the underfull node with the node to it's right in the B+ tree.
+     *
+     * @param current The current node that is underfull.
+     * @param parent The parent of the underfull node.
+     * @param primKey the primarykey that is getting deleted from the B+ tree.
+     * @return 1 if success, 0 if failure.
+     */
     public int mergeRight(Node current, Node parent, Object primKey){
         return 0;
     }
+
+    /**
+     * The third operation that happens when a node is underfull. Will attempt
+     * to borrow a primarykey from the node to it's left in the B+ tree.
+     *
+     * @param current The current node that is underfull.
+     * @param parent The parent of the underfull node.
+     * @param primKey the primarykey that is getting deleted from the B+ tree.
+     * @return 1 if success, 0 if failure.
+     */
     public int borrowLeft(Node current, Node parent, Object primKey){
+
         return 0;
     }
+
+    /**
+     * The foruth and final operation that happens when a node is underfull.
+     * Will attempt to borrow a primarykey from the node to it's right in the B+ tree.
+     *
+     * @param current The current node that is underfull.
+     * @param parent The parent of the underfull node.
+     * @param primKey the primarykey that is getting deleted from the B+ tree.
+     * @return 1 if success, 0 if failure. Should not be possible to fail at this point.
+     */
     public int borrowRight(Node current, Node parent, Object primKey){
         return 0;
     }
