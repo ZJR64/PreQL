@@ -151,6 +151,9 @@ public class Index {
         for (Map.Entry<Object, Integer> entry : currentNode.getPageNums().entrySet()) {
             Object key = entry.getKey();
             if (equals(key, primaryKeyValue)) {
+                return null;
+            }
+            if (lessThan(key, primaryKeyValue)) {
                 int[] results = new int[2];
                 results[0] = currentNode.getPageNums().get(key);
                 results[1] = currentNode.getIndexes().get(key);

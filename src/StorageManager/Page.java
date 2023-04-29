@@ -201,6 +201,18 @@ public class Page {
         }
     }
 
+    public void removeRecordWithIndex(int index) {
+        recordList.remove(index);
+
+        schema.getIndex().updateIndex(recordList, pageNum);
+
+        //check if there are no more records
+        if (recordList.isEmpty()) {
+            //delete page
+            schema.subPage(this.pageNum);
+        }
+    }
+
     /**
      * Updates a record from the table with new values.
      *
