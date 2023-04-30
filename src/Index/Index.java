@@ -469,12 +469,12 @@ public class Index {
 
         //get exact value
         for (Map.Entry<TreeMapObj, Integer> entry : currentNode.getPageNums().entrySet()) {
-            Object key = entry.getKey();
-            if (equals(key, primaryKeyValue)) {
+            Object primaryKeyVal = entry.getKey().getPrimaryKeyValue();
+            Object treeObjKey = entry.getKey();
+            if (equals(primaryKeyVal, primaryKeyValue)) {
                 int[] results = new int[2];
-                results[0] = currentNode.getPageNums().get(key);
-                results[1] = currentNode.getIndexes().get(key);
-                return results;
+                results[0] = currentNode.getPageNums().get(treeObjKey);
+                results[1] = currentNode.getIndexes().get(treeObjKey);
             }
         }
 
