@@ -344,7 +344,7 @@ public class Index {
         //loop through internal
         while (currentNode.isInternal()) {
             for (Map.Entry<TreeMapObj, Integer> entry : currentNode.getPageNums().entrySet()) {
-                Object key = entry.getKey();
+                Object key = entry.getKey().getPrimaryKeyValue();
                 if (lessThan(key, primaryKeyValue)) {
                     nodeBytes = bufferManager.getPage(pageName, entry.getValue());
                     currentNode = new Node(nodeBytes, keyType, entry.getValue());
@@ -404,11 +404,12 @@ public class Index {
 
 
         for (Map.Entry<TreeMapObj, Integer> entry : currentNode.getPageNums().entrySet()) {
+            Object primaryKey = entry.getKey().getPrimaryKeyValue();
             Object key = entry.getKey();
-            if (equals(key, primaryKeyValue)) {
+            if (equals(primaryKey, primaryKeyValue)) {
                 return null;
             }
-            if (lessThan(key, primaryKeyValue)) {
+            if (lessThan(primaryKey, primaryKeyValue)) {
                 int[] results = new int[2];
                 results[0] = currentNode.getPageNums().get(key);
                 results[1] = currentNode.getIndexes().get(key);
