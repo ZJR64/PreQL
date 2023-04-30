@@ -163,7 +163,7 @@ public class Page {
         schema.addRecord();
 
         //update index values
-        schema.getIndex().updateIndex(recordList, pageNum);
+        schema.getIndex().updateIndex(new ArrayList<>(recordList.subList(index, recordList.size())), pageNum, index);
 
         //record added successfully
         return true;
@@ -222,6 +222,10 @@ public class Page {
         //add to list
         recordList.add(index, record);
 
+        //add to index
+        schema.getIndex().addToIndex(record.getPrimaryKey(), pageNum, index, record.getKeyType());
+        schema.getIndex().updateIndex(new ArrayList<>(recordList.subList(index, recordList.size())), pageNum, index);
+
         //update schema
         schema.addRecord();
 
@@ -240,8 +244,7 @@ public class Page {
         bufferManager.writePage(schema.getFileName() , newPageNum, newPage.getBytes());
 
         // update the indexs of the records on the new page
-        schema.getIndex().updateIndex(recordList, pageNum);
-        schema.getIndex().updateIndex(newPage.getRecords(), newPageNum);
+        schema.getIndex().updateIndex(newPage.getRecords(), newPageNum, 0);
         //return number of page
         return newPageNum;
     }
@@ -290,7 +293,7 @@ public class Page {
         schema.subRecord();
 
         //update the index of all values
-        schema.getIndex().updateIndex(recordList, pageNum);
+        schema.getIndex().updateIndex(new ArrayList<>(recordList.subList(index, recordList.size())), pageNum, index);
 
         //check if there are no more records
         if (recordList.isEmpty()) {

@@ -615,12 +615,12 @@ public class Index {
      * @param records The records of ...
      * @param pageNumber The pagenumber of ...
      */
-    public void updateIndex(ArrayList<Record> records, int pageNumber) {
+    public void updateIndex(ArrayList<Record> records, int pageNumber, int index) {
         for (int i = 0; i < records.size(); i++ ){
             Object key = records.get(i).getPrimaryKey();
             String type = records.get(i).getKeyType();
 
-            update(key, pageNumber, i, type);
+            update(key, pageNumber, i + index, type);
         }
     }
 
@@ -629,6 +629,7 @@ public class Index {
         TreeMapObj key = new TreeMapObj(keyType, primaryKeyValue);
         Node currentNode = getToLeafNode(primaryKeyValue);
         //set values
+        /*
         while (!updated) {
             TreeMap<TreeMapObj, Integer> pages = currentNode.getPageNums();
             TreeMap<TreeMapObj, Integer> indexes = currentNode.getIndexes();
@@ -646,6 +647,18 @@ public class Index {
             }
             byte[] bytes = bufferManager.getPage(pageName, currentNode.getFinalValue());
             currentNode = new Node(false, currentNode.getParent(), keyType, currentNode.getFinalValue());
+        }
+        */
+        TreeMap<TreeMapObj, Integer> pages = currentNode.getPageNums();
+        TreeMap<TreeMapObj, Integer> indexes = currentNode.getIndexes();
+        if (pages.containsKey(key)) {
+            TreeMapObj toBeAdded = new TreeMapObj(type, primaryKeyValue);
+            pages.put(toBeAdded, page);
+            indexes.put(toBeAdded, index);
+            currentNode.setIndexes(indexes);
+            currentNode.setPageNums(pages);
+            bufferManager.writePage(pageName, currentNode.getSelf(), currentNode.toBytes());;
+            updated = true;
         }
     }
 

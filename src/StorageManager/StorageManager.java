@@ -94,7 +94,13 @@ public class StorageManager {
         Map<String, Object> attributes;
         String fileName = table.getFileName();
         Index ind = table.getIndex();
+        int done = 0;
         for(ArrayList<String> tuple : tuples){
+            ///Progress
+            double progress = (double)done / tuples.size() * 100;
+            System.out.print("\rProcessing tuple " + (done + 1) + " of " + tuples.size() + " (" + progress + "%)");
+            done++;
+
             attributes = StorageManagerHelper.checkAttributes(table, tuple, bm);
             if(attributes != null){
                 int[] arr;
