@@ -130,14 +130,14 @@ public class Index {
 
         //split values between new node and current
         TreeMap<TreeMapObj, Integer> currentPages = currentNode.getPageNums();
-        TreeMap<TreeMapObj, Integer> currentIndexes = currentNode.getPageNums();
+        TreeMap<TreeMapObj, Integer> currentIndexes = currentNode.getIndexes();
         TreeMap<TreeMapObj, Integer> newPages = new TreeMap<TreeMapObj, Integer>();
         TreeMap<TreeMapObj, Integer> newIndexes = new TreeMap<TreeMapObj, Integer>();
 
         while (currentPages.size() > newPages.size()) {
             //transfer indexes only when not internal
             if (!isInternal) {
-                Map.Entry<TreeMapObj, Integer> indexEntry = currentPages.firstEntry();
+                Map.Entry<TreeMapObj, Integer> indexEntry = currentIndexes.firstEntry();
                 currentIndexes.remove(indexEntry.getKey());
                 newIndexes.put(indexEntry.getKey(), indexEntry.getValue());
             }
