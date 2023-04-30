@@ -104,17 +104,10 @@ public class Index {
     public void removeFromIndex(Object primaryKeyValue, String type) {
         //get leaf node
         Node currentNode = getToLeafNode(primaryKeyValue);
-        TreeMap<TreeMapObj, Integer> temp = currentNode.getPageNums();
-        TreeMapObj toBeRemoved = new TreeMapObj(type, primaryKeyValue);
-        //remove values
-        temp.remove(toBeRemoved);
-        currentNode.setPageNums(temp);
-        temp = currentNode.getIndexes();
-        temp.remove(toBeRemoved);
-        currentNode.setIndexes(temp);
-
+        currentNode.getPageNums().remove(primaryKeyValue);
+        currentNode.getIndexes().remove(primaryKeyValue);
         //check if compliant
-        if (temp.size() < Math.ceil((size - 1)/2)) {
+        if (currentNode.getParent() == -1 && currentNode.getPageNums().size()+1 < Math.ceil((size - 1)/2)) {
             underfull(currentNode, primaryKeyValue);
         }
 
@@ -210,11 +203,15 @@ public class Index {
                 }
             }
         }
-        if (parent.getParent() == -1 && parent.getPageNums().size() <= 1){
-            //changeRoot();
+        if (parent.getParent() == -1 && parent.getPageNums().size() < 1){
+            current.setParent(-1);
+            openPages.add(parent.getSelf());
+            return 1;
         }
         if (parent.getPageNums().size() < Math.ceilDiv(size, 2)){
-            underfull(parent, primKey);
+            if (parent.getParent() != -1) {
+                underfull(parent, primKey);
+            }
         }
         return 1;
 
