@@ -215,6 +215,18 @@ public class Index {
                 splitNode(parentNode);
             }
         }
+        if(newNode.isInternal()){
+            for(TreeMapObj t : newNode.getPageNums().keySet()){
+                byte[] changingParentBytes = bufferManager.getPage(pageName, newNode.getPageNums().get(t));
+                Node changingParent = new Node(changingParentBytes, keyType, newNode.getPageNums().get(t));
+                changingParent.setParent(newNode.getSelf());
+                bufferManager.writePage(pageName, changingParent.getSelf(), changingParent.toBytes());
+            }
+            byte[] changingParentBytes = bufferManager.getPage(pageName, newNode.getFinalValue());
+            Node changingParent = new Node(changingParentBytes, keyType, newNode.getFinalValue());
+            changingParent.setParent(newNode.getSelf());
+            bufferManager.writePage(pageName, changingParent.getSelf(), changingParent.toBytes());
+        }
     }
 
     public int underfull(Node current, Object primKey) {
