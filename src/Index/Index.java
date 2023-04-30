@@ -251,7 +251,16 @@ public class Index {
         for (TreeMapObj obj : leftNode.getPageNums().keySet()) {
             current.getPageNums().put(obj, leftNode.getPageNums().get(obj));
         }
-        openPages.add(leftNode.getSelf());
+        if (!current.isInternal()){
+            for (TreeMapObj obj : leftNode.getIndexes().keySet()) {
+                current.getIndexes().put(obj, leftNode.getIndexes().get(obj));
+            }
+            openPages.add(leftNode.getSelf());
+        }
+        else{
+            current.getPageNums().put(left, leftNode.getFinalValue());
+        }
+
         parent.getPageNums().remove(left);
         return 1;
     }
@@ -266,7 +275,49 @@ public class Index {
      * @return 1 if success, 0 if failure.
      */
     public int mergeRight(Node current, Node parent, Object primKey){
-        return 0;
+        TreeMapObj right = null;
+        TreeMapObj center = null;
+        for (TreeMapObj obj : parent.getPageNums().keySet()) {
+            if (parent.getPageNums().get(obj) == current.getSelf()){
+                center = obj;
+                break;
+            }
+        }
+        if (center == null) {
+            return -1;
+        }
+        for (TreeMapObj obj : parent.getPageNums().keySet()) {
+            if (obj.compareTo(center) == 1){
+                right = obj;
+                break;
+            }
+        }
+        Node rightNode;
+        if (right == null) {
+            rightNode = new Node(bufferManager.getPage(pageName, parent.getFinalValue()), keyType, parent.getFinalValue());
+        }
+        else {
+            rightNode = new Node(bufferManager.getPage(pageName, parent.getPageNums().get(right)), keyType, parent.getPageNums().get(right));
+        }
+        if (rightNode.getPageNums().size() + current.getPageNums().size() > size){
+            return -2;
+        }
+
+        for (TreeMapObj obj : current.getPageNums().keySet()) {
+            current.getPageNums().put(obj, current.getPageNums().get(obj));
+        }
+        if (!current.isInternal()){
+            for (TreeMapObj obj : current.getIndexes().keySet()) {
+                current.getIndexes().put(obj, current.getIndexes().get(obj));
+            }
+            openPages.add(current.getSelf());
+        }
+        else{
+            rightNode.getPageNums().put(center, current.getFinalValue());
+        }
+
+        parent.getPageNums().remove(center);
+        return 1;
     }
 
     /**
