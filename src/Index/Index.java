@@ -137,23 +137,25 @@ public class Index {
             if (!currentNode.isInternal()) {
                 Map.Entry<TreeMapObj, Integer> indexEntry = currentIndexes.firstEntry();
                 currentIndexes.remove(indexEntry.getKey());
-                newIndexes.put(indexEntry.getKey(), indexEntry.getValue());
+                newIndexes.put(new TreeMapObj(keyType, indexEntry.getKey().getPrimaryKeyValue()), indexEntry.getValue());
             }
             //get first entry
             Map.Entry<TreeMapObj, Integer> pageEntry = currentPages.firstEntry();
-
 
             //remove from current
             currentPages.remove(pageEntry.getKey());
 
             //add to new
-            newPages.put(pageEntry.getKey(), pageEntry.getValue());
+            newPages.put(new TreeMapObj(keyType, pageEntry.getKey().getPrimaryKeyValue()), pageEntry.getValue());
         }
         TreeMapObj key = null;
         if(currentNode.isInternal()){
             key = newPages.lastKey();
             newNode.setFinalValue(newPages.get(key));
             newPages.remove(key);
+        }
+        else {
+            newNode.setFinalValue(currentNode.getSelf());
         }
 
 
@@ -547,19 +549,27 @@ public class Index {
     }
 
     private void update(Object primaryKeyValue, int page, int index, String type) {
+        boolean updated = false;
+        TreeMapObj key = new TreeMapObj(keyType, primaryKeyValue);
         Node currentNode = getToLeafNode(primaryKeyValue);
-        TreeMap<TreeMapObj, Integer> pages = currentNode.getPageNums();
-        int check = pages.size();
-        TreeMap<TreeMapObj, Integer> indexes = currentNode.getIndexes();
         //set values
-        TreeMapObj toBeAdded = new TreeMapObj(type, primaryKeyValue);
-        pages.put(toBeAdded, page);
-        indexes.put(toBeAdded, index);
-        //save values
-        if (pages.size() == check) {
-            currentNode.setIndexes(indexes);
-            currentNode.setPageNums(pages);
-            bufferManager.writePage(pageName, currentNode.getSelf(), currentNode.toBytes());
+        while (!updated) {
+            TreeMap<TreeMapObj, Integer> pages = currentNode.getPageNums();
+            TreeMap<TreeMapObj, Integer> indexes = currentNode.getIndexes();
+            if (pages.containsKey(key)) {
+                TreeMapObj toBeAdded = new TreeMapObj(type, primaryKeyValue);
+                pages.put(toBeAdded, page);
+                indexes.put(toBeAdded, index);
+                currentNode.setIndexes(indexes);
+                currentNode.setPageNums(pages);
+                bufferManager.writePage(pageName, currentNode.getSelf(), currentNode.toBytes());;
+                updated = true;
+            }
+            if (currentNode.getFinalValue() == -1) {
+                return;
+            }
+            byte[] bytes = bufferManager.getPage(pageName, currentNode.getFinalValue());
+            currentNode = new Node(false, currentNode.getParent(), keyType, currentNode.getFinalValue());
         }
     }
 
