@@ -111,7 +111,6 @@ public class Node {
 
     public byte[] toBytes() {
         ByteBuffer buffer = ByteBuffer.wrap(new byte[getNodeByteSize()]);
-        System.out.println(("BYTES: " + getNodeByteSize()));
 
         //set isInternal
         if (this.internal) {

@@ -229,7 +229,7 @@ public class Page {
         int cutoffPoint = recordList.size() / 2;
         for (int i = cutoffPoint; i < recordList.size(); i++) {
             Record currentRecord = recordList.get(i);
-            schema.getIndex().removeFromIndex(currentRecord.getPrimaryKey(), record.getKeyType());
+                            //schema.getIndex().removeFromIndex(currentRecord.getPrimaryKey(), record.getKeyType());
             newPage.addRecord(currentRecord);
             //update schema
             schema.subRecord();
@@ -240,8 +240,8 @@ public class Page {
         bufferManager.writePage(schema.getFileName() , newPageNum, newPage.getBytes());
 
         // update the indexs of the records on the new page
-        schema.getIndex().updateIndex(recordList, newPageNum);
-
+        schema.getIndex().updateIndex(recordList, pageNum);
+        schema.getIndex().updateIndex(newPage.getRecords(), newPageNum);
         //return number of page
         return newPageNum;
     }

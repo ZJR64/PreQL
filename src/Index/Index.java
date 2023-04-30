@@ -38,7 +38,6 @@ public class Index {
         //get N for the tree
         int pairSize =+ Integer.BYTES + keySize + Integer.BYTES + Integer.BYTES;
         this.size = (int) (Math.floor((bufferManager.getPageSize() - 20) / pairSize));
-        System.out.println(size);
 
         //create open pages
         this.openPages = new ArrayList<Integer>();
@@ -63,7 +62,6 @@ public class Index {
         this.pageName = tableName + ".idx";
         this.keyType = keyType;
         this.size = buffer.getInt();
-        System.out.println(size);
 
         //get open pages
         int numOpenPages = buffer.getInt();
