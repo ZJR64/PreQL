@@ -146,6 +146,12 @@ public class Index {
             //add to new
             newPages.put(pageEntry.getKey(), pageEntry.getValue());
         }
+        if(currentNode.isInternal()){
+            TreeMapObj key = newPages.lastKey();
+            newNode.setFinalValue(newPages.get(key));
+            newPages.remove(key);
+        }
+
 
         //save new values of current
         currentNode.setPageNums(currentPages);
