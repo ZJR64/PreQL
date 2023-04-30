@@ -502,7 +502,7 @@ public class Index {
             if (equals(primaryKey, primaryKeyValue)) {
                 return null;
             }
-            if (lessThan(primaryKey, primaryKeyValue)) {
+            if (lessThan(primaryKeyValue, primaryKey)) {
                 int[] results = new int[2];
                 results[0] = currentNode.getPageNums().get(key);
                 results[1] = currentNode.getIndexes().get(key);
