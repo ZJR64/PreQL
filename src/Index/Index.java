@@ -309,6 +309,9 @@ public class Index {
         }
 
         parent.getPageNums().remove(left);
+        bufferManager.writePage(pageName, current.getSelf(), current.toBytes());     // write left node (current)
+        bufferManager.writePage(pageName, parent.getSelf(), parent.toBytes());       // write parent
+        bufferManager.writePage(pageName, leftNode.getSelf(), leftNode.toBytes());   // write rightNode
         return 1;
     }
 
@@ -364,6 +367,9 @@ public class Index {
         }
 
         parent.getPageNums().remove(center);
+        bufferManager.writePage(pageName, current.getSelf(), current.toBytes());     // write left node (current)
+        bufferManager.writePage(pageName, parent.getSelf(), parent.toBytes());       // write parent
+        bufferManager.writePage(pageName, rightNode.getSelf(), rightNode.toBytes()); // write rightNode
         return 1;
     }
 
@@ -434,11 +440,10 @@ public class Index {
         TreeMap<TreeMapObj, Integer> currentPages = current.getPageNums();
         TreeMap<TreeMapObj, Integer> currentIndexes = current.getIndexes();
         TreeMapObj nextTMO = null;
-        Node nextNode = null;
         boolean found = false;
 
         for(TreeMapObj tmo : parentPageNums.keySet()){
-            if (found){
+            if (found){          // if pointer to current node is in parent
                 nextTMO = tmo;
                 break;
             }
@@ -447,33 +452,73 @@ public class Index {
             }
 
         }
+        Integer pageNum;
         if(nextTMO == null){
-            return -1;
+            pageNum = parent.getFinalValue();
         }
-        Integer pageNum = parentPageNums.get(nextTMO);
+        else{
+            pageNum = parentPageNums.get(nextTMO);
+        }
         byte[] nodeBytes = bufferManager.getPage(pageName, pageNum);
-        Node currentNode = new Node(nodeBytes, keyType, pageNum);
+        Node rightNode = new Node(nodeBytes, keyType, pageNum);
 
-        TreeMap<TreeMapObj, Integer> nextPages = nextNode.getPageNums();
-        TreeMap<TreeMapObj, Integer> nextIndexes = nextNode.getIndexes();
+        TreeMap<TreeMapObj, Integer> rightNodePageNums = rightNode.getPageNums();
+        TreeMap<TreeMapObj, Integer> rightNodePageIndices = rightNode.getIndexes();
 
         // cannot borrow if it will underfill previous node
-        if (nextPages.size() <= Math.ceil((size - 1)/2)){
+        if (rightNodePageNums.size() <= Math.ceil((size - 1)/2)){
             return -1;
         }
 
-        Map.Entry<TreeMapObj, Integer> indexEntry = nextPages.firstEntry();
-        nextIndexes.remove(indexEntry.getKey());
-        currentIndexes.put(indexEntry.getKey(), indexEntry.getValue());
+        if(!current.isInternal()) {   // for leaf nodes
+            Map.Entry<TreeMapObj, Integer> pageEntry = rightNodePageNums.firstEntry();  // Get the pageNum from rightNode of the value being borrowed
+            current.getPageNums().put(pageEntry.getKey(), pageEntry.getValue()); //  put the pageNum from rightNode of the value being borrowed into the current(left nodes pageNums)
 
-        //get last entry
-        Map.Entry<TreeMapObj, Integer> pageEntry = nextPages.firstEntry();
-        //remove from current
-        nextPages.remove(pageEntry.getKey());
-        //add to new
-        currentPages.put(pageEntry.getKey(), pageEntry.getValue());
 
-        return 1;
+            Map.Entry<TreeMapObj, Integer> indexEntry = rightNodePageIndices.firstEntry();  // Get the index from rightNode of the value being borrowed
+            current.getIndexes().put(indexEntry.getKey(), indexEntry.getValue()); //  put the index from rightNode of the value being borrowed into the current(left nodes indexes)
+
+            rightNodePageNums.remove(pageEntry.getKey());  // remove the value being borrowed from the right node
+            rightNodePageIndices.remove(indexEntry.getKey());  // remove the index being borrowed from the right node
+
+            parentPageNums.remove(pageEntry.getKey());   // remove the old parent priamary key
+            pageEntry = rightNodePageNums.firstEntry();  // get the new parent primary key.
+            parentPageNums.put(pageEntry.getKey(), current.getSelf()); // put it into parent
+
+
+            bufferManager.writePage(pageName, current.getSelf(), current.toBytes());     // write left node (current)
+            bufferManager.writePage(pageName, parent.getSelf(), parent.toBytes());       // write parent
+            bufferManager.writePage(pageName, rightNode.getSelf(), rightNode.toBytes()); // write rightNode
+            return 1;
+
+        }
+        else{ //internal nodes
+            Map.Entry<TreeMapObj, Integer> pageEntry = rightNodePageNums.firstEntry();  // Get the pageNum from rightNode of the value being borrowed
+            current.getPageNums().put(pageEntry.getKey(), current.getFinalValue()); //  put the pageNum from rightNode of the value being borrowed into the current(left nodes pageNums)
+            current.setFinalValue(pageEntry.getValue());
+
+            Node oldNode = new Node(bufferManager.getPage(pageName, current.getFinalValue()), keyType, current.getFinalValue());  // gets
+            oldNode.setParent(current.getSelf());
+
+            for(Map.Entry<TreeMapObj,Integer> entry : parentPageNums.entrySet()){
+                if(entry.getValue() == current.getSelf()){
+                    parentPageNums.remove(entry.getKey());   // remove the old parent priamary key
+                    break;
+                }
+            }
+
+            rightNodePageNums.remove(pageEntry.getKey());  // remove the value being borrowed from the right node
+
+            pageEntry = rightNodePageNums.firstEntry();  // get the new parent primary key.
+            parentPageNums.put(pageEntry.getKey(), current.getSelf()); // put it into parent
+
+
+            bufferManager.writePage(pageName, current.getSelf(), current.toBytes());     // write left node (current)
+            bufferManager.writePage(pageName, parent.getSelf(), parent.toBytes());       // write parent
+            bufferManager.writePage(pageName, rightNode.getSelf(), rightNode.toBytes()); // write rightNode
+            bufferManager.writePage(pageName, oldNode.getSelf(), oldNode.toBytes());     // write left node (current)
+            return 1;
+        }
     }
 
     public Node getToLeafNode(Object primaryKeyValue) {
