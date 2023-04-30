@@ -53,7 +53,6 @@ public class Node {
         this.pageNums = new TreeMap<TreeMapObj, Integer>();
         this.indexes = new TreeMap<TreeMapObj, Integer>();
         for (int i = 0; i < numValues; i++) {
-            //TODO
             TreeMapObj key = new TreeMapObj(primaryKeyType, buffer);
             pageNums.put(key, buffer.getInt());
             if (!internal) {
