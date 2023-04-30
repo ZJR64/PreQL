@@ -165,7 +165,7 @@ public class Index {
         //if root, create new root
         if (currentNode.getSelf() == this.root) {
             int newParentNum = bufferManager.addPage(pageName, openPages);
-            Node newParentNode = new Node(isInternal, currentNode.getParent(), keyType, newNum);
+            Node newParentNode = new Node(true, currentNode.getParent(), keyType, newParentNum);
             TreeMap<TreeMapObj, Integer> children = new TreeMap<TreeMapObj, Integer>();
             children.put(currentNode.getPageNums().firstKey(), newNode.getSelf());
 
