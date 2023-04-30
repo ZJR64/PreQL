@@ -441,19 +441,24 @@ public class Index {
 
         //loop through internal
         while (currentNode.isInternal()) {
+            boolean found = false;
             for (Map.Entry<TreeMapObj, Integer> entry : currentNode.getPageNums().entrySet()) {
                 Object key = entry.getKey().getPrimaryKeyValue();
                 if (lessThan(primaryKeyValue, key)) {
                     nodeBytes = bufferManager.getPage(pageName, entry.getValue());
                     currentNode = new Node(nodeBytes, keyType, entry.getValue());
-                    return currentNode;
+                    found = true;
+                    break;
                 }
             }
-            nodeBytes = bufferManager.getPage(pageName, currentNode.getFinalValue());
-            currentNode = new Node(nodeBytes, keyType, currentNode.getFinalValue());
+            if(!found){
+                nodeBytes = bufferManager.getPage(pageName, currentNode.getFinalValue());
+                currentNode = new Node(nodeBytes, keyType, currentNode.getFinalValue());
+            }
         }
 
         return currentNode;
+
     }
 
 
@@ -472,18 +477,19 @@ public class Index {
             return null;
         }
 
-        //get exact value
         for (Map.Entry<TreeMapObj, Integer> entry : currentNode.getPageNums().entrySet()) {
-            Object primaryKeyVal = entry.getKey().getPrimaryKeyValue();
-            Object treeObjKey = entry.getKey();
-            if (equals(primaryKeyVal, primaryKeyValue)) {
+            Object primaryKey = entry.getKey().getPrimaryKeyValue();
+            Object TreeMapKey = entry.getKey();
+            if (equals(primaryKey, primaryKeyValue)) {
+                return null;
+            }
+            if (lessThan(primaryKeyValue, primaryKey)) {
                 int[] results = new int[2];
-                results[0] = currentNode.getPageNums().get(treeObjKey);
-                results[1] = currentNode.getIndexes().get(treeObjKey);
+                results[0] = currentNode.getPageNums().get(TreeMapKey);
+                results[1] = currentNode.getIndexes().get(TreeMapKey);
                 return results;
             }
         }
-
         return null;
     }
 
