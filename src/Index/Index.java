@@ -173,7 +173,14 @@ public class Index {
             int newParentNum = bufferManager.addPage(pageName, openPages);
             Node newParentNode = new Node(true, -1, keyType, newParentNum);
             TreeMap<TreeMapObj, Integer> children = new TreeMap<TreeMapObj, Integer>();
-            TreeMapObj test = new TreeMapObj(keyType, currentNode.getPageNums().firstKey().getPrimaryKeyValue());
+            TreeMapObj test = null;
+            if (key != null) {
+                test = new TreeMapObj(keyType, key.getPrimaryKeyValue());
+            }
+            else{
+                test = new TreeMapObj(keyType, currentNode.getPageNums().firstKey().getPrimaryKeyValue());
+            }
+
             children.put(test, newNode.getSelf());
 
             //save values
@@ -204,7 +211,7 @@ public class Index {
             bufferManager.writePage(pageName, parentNode.getSelf(), parentNode.toBytes());
 
             //check if parent needs splitting
-            if (parentNode.getPageNums().size() > size) {
+            if (parentNode.getPageNums().size() > size-1) {
                 splitNode(parentNode);
             }
         }
