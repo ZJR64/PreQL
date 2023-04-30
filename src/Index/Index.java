@@ -83,9 +83,6 @@ public class Index {
         Node currentNode = getToLeafNode(primaryKeyValue);
         TreeMap<TreeMapObj, Integer> tempPages = currentNode.getPageNums();
         TreeMap<TreeMapObj, Integer> tempIndexes = currentNode.getIndexes();
-        if (tempPages.size() > size - 2) {
-            splitNode(currentNode, false);
-        }
 
         TreeMapObj newVal = new TreeMapObj(type,primaryKeyValue);
         //add values
@@ -95,6 +92,10 @@ public class Index {
         currentNode.setIndexes(tempIndexes);
 
         bufferManager.writePage(pageName, currentNode.getSelf(), currentNode.toBytes());
+
+        if (tempPages.size() > size - 1) {
+            splitNode(currentNode);
+        }
     }
 
     /**
@@ -118,10 +119,10 @@ public class Index {
     /**
      * Splits a node into two when a node is full.
      */
-    public void splitNode(Node currentNode, boolean isInternal) {
+    public void splitNode(Node currentNode) {
         //make new node
         int newNum = bufferManager.addPage(pageName, openPages);
-        Node newNode = new Node(isInternal, currentNode.getParent(), keyType, newNum);
+        Node newNode = new Node(currentNode.isInternal(), currentNode.getParent(), keyType, newNum);
 
         //split values between new node and current
         TreeMap<TreeMapObj, Integer> currentPages = currentNode.getPageNums();
@@ -131,7 +132,7 @@ public class Index {
 
         while (currentPages.size() > newPages.size()) {
             //transfer indexes only when not internal
-            if (!isInternal) {
+            if (!currentNode.isInternal()) {
                 Map.Entry<TreeMapObj, Integer> indexEntry = currentIndexes.firstEntry();
                 currentIndexes.remove(indexEntry.getKey());
                 newIndexes.put(indexEntry.getKey(), indexEntry.getValue());
@@ -192,7 +193,7 @@ public class Index {
 
             //check if parent needs splitting
             if (parentMap.size() > size - 1) {
-                splitNode(parentNode, true);
+                splitNode(parentNode);
             }
         }
 
