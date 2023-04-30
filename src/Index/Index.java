@@ -91,10 +91,11 @@ public class Index {
         tempIndexes.put(newVal, index);
         currentNode.setIndexes(tempIndexes);
 
-        bufferManager.writePage(pageName, currentNode.getSelf(), currentNode.toBytes());
-
         if (tempPages.size() > size - 1) {
             splitNode(currentNode);
+        }
+        else {
+            bufferManager.writePage(pageName, currentNode.getSelf(), currentNode.toBytes());
         }
     }
 
@@ -202,7 +203,6 @@ public class Index {
                 splitNode(parentNode);
             }
         }
-
     }
 
     public int underfull(Node current, Object primKey) {
@@ -509,8 +509,6 @@ public class Index {
 
 
         //get less than
-
-
         for (Map.Entry<TreeMapObj, Integer> entry : currentNode.getPageNums().entrySet()) {
             Object primaryKey = entry.getKey().getPrimaryKeyValue();
             Object key = entry.getKey();
@@ -541,22 +539,9 @@ public class Index {
             Object key = records.get(i).getPrimaryKey();
             String type = records.get(i).getKeyType();
 
-            update(key, pageNumber, i, type);
+            removeFromIndex(records.get(i).getKey(), keyType);
+            addToIndex(records.get(i).getKey(), pageNumber, i, keyType);
         }
-    }
-
-    private void update(Object primaryKeyValue, int page, int index, String type) {
-        Node currentNode = getToLeafNode(primaryKeyValue);
-        TreeMap<TreeMapObj, Integer> pages = currentNode.getPageNums();
-        TreeMap<TreeMapObj, Integer> indexes = currentNode.getIndexes();
-        //set values
-        TreeMapObj toBeAdded = new TreeMapObj(type, primaryKeyValue);
-        pages.put(toBeAdded, page);
-        indexes.put(toBeAdded, index);
-        //save values
-        currentNode.setIndexes(indexes);
-        currentNode.setPageNums(pages);
-        bufferManager.writePage(pageName, currentNode.getSelf(), currentNode.toBytes());
     }
 
     /**
