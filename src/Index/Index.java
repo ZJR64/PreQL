@@ -191,26 +191,19 @@ public class Index {
             //get parent
             byte[] parentBytes = bufferManager.getPage(pageName, currentNode.getParent());
             Node parentNode = new Node(parentBytes, keyType, currentNode.getParent());
-            if (currentNode.isInternal()){
-                parentNode.getPageNums().put(key, newNode.getSelf());
-                bufferManager.writePage(pageName, parentNode.getSelf(), parentNode.toBytes());
 
-            }
-            else{
-                //add new value to parent
-                TreeMap<TreeMapObj, Integer> parentMap = parentNode.getPageNums();
-                parentMap.put(currentNode.getPageNums().firstKey(), newNode.getSelf());
+            //add new value to parent
+            TreeMap<TreeMapObj, Integer> parentMap = parentNode.getPageNums();
+            parentMap.put(currentNode.getPageNums().firstKey(), newNode.getSelf());
 
-                //save parent
-                parentNode.setPageNums(parentMap);
-                bufferManager.writePage(pageName, parentNode.getSelf(), parentNode.toBytes());
+            //save parent
+            parentNode.setPageNums(parentMap);
+            bufferManager.writePage(pageName, parentNode.getSelf(), parentNode.toBytes());
 
-            }
             //check if parent needs splitting
-            if (parentNode.getPageNums().size() > size - 1) {
+            if (parentNode.getPageNums().size() > size) {
                 splitNode(parentNode);
             }
-
         }
     }
 
@@ -357,7 +350,7 @@ public class Index {
         Node previousNode = null;
 
         for(TreeMapObj tmo : parentPageNums.keySet()){
-            if(parentPageNums.get(tmo) == current.getSelf()){
+            if(parentPageNums.get(tmo).compareTo(current.getSelf()) == 0){
                 break;
             }
             else{
@@ -548,9 +541,22 @@ public class Index {
             Object key = records.get(i).getPrimaryKey();
             String type = records.get(i).getKeyType();
 
-            removeFromIndex(records.get(i).getKey(), keyType);
-            addToIndex(records.get(i).getKey(), pageNumber, i, keyType);
+            update(key, pageNumber, i, type);
         }
+    }
+
+    private void update(Object primaryKeyValue, int page, int index, String type) {
+        Node currentNode = getToLeafNode(primaryKeyValue);
+        TreeMap<TreeMapObj, Integer> pages = currentNode.getPageNums();
+        TreeMap<TreeMapObj, Integer> indexes = currentNode.getIndexes();
+        //set values
+        TreeMapObj toBeAdded = new TreeMapObj(type, primaryKeyValue);
+        pages.put(toBeAdded, page);
+        indexes.put(toBeAdded, index);
+        //save values
+        currentNode.setIndexes(indexes);
+        currentNode.setPageNums(pages);
+        bufferManager.writePage(pageName, currentNode.getSelf(), currentNode.toBytes());
     }
 
     /**
