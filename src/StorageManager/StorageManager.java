@@ -567,6 +567,18 @@ public class StorageManager {
      */
     public String deleteRecords(ArrayList<Record> records, String tableName){
         Schema table = c.getSchema(tableName);
+        if (indexing){
+            for (Record r: records) {
+                int[] res = table.getIndex().find(r.getPrimaryKey());
+                Page deleting = new Page(res[0], table, bm.getPageSize(), bm.getPage(table.getFileName(), res[0]));
+                deleting.removeRecordWithIndex(res[1]);
+                table.getIndex().removeFromIndex(r.getPrimaryKey(), r.getKeyType());
+                bm.writePage(table.getFileName(), res[0], deleting.getBytes());
+
+            }
+            return "SUCCESS";
+
+        }
         //create copy array in case of modification
         ArrayList<Integer> pageList = new ArrayList<Integer>(table.getPageOrder());
         //iterate over
