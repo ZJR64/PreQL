@@ -7,6 +7,7 @@ import src.StorageManager.Record;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -113,7 +114,7 @@ public class Index {
         currentNode.setIndexes(temp);
 
         //check if compliant
-        if (temp.size() < Math.ceil((size - 1)/2) && currentNode.getSelf() != root) {
+        if (temp.size() < Math.ceil((size - 1)/2)) {
             underfull(currentNode, primaryKeyValue);
         }
 
@@ -210,7 +211,7 @@ public class Index {
             }
         }
         if (parent.getParent() == -1 && parent.getPageNums().size() <= 1){
-            //TODO changeRoot();
+            //changeRoot();
         }
         if (parent.getPageNums().size() < Math.ceilDiv(size, 2)){
             underfull(parent, primKey);
@@ -229,8 +230,30 @@ public class Index {
      * @return 1 if success, 0 if failure.
      */
     public int mergeLeft(Node current, Node parent, Object primKey){
+        TreeMapObj left = null;
+        TreeMapObj center = null;
+        for (TreeMapObj obj : parent.getPageNums().keySet()) {
+            if (parent.getPageNums().get(obj) == current.getSelf()){
+                center = obj;
+                break;
+            }
+            left = obj;
+        }
+        if (left == null){
+            return -1;
+        }
 
-        return 0;
+        Node leftNode = new Node(bufferManager.getPage(pageName, parent.getPageNums().get(left)), keyType, parent.getPageNums().get(left));
+        if (leftNode.getPageNums().size() + current.getPageNums().size() > size){
+            return -2;
+        }
+
+        for (TreeMapObj obj : leftNode.getPageNums().keySet()) {
+            current.getPageNums().put(obj, leftNode.getPageNums().get(obj));
+        }
+        openPages.add(leftNode.getSelf());
+        parent.getPageNums().remove(left);
+        return 1;
     }
 
     /**
