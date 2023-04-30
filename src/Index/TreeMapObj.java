@@ -70,9 +70,9 @@ public class TreeMapObj implements Comparable<TreeMapObj> {
                     String otherPK = (String) otherTree.primaryKeyValue;
                     return thisPK.compareTo(otherPK);
                 } else if (type.equalsIgnoreCase("Integer")) {
-                    int thisPK = (Integer) primaryKeyValue;
-                    int otherPK = (Integer) otherTree.primaryKeyValue;
-                    return Integer.compare(thisPK, otherPK);
+                    Integer thisPK = (Integer) primaryKeyValue;
+                    Integer otherPK = (Integer) otherTree.primaryKeyValue;
+                    return thisPK.compareTo(otherPK);
                 } else if (type.equalsIgnoreCase("Double")) {
                     Double thisPK = (Double) primaryKeyValue;
                     Double otherPK = (Double) otherTree.primaryKeyValue;

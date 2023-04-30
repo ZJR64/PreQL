@@ -692,54 +692,97 @@ public class StorageManager {
             for (Integer pageNum : table.getPageOrder()) {
                 pageList.add(pageNum);
             }
+            ArrayList<Record> singleRecordList = new ArrayList<>();
+            singleRecordList.add(record);
 
-            //iterate through each page
-            for (int pageNum : pageList) {
-                //get page
-                byte[] bytes =  bm.getPage(table.getFileName(), pageNum);
-                Page page = new Page(pageNum, table, bm.getPageSize(), bytes);
-                ArrayList<Integer> deletedIndex = new ArrayList<Integer>();
+            if(indexing){
+                Index ind = table.getIndex();
 
-                if (page.belongs(record.getKey())) {
-                    //delete record
-                    ArrayList<Record> delete = new ArrayList<Record>();
-                    delete.add(record);
-                    deleteRecords(delete, tableName);
+                int[] arr = ind.find(record.getPrimaryKey());
+                int pgNum = arr[0];
+                int index = arr[1];
 
-                    // into tuples
-                    ArrayList<String> tuple = new ArrayList<String>();
-                    Map<String, Object> recordValues = record.getAttributes();
+                byte[] buf = bm.getPage(table.getFileName(), pgNum);
+                Page pg = new Page(pgNum, table, bm.getPageSize(), buf);
+
+                ind.addToIndex(record.getPrimaryKey(), pgNum, index, record.getKeyType());
+
+                deleteRecords(singleRecordList, tableName);
+                ArrayList<String> tuple = new ArrayList<String>();
+                Map<String, Object> recordValues = record.getAttributes();
+                for (Attribute attribute : table.getAttributes()) {
+                    if (attribute.getName().equalsIgnoreCase(target)) {
+                        if (value == null) {
+                            tuple.add("null");
+                        } else {
+                            tuple.add(value.toString());
+                        }
+                    } else {
+                        tuple.add(recordValues.get(attribute.getName()).toString());
+                    }
+                }
+                ArrayList<ArrayList<String>> tuples = new ArrayList<ArrayList<String>>();
+                tuples.add(tuple);
+                if(indexInsert(table, tuples).contains("ERROR")){
+                    tuples.clear();
+                    tuple.clear();
+                    //rollback change
                     for (Attribute attribute : table.getAttributes()) {
-                        if (attribute.getName().equalsIgnoreCase(target)) {
-                            if (value == null) {
-                                tuple.add("null");
-                            }
-                            else {
-                                tuple.add(value.toString());
-                            }
-                        }
-                        else {
-                            tuple.add(recordValues.get(attribute.getName()).toString());
-                        }
+                        tuple.add(recordValues.get(attribute.getName()).toString());
                     }
-                    ArrayList<ArrayList<String>> tuples = new ArrayList<ArrayList<String>>();
                     tuples.add(tuple);
+                    insert(tableName, tuples);
+                    //return error
+                    return "conflict in update. \nERROR";
+                }
+            }
+            else {
+                //iterate through each page
+                for (int pageNum : pageList) {
+                    //get page
+                    byte[] bytes = bm.getPage(table.getFileName(), pageNum);
+                    Page page = new Page(pageNum, table, bm.getPageSize(), bytes);
+                    ArrayList<Integer> deletedIndex = new ArrayList<Integer>();
 
-                    //attempt to insert into table
-                    if (insert(tableName, tuples).contains("ERROR")) {
-                        tuples.clear();
-                        tuple.clear();
+                    if (page.belongs(record.getKey())) {
+                        //delete record
+                        ArrayList<Record> delete = new ArrayList<Record>();
+                        delete.add(record);
+                        deleteRecords(delete, tableName);
 
-                        //rollback change
+                        // into tuples
+                        ArrayList<String> tuple = new ArrayList<String>();
+                        Map<String, Object> recordValues = record.getAttributes();
                         for (Attribute attribute : table.getAttributes()) {
-                            tuple.add(recordValues.get(attribute.getName()).toString());
+                            if (attribute.getName().equalsIgnoreCase(target)) {
+                                if (value == null) {
+                                    tuple.add("null");
+                                } else {
+                                    tuple.add(value.toString());
+                                }
+                            } else {
+                                tuple.add(recordValues.get(attribute.getName()).toString());
+                            }
                         }
+                        ArrayList<ArrayList<String>> tuples = new ArrayList<ArrayList<String>>();
                         tuples.add(tuple);
-                        insert(tableName, tuples);
-                        //return error
-                        return "conflict in update. \nERROR";
+
+                        //attempt to insert into table
+                        if (insert(tableName, tuples).contains("ERROR")) {
+                            tuples.clear();
+                            tuple.clear();
+
+                            //rollback change
+                            for (Attribute attribute : table.getAttributes()) {
+                                tuple.add(recordValues.get(attribute.getName()).toString());
+                            }
+                            tuples.add(tuple);
+                            insert(tableName, tuples);
+                            //return error
+                            return "conflict in update. \nERROR";
+                        }
+                        break;
                     }
-                    break;
                 }
             }
         }
