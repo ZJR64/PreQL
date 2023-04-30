@@ -81,18 +81,18 @@ public class Index {
     public void addToIndex(Object primaryKeyValue, int pageNum, int index, String type) {
         //get leaf node
         Node currentNode = getToLeafNode(primaryKeyValue);
-        TreeMap<TreeMapObj, Integer> temp = currentNode.getPageNums();
-        if (temp.size() > size - 2) {
+        TreeMap<TreeMapObj, Integer> tempPages = currentNode.getPageNums();
+        TreeMap<TreeMapObj, Integer> tempIndexes = currentNode.getIndexes();
+        if (tempPages.size() > size - 2) {
             splitNode(currentNode, false);
         }
 
         TreeMapObj newVal = new TreeMapObj(type,primaryKeyValue);
         //add values
-        temp.put(newVal, pageNum);
-        currentNode.setPageNums(temp);
-        temp = currentNode.getIndexes();
-        temp.put(newVal, index);
-        currentNode.setIndexes(temp);
+        tempPages.put(newVal, pageNum);
+        currentNode.setPageNums(tempPages);
+        tempIndexes.put(newVal, index);
+        currentNode.setIndexes(tempIndexes);
 
         bufferManager.writePage(pageName, currentNode.getSelf(), currentNode.toBytes());
     }

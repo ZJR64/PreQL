@@ -81,7 +81,7 @@ public class Node {
     }
 
     public TreeMap<TreeMapObj, Integer> getIndexes() {
-        return pageNums;
+        return indexes;
     }
 
     public void setIndexes(TreeMap<TreeMapObj, Integer> indexes) {
