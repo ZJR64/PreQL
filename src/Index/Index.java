@@ -121,6 +121,7 @@ public class Index {
      */
     public void splitNode(Node currentNode) {
         //make new node
+
         int newNum = bufferManager.addPage(pageName, openPages);
         Node newNode = new Node(currentNode.isInternal(), currentNode.getParent(), keyType, newNum);
 
@@ -130,7 +131,7 @@ public class Index {
         TreeMap<TreeMapObj, Integer> newPages = new TreeMap<TreeMapObj, Integer>();
         TreeMap<TreeMapObj, Integer> newIndexes = new TreeMap<TreeMapObj, Integer>();
 
-        while (currentPages.size() > newPages.size()) {
+        while (currentPages.size() >= newPages.size()) {
             //transfer indexes only when not internal
             if (!currentNode.isInternal()) {
                 Map.Entry<TreeMapObj, Integer> indexEntry = currentIndexes.firstEntry();
@@ -140,14 +141,16 @@ public class Index {
             //get first entry
             Map.Entry<TreeMapObj, Integer> pageEntry = currentPages.firstEntry();
 
+
             //remove from current
             currentPages.remove(pageEntry.getKey());
 
             //add to new
             newPages.put(pageEntry.getKey(), pageEntry.getValue());
         }
+        TreeMapObj key = null;
         if(currentNode.isInternal()){
-            TreeMapObj key = newPages.lastKey();
+            key = newPages.lastKey();
             newNode.setFinalValue(newPages.get(key));
             newPages.remove(key);
         }
@@ -162,7 +165,6 @@ public class Index {
         newNode.setPageNums(newPages);
         newNode.setIndexes(newIndexes);
         bufferManager.writePage(pageName, newNode.getSelf(), newNode.toBytes());
-
         //if root, create new root
         if (currentNode.getSelf() == this.root) {
             int newParentNum = bufferManager.addPage(pageName, openPages);
@@ -188,19 +190,26 @@ public class Index {
             //get parent
             byte[] parentBytes = bufferManager.getPage(pageName, currentNode.getParent());
             Node parentNode = new Node(parentBytes, keyType, currentNode.getParent());
+            if (currentNode.isInternal()){
+                parentNode.getPageNums().put(key, newNode.getSelf());
+                bufferManager.writePage(pageName, parentNode.getSelf(), parentNode.toBytes());
 
-            //add new value to parent
-            TreeMap<TreeMapObj, Integer> parentMap = parentNode.getPageNums();
-            parentMap.put(currentNode.getPageNums().firstKey(), newNode.getSelf());
+            }
+            else{
+                //add new value to parent
+                TreeMap<TreeMapObj, Integer> parentMap = parentNode.getPageNums();
+                parentMap.put(currentNode.getPageNums().firstKey(), newNode.getSelf());
 
-            //save parent
-            parentNode.setPageNums(parentMap);
-            bufferManager.writePage(pageName, parentNode.getSelf(), parentNode.toBytes());
+                //save parent
+                parentNode.setPageNums(parentMap);
+                bufferManager.writePage(pageName, parentNode.getSelf(), parentNode.toBytes());
 
+            }
             //check if parent needs splitting
-            if (parentMap.size() > size - 1) {
+            if (parentNode.getPageNums().size() > size - 1) {
                 splitNode(parentNode);
             }
+
         }
 
     }

@@ -65,7 +65,7 @@ public class TreeMapObj implements Comparable<TreeMapObj> {
     public int compareTo(TreeMapObj otherTree){
         try {
             if (this.type.equalsIgnoreCase(otherTree.type)) {
-                if (type.equalsIgnoreCase("String")) {
+                if (type.contains("char")) {
                     String thisPK = (String) primaryKeyValue;
                     String otherPK = (String) otherTree.primaryKeyValue;
                     return thisPK.compareTo(otherPK);
