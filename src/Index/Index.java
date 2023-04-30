@@ -109,7 +109,7 @@ public class Index {
         currentNode.getPageNums().remove(treOb);
         currentNode.getIndexes().remove(treOb);
         //check if compliant
-        if (currentNode.getParent() == -1 && currentNode.getPageNums().size()+1 < Math.ceil((size - 1)/2)) {
+        if (currentNode.getPageNums().size() < Math.ceil((size - 1)/2)) {
             underfull(currentNode, primaryKeyValue);
         }
 
@@ -487,9 +487,6 @@ public class Index {
             Object primaryKey = entry.getKey().getPrimaryKeyValue();
             Object TreeMapKey = entry.getKey();
             if (equals(primaryKey, primaryKeyValue)) {
-                return null;
-            }
-            if (lessThan(primaryKeyValue, primaryKey)) {
                 int[] results = new int[2];
                 results[0] = currentNode.getPageNums().get(TreeMapKey);
                 results[1] = currentNode.getIndexes().get(TreeMapKey);
