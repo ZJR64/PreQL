@@ -92,6 +92,7 @@ public class TreeMapObj implements Comparable<TreeMapObj> {
         }
     }
 
+
     public byte[] toBytes() {
         ByteBuffer buffer = ByteBuffer.wrap(new byte[getByteSize()]);
         if (this.type.contains("char")) {
@@ -125,6 +126,7 @@ public class TreeMapObj implements Comparable<TreeMapObj> {
         }
         return buffer.array();
     }
+
 
     public int getByteSize() {
         int size = 0;
