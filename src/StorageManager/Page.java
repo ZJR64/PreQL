@@ -200,9 +200,6 @@ public class Page {
         //write new page to buffer
         bufferManager.writePage(schema.getFileName() , newPageNum, newPage.getBytes());
 
-        // update the indexs of the records on the new page
-        schema.getIndex().updateIndex(newPage.recordList, newPageNum);
-
         //return number of page
         return newPageNum;
     }
