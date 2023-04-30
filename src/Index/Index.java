@@ -36,8 +36,9 @@ public class Index {
         this.keyType = keyType;
 
         //get N for the tree
-        int pairSize = keySize + Integer.BYTES;
-        this.size = (int) (Math.floor(bufferManager.getPageSize()/ pairSize) - 1);
+        int pairSize =+ Integer.BYTES + keySize + Integer.BYTES + Integer.BYTES;
+        this.size = (int) (Math.floor((bufferManager.getPageSize() - 20) / pairSize));
+        System.out.println(size);
 
         //create open pages
         this.openPages = new ArrayList<Integer>();
@@ -62,6 +63,7 @@ public class Index {
         this.pageName = tableName + ".idx";
         this.keyType = keyType;
         this.size = buffer.getInt();
+        System.out.println(size);
 
         //get open pages
         int numOpenPages = buffer.getInt();
@@ -169,6 +171,12 @@ public class Index {
             //save new parent
             bufferManager.writePage(pageName, newParentNode.getSelf(), newParentNode.toBytes());
             this.root = newParentNode.getSelf();
+
+            //add new parent to children
+            currentNode.setParent(newParentNum);
+            bufferManager.writePage(pageName, currentNode.getSelf(), currentNode.toBytes());
+            newNode.setParent(newParentNum);
+            bufferManager.writePage(pageName, newNode.getSelf(), newNode.toBytes());
         }
         else {
             //get parent

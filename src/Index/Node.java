@@ -51,21 +51,14 @@ public class Node {
 
         //get pageNums
         this.pageNums = new TreeMap<TreeMapObj, Integer>();
-        for (int i = 0; i < numValues; i++) {
-            //TODO
-            TreeMapObj key = new TreeMapObj(primaryKeyType, buffer);
-            pageNums.put(key, buffer.getInt());
-        }
-
-        //get number of indexes
-        numValues = buffer.getInt();
-
-        //get indexes
         this.indexes = new TreeMap<TreeMapObj, Integer>();
         for (int i = 0; i < numValues; i++) {
             //TODO
             TreeMapObj key = new TreeMapObj(primaryKeyType, buffer);
-            indexes.put(key, buffer.getInt());
+            pageNums.put(key, buffer.getInt());
+            if (!internal) {
+                indexes.put(key, buffer.getInt());
+            }
         }
 
         //get final value
@@ -118,6 +111,7 @@ public class Node {
 
     public byte[] toBytes() {
         ByteBuffer buffer = ByteBuffer.wrap(new byte[getNodeByteSize()]);
+        System.out.println(("BYTES: " + getNodeByteSize()));
 
         //set isInternal
         if (this.internal) {
@@ -133,23 +127,15 @@ public class Node {
         //set number of pageNums
         buffer.putInt(pageNums.size());
 
-        //set pageNums
+        //set pageNums and indexes
         for (Map.Entry<TreeMapObj, Integer> entry : pageNums.entrySet()) {
             //set key
             buffer.put(entry.getKey().toBytes());
             //set page num
             buffer.putInt(entry.getValue());
-        }
-
-        //set number of pageNums
-        buffer.putInt(indexes.size());
-
-        //set indexes
-        for (Map.Entry<TreeMapObj, Integer> entry : indexes.entrySet()) {
-            //set key
-            buffer.put(entry.getKey().toBytes());
-            //set page num
-            buffer.putInt(entry.getValue());
+            if (!internal) {
+                buffer.putInt(indexes.get(entry.getKey()));
+            }
         }
 
         //set final value
@@ -174,15 +160,9 @@ public class Node {
         for (Map.Entry<TreeMapObj, Integer> entry : pageNums.entrySet()) {
             size += entry.getKey().getByteSize();
             size += Integer.BYTES;
-        }
-
-        //countnumber of pageNums
-        size += Integer.BYTES;
-
-        //count indexes
-        for (Map.Entry<TreeMapObj, Integer> entry : indexes.entrySet()) {
-            size += entry.getKey().getByteSize();
-            size += Integer.BYTES;
+            if (!internal) {
+                size += Integer.BYTES;
+            }
         }
 
         //count final value
