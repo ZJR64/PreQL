@@ -304,7 +304,7 @@ public class Index {
         TreeMap<TreeMapObj, Integer> previousIndexes = previousNode.getIndexes();
 
         // cannot borrow if it will underfill previous node
-        if (previousPages.size() < Math.ceil((size - 1)/2)){
+        if (previousPages.size() <= Math.ceil((size - 1)/2)){
             return -1;
         }
 
@@ -332,8 +332,50 @@ public class Index {
      * @return 1 if success, 0 if failure. Should not be possible to fail at this point.
      */
     public int borrowRight(Node current, Node parent, Object primKey){
+        TreeMap<TreeMapObj, Integer> parentPageNums = parent.getPageNums();
+        TreeMap<TreeMapObj, Integer> currentPages = current.getPageNums();
+        TreeMap<TreeMapObj, Integer> currentIndexes = current.getIndexes();
+        TreeMapObj nextTMO = null;
+        Node nextNode = null;
+        boolean found = false;
 
-        return 0;
+        for(TreeMapObj tmo : parentPageNums.keySet()){
+            if (found){
+                nextTMO = tmo;
+                break;
+            }
+            if(parentPageNums.get(tmo) == current.getSelf()){
+                found = true;
+            }
+
+        }
+        if(nextTMO == null){
+            return -1;
+        }
+        Integer pageNum = parentPageNums.get(nextTMO);
+        byte[] nodeBytes = bufferManager.getPage(pageName, pageNum);
+        Node currentNode = new Node(nodeBytes, keyType, pageNum);
+
+        TreeMap<TreeMapObj, Integer> nextPages = nextNode.getPageNums();
+        TreeMap<TreeMapObj, Integer> nextIndexes = nextNode.getIndexes();
+
+        // cannot borrow if it will underfill previous node
+        if (nextPages.size() <= Math.ceil((size - 1)/2)){
+            return -1;
+        }
+
+        Map.Entry<TreeMapObj, Integer> indexEntry = nextPages.firstEntry();
+        nextIndexes.remove(indexEntry.getKey());
+        currentIndexes.put(indexEntry.getKey(), indexEntry.getValue());
+
+        //get last entry
+        Map.Entry<TreeMapObj, Integer> pageEntry = nextPages.firstEntry();
+        //remove from current
+        nextPages.remove(pageEntry.getKey());
+        //add to new
+        currentPages.put(pageEntry.getKey(), pageEntry.getValue());
+
+        return 1;
     }
 
     public Node getToLeafNode(Object primaryKeyValue) {
