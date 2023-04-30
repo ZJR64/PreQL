@@ -110,7 +110,7 @@ public class Index {
         currentNode.getPageNums().remove(treOb);
         currentNode.getIndexes().remove(treOb);
         //check if compliant
-        if (currentNode.getPageNums().size() < Math.ceil((size - 1)/2)) {
+        if (currentNode.getPageNums().size() < Math.ceil((size - 1)/2) && currentNode.getSelf() != root) {
             underfull(currentNode, primaryKeyValue);
         }
 
@@ -171,7 +171,8 @@ public class Index {
             int newParentNum = bufferManager.addPage(pageName, openPages);
             Node newParentNode = new Node(true, -1, keyType, newParentNum);
             TreeMap<TreeMapObj, Integer> children = new TreeMap<TreeMapObj, Integer>();
-            children.put(currentNode.getPageNums().firstKey(), newNode.getSelf());
+            TreeMapObj test = new TreeMapObj(keyType, currentNode.getPageNums().firstKey().getPrimaryKeyValue());
+            children.put(test, newNode.getSelf());
 
             //save values
             newParentNode.setPageNums(children);
@@ -548,15 +549,18 @@ public class Index {
     private void update(Object primaryKeyValue, int page, int index, String type) {
         Node currentNode = getToLeafNode(primaryKeyValue);
         TreeMap<TreeMapObj, Integer> pages = currentNode.getPageNums();
+        int check = pages.size();
         TreeMap<TreeMapObj, Integer> indexes = currentNode.getIndexes();
         //set values
         TreeMapObj toBeAdded = new TreeMapObj(type, primaryKeyValue);
         pages.put(toBeAdded, page);
         indexes.put(toBeAdded, index);
         //save values
-        currentNode.setIndexes(indexes);
-        currentNode.setPageNums(pages);
-        bufferManager.writePage(pageName, currentNode.getSelf(), currentNode.toBytes());
+        if (pages.size() == check) {
+            currentNode.setIndexes(indexes);
+            currentNode.setPageNums(pages);
+            bufferManager.writePage(pageName, currentNode.getSelf(), currentNode.toBytes());
+        }
     }
 
     /**
