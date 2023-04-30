@@ -159,7 +159,7 @@ public class Index {
         //if root, create new root
         if (currentNode.getSelf() == this.root) {
             int newParentNum = bufferManager.addPage(pageName, openPages);
-            Node newParentNode = new Node(true, currentNode.getParent(), keyType, newParentNum);
+            Node newParentNode = new Node(true, -1, keyType, newParentNum);
             TreeMap<TreeMapObj, Integer> children = new TreeMap<TreeMapObj, Integer>();
             children.put(currentNode.getPageNums().firstKey(), newNode.getSelf());
 
@@ -192,7 +192,7 @@ public class Index {
 
             //check if parent needs splitting
             if (parentMap.size() > size - 1) {
-                splitNode(currentNode, true);
+                splitNode(parentNode, true);
             }
         }
 
