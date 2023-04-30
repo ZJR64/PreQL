@@ -105,9 +105,10 @@ public class Index {
      */
     public void removeFromIndex(Object primaryKeyValue, String type) {
         //get leaf node
+        TreeMapObj treOb = new TreeMapObj(type, primaryKeyValue);
         Node currentNode = getToLeafNode(primaryKeyValue);
-        currentNode.getPageNums().remove(primaryKeyValue);
-        currentNode.getIndexes().remove(primaryKeyValue);
+        currentNode.getPageNums().remove(treOb);
+        currentNode.getIndexes().remove(treOb);
         //check if compliant
         if (currentNode.getParent() == -1 && currentNode.getPageNums().size()+1 < Math.ceil((size - 1)/2)) {
             underfull(currentNode, primaryKeyValue);
@@ -443,10 +444,10 @@ public class Index {
         while (currentNode.isInternal()) {
             for (Map.Entry<TreeMapObj, Integer> entry : currentNode.getPageNums().entrySet()) {
                 Object key = entry.getKey().getPrimaryKeyValue();
-                if (lessThan(key, primaryKeyValue)) {
+                if (lessThan(primaryKeyValue, key)) {
                     nodeBytes = bufferManager.getPage(pageName, entry.getValue());
                     currentNode = new Node(nodeBytes, keyType, entry.getValue());
-                    break;
+                    return currentNode;
                 }
             }
             nodeBytes = bufferManager.getPage(pageName, currentNode.getFinalValue());
@@ -480,6 +481,7 @@ public class Index {
                 int[] results = new int[2];
                 results[0] = currentNode.getPageNums().get(treeObjKey);
                 results[1] = currentNode.getIndexes().get(treeObjKey);
+                return results;
             }
         }
 
