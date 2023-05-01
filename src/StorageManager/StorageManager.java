@@ -830,7 +830,7 @@ public class StorageManager {
         }
         bm.purge(schema.getFileName());
         if (indexing) {
-            c.getBufferManager().purge(schema.getFileName());
+            c.getBufferManager().purge(schema.getName() + ".idx");
         }
         c.removeSchema(schema);
         return "Success";
