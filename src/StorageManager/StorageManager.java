@@ -829,6 +829,9 @@ public class StorageManager {
             return "Table "+ tableName +" could not be found" + "\n ERROR";
         }
         bm.purge(schema.getFileName());
+        if (indexing) {
+            c.getBufferManager().purge(schema.getFileName());
+        }
         c.removeSchema(schema);
         return "Success";
     }

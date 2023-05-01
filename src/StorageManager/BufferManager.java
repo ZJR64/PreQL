@@ -185,13 +185,17 @@ public class BufferManager {
      */
     public void purge(String fileName) {
         //find any pages that need to be removed
+        Map<String, byte[]> newBuffer = new HashMap<String, byte[]>();
+        ArrayList<String> newRecentlyUsed = new ArrayList<String>();
         for (String key : buffer.keySet()) {
-            //if page from file, remove from buffer
-            if (key.startsWith(fileName)) {
-                buffer.remove(key);
-                recentlyUsed.remove(key);
+            //if page is not from file, keep in buffer
+            if (!key.startsWith(fileName)) {
+                newBuffer.put(key, buffer.get(key));
+                newRecentlyUsed.add(key);
             }
         }
+        this.buffer = newBuffer;
+        this.recentlyUsed = newRecentlyUsed;
         //delete file
         File tableFile = new File(storagePath + fileName);
         tableFile.delete();
